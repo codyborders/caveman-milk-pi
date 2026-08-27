@@ -6,6 +6,7 @@
 // so lock behavior is exercised across actual process boundaries.
 
 import { execFileSync, spawn } from "node:child_process";
+import { createRequire } from "node:module";
 import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as os from "node:os";
@@ -80,6 +81,14 @@ try {
 }
 `;
 
+// The TypeScript compiler runs through process.execPath and its portable JS
+// entry. The node_modules/.bin shim differs per platform (.cmd on Windows),
+// and spawning it without a shell fails there; a JS entry needs no shell.
+export function resolveTscEntry(): string {
+  const requireFromHarness = createRequire(import.meta.url);
+  return requireFromHarness.resolve("typescript/lib/tsc.js");
+}
+
 export function setupChildHarness(): string {
   if (harnessDirectory !== null) return harnessDirectory;
 
@@ -87,8 +96,9 @@ export function setupChildHarness(): string {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "caveman-child-harness-"));
 
   execFileSync(
-    path.join(repositoryRoot, "node_modules", ".bin", "tsc"),
+    process.execPath,
     [
+      resolveTscEntry(),
       "src/config.ts",
       "src/types.ts",
       "--ignoreConfig",

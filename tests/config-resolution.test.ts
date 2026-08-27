@@ -12,6 +12,13 @@ import {
   resolveConfigDirectory,
 } from "../src/config.js";
 
+// Simulated platforms must follow their own path semantics regardless of the
+// host: win32 expects backslash joins and drive-letter resolution, while
+// linux and darwin expect POSIX separators.
+function platformExpectation(platform: NodeJS.Platform): path.PlatformPath {
+  return platform === "win32" ? path.win32 : path.posix;
+}
+
 const ORIGINAL_ENV = { ...process.env };
 
 afterEach(() => {
@@ -31,8 +38,18 @@ describe("resolveConfigDirectory", () => {
           platform,
           homedir: "/home/user",
         }),
-      ).toBe(path.resolve("/opt/caveman"));
+      ).toBe(platformExpectation(platform).resolve("/opt/caveman"));
     }
+  });
+
+  it("normalizes the override with win32 semantics when simulating windows", () => {
+    expect(
+      resolveConfigDirectory({
+        env: { CAVEMAN_MILK_CONFIG_DIR: "C:/Users/user/AppData/Roaming" },
+        platform: "win32",
+        homedir: "C:\\Users\\user",
+      }),
+    ).toBe("C:\\Users\\user\\AppData\\Roaming");
   });
 
   it("honors XDG_CONFIG_HOME on linux and falls back to ~/.config", () => {
@@ -65,14 +82,14 @@ describe("resolveConfigDirectory", () => {
         platform: "win32",
         homedir: "C:\\Users\\user",
       }),
-    ).toBe(path.resolve("C:\\Users\\user\\AppData\\Roaming"));
+    ).toBe("C:\\Users\\user\\AppData\\Roaming");
     expect(
       resolveConfigDirectory({
         env: {},
         platform: "win32",
         homedir: "C:\\Users\\user",
       }),
-    ).toBe(path.join("C:\\Users\\user", "AppData", "Roaming"));
+    ).toBe("C:\\Users\\user\\AppData\\Roaming");
   });
 
   it("ignores a relative XDG_CONFIG_HOME value per the XDG specification", () => {

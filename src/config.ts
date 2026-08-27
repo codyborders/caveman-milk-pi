@@ -44,29 +44,34 @@ export function resolveConfigDirectory(input: ConfigDirectoryInput = {}): string
   const platform = input.platform ?? process.platform;
   const homedir = input.homedir ?? os.homedir();
 
+  // Simulated platforms must follow their own path semantics: win32 uses
+  // backslash joins and drive-letter resolution, other platforms use POSIX.
+  // At runtime platform equals process.platform, so this matches the host.
+  const platformPath = platform === "win32" ? path.win32 : path.posix;
+
   const override = (env.CAVEMAN_MILK_CONFIG_DIR ?? "").trim();
   if (override !== "") {
-    return path.resolve(override);
+    return platformPath.resolve(override);
   }
 
   if (platform === "win32") {
     const appData = (env.APPDATA ?? "").trim();
     if (appData !== "") {
-      return path.resolve(appData);
+      return platformPath.resolve(appData);
     }
-    return path.join(homedir, "AppData", "Roaming");
+    return platformPath.join(homedir, "AppData", "Roaming");
   }
 
   if (platform === "darwin") {
-    return path.join(homedir, "Library", "Application Support");
+    return platformPath.join(homedir, "Library", "Application Support");
   }
 
   // XDG: a relative XDG_CONFIG_HOME is invalid per spec; use the default.
   const xdg = (env.XDG_CONFIG_HOME ?? "").trim();
-  if (xdg !== "" && path.isAbsolute(xdg)) {
+  if (xdg !== "" && platformPath.isAbsolute(xdg)) {
     return xdg;
   }
-  return path.join(homedir, ".config");
+  return platformPath.join(homedir, ".config");
 }
 
 export function getConfigPaths(): ConfigPaths {

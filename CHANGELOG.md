@@ -2,7 +2,7 @@
 
 This file records caveman-milk-pi releases. Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 0.4.0-beta.1 - Unreleased
 
 ### Added
 

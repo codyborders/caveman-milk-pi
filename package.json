@@ -1,6 +1,6 @@
 {
-  "name": "@tomooshi/caveman-milk-pi",
-  "version": "0.3.0",
+  "name": "@codyborders/caveman-milk-pi",
+  "version": "0.4.0-beta.1",
   "description": "Opt-in Pi extension with compact, deterministic response-style prompts.",
   "main": "index.ts",
   "type": "module",
@@ -13,13 +13,16 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tomooshi/caveman-milk-pi.git"
+    "url": "git+https://github.com/codyborders/caveman-milk-pi.git"
   },
-  "homepage": "https://github.com/tomooshi/caveman-milk-pi",
+  "homepage": "https://github.com/codyborders/caveman-milk-pi",
+  "bugs": {
+    "url": "https://github.com/codyborders/caveman-milk-pi/issues"
+  },
   "license": "MIT",
-  "author": "tomooshi",
+  "author": "codyborders",
   "engines": {
-    "node": ">=20"
+    "node": ">=22.19.0"
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",
@@ -36,16 +39,19 @@
     "skill/",
     "scripts/evaluate.mjs",
     "scripts/evaluation-fixtures.json",
+    "scripts/sync-skill.sh",
     "README.md",
     "CREDITS.md",
     "LICENSE"
   ],
   "scripts": {
     "test": "vitest run",
+    "test:unit": "vitest run --exclude tests/package-smoke.test.ts",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "evaluate": "node scripts/evaluate.mjs",
-    "evaluate:offline": "node scripts/evaluate.mjs"
+    "evaluate:offline": "node scripts/evaluate.mjs",
+    "test:package": "node scripts/smoke-packed.mjs"
   },
   "devDependencies": {
     "@earendil-works/pi-coding-agent": "0.84.3",

@@ -35,6 +35,10 @@ describe("computeInjection determinism", () => {
 });
 
 describe("computeInjection compact rules", () => {
+  it("uses exact concise language contract text", () => {
+    expect(promptContract.commonRules).toMatch(/^Answer concisely in the user's language\. /);
+  });
+
   it("off mode produces empty text", () => {
     const result = computeInjection("off");
     expect(result.text).toBe("");

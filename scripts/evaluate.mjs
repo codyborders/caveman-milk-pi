@@ -237,20 +237,32 @@ export async function runProviderEvaluation(options) {
       "/v1/messages/count_tokens",
     status: countTokens === true ? "exact" : "not-run",
     model,
+    totalRequestInputTokens: {},
+    incrementalActiveMinusOffTokens: {},
     exactCounts: {},
   };
   if (countTokens === true) {
     const resolvedCountEndpoint =
       countEndpoint ?? new URL(tokenAccounting.endpointPath, endpoint).toString();
+    const countModes = modes.includes("off") ? modes : ["off", ...modes];
+    for (const mode of countModes) {
+      const count = await countPromptTokens({
+        apiKey,
+        model,
+        prompt: fixtures.runtimePrompts[mode] ?? "",
+        endpoint: resolvedCountEndpoint,
+        fetchImpl,
+      });
+      tokenAccounting.totalRequestInputTokens[mode] = count.inputTokens;
+      tokenAccounting.exactCounts[mode] = count;
+    }
+    const offTokens = tokenAccounting.totalRequestInputTokens.off;
     for (const mode of modes) {
-      tokenAccounting.exactCounts[mode] =
-        await countPromptTokens({
-          apiKey,
-          model,
-          prompt: fixtures.runtimePrompts[mode],
-          endpoint: resolvedCountEndpoint,
-          fetchImpl,
-        });
+      if (mode === "off") continue;
+      tokenAccounting.incrementalActiveMinusOffTokens[mode] =
+        tokenAccounting.totalRequestInputTokens[mode] - offTokens;
+      tokenAccounting.exactCounts[mode].incrementalInputTokens =
+        tokenAccounting.incrementalActiveMinusOffTokens[mode];
     }
   }
   const results = [];

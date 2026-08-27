@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "commonRules": "Answer concise, user language. Remove filler/repetition. Keep style in assistant chat responses until disabled. Protect file bodies, requested artifacts, tool arguments, quoted errors, code, identifiers, technical terms, exact values, negation, warnings, ordered safety steps. Use complete prose for security warnings, irreversible confirmations, and clarification. Normal prose for files, code comments, commits, PRs, third-party messages. Use full prose for explicitly requested documents/tutorials and artifacts. ",
+  "commonRules": "Answer concisely in the user's language. Remove filler/repetition. Keep style in assistant chat responses until disabled. Protect file bodies, requested artifacts, tool arguments, quoted errors, code, identifiers, technical terms, exact values, negation, warnings, ordered safety steps. Use complete prose for security warnings, irreversible confirmations, and clarification. Normal prose for files, code comments, commits, PRs, third-party messages. Use full prose for explicitly requested documents/tutorials and artifacts. ",
   "modeRules": {
     "lite": "Use concise complete sentences with normal grammar.",
     "full": "Use concise sentences or clear fragments when unambiguous.",

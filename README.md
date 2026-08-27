@@ -76,7 +76,15 @@ The footer shows `caveman: <mode>` by default.
 
 ## Configuration
 
-Configuration is stored at `~/.config/caveman-milk-pi.json`.
+The configuration file is named `caveman-milk-pi.json`. It lives in the platform config root.
+
+| Platform | Default path |
+| --- | --- |
+| Linux | `$XDG_CONFIG_HOME/caveman-milk-pi.json` (default `~/.config/caveman-milk-pi.json`) |
+| macOS | `~/Library/Application Support/caveman-milk-pi.json` |
+| Windows | `%APPDATA%\caveman-milk-pi.json` (Roaming) |
+
+Set `CAVEMAN_MILK_CONFIG_DIR` to override the config directory on any platform. A relative `XDG_CONFIG_HOME` value is ignored per the XDG specification.
 
 ```json
 {
@@ -86,11 +94,31 @@ Configuration is stored at `~/.config/caveman-milk-pi.json`.
 }
 ```
 
-The loader migrates older flat configuration. It also migrates the former `~/.config/pi-caveman.json` filename.
+### Migration
 
-Unknown schema versions and invalid field types stop loading with a specific error.
+First load migrates older state when the target file is absent. Candidates are checked in this order:
 
-Writes use a random temporary filename in the configuration directory. The extension renames that file atomically and removes it after failures.
+1. `pi-caveman.json` in the same directory as the target.
+2. The prior default `~/.config/caveman-milk-pi.json`.
+3. The former `~/.config/pi-caveman.json`.
+
+Older flat files without `schemaVersion` are rewritten in place in the current format. Migrated files are normalized to `0600` permissions.
+
+The legacy `enabled` field is accepted during migration and then removed. No released version ever consulted it. Injection was keyed on `mode` alone from v0.1.0 onward. Migration preserves `mode` verbatim, matching what the extension actually did with those files. A v0.1.x user with `enabled: false` kept the injected mode then. The same user keeps it now. Run `/caveman off` to disable injection.
+
+### Validation
+
+Unknown schema versions, unknown fields, and invalid field types stop loading. Every validation error names the exact path being loaded.
+
+### Concurrent-safe updates
+
+Mode and status changes run through a locked update. The update acquires a short-lived `<config>.lock` in the same directory. It reloads the latest valid config. It applies exactly one field-level change. It saves atomically. It then releases the lock. Concurrent Pi sessions changing different fields cannot lose each other's updates.
+
+The lock carries an ownership token. A process only deletes a lock it still owns. A crashed writer's lock is recovered conservatively after ten seconds of inactivity. Waiting is bounded at fifteen seconds. A crash never blocks configuration permanently. A live owner's lock is never deleted.
+
+A mutator may change zero fields or exactly one field. A zero-field change is a no-op that reloads but does not rewrite the file. Changing both fields in one update is rejected.
+
+Writes use a random temporary filename in the configuration directory. The extension renames that file atomically with `0600` permissions. It removes the temporary file after failures.
 
 ## Cache behavior
 

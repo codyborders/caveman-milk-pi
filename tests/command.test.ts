@@ -10,8 +10,9 @@ function createHarness(initialConfig: CavemanConfig) {
   let config = initialConfig;
   const notify = vi.fn();
   const setStatus = vi.fn();
-  const persist = vi.fn((nextConfig: CavemanConfig) => {
-    config = nextConfig;
+  const update = vi.fn(async (mutator: (current: CavemanConfig) => CavemanConfig) => {
+    config = mutator(config);
+    return config;
   });
   const pi = {
     registerCommand: (_name: string, command: { handler: typeof handler }) => {
@@ -25,7 +26,7 @@ function createHarness(initialConfig: CavemanConfig) {
       cache = nextCache;
     },
     loadConfig: () => config,
-    persist,
+    update,
   });
 
   return {
@@ -34,48 +35,59 @@ function createHarness(initialConfig: CavemanConfig) {
       await handler(args, { ui: { notify, setStatus } });
     },
     getCache: () => cache,
+    getConfig: () => config,
     notify,
-    persist,
+    update,
     setStatus,
   };
 }
 
 describe("/caveman", () => {
-  it("persists and activates a selected mode", async () => {
+  it("persists a mode change through a locked field-level update and activates it", async () => {
     const harness = createHarness({ schemaVersion: 1, mode: "off", showStatus: true });
 
     await harness.run("full");
 
-    expect(harness.persist).toHaveBeenCalledWith({
+    expect(harness.update).toHaveBeenCalledTimes(1);
+    const mutator = harness.update.mock.calls[0]?.[0] as (
+      current: CavemanConfig,
+    ) => CavemanConfig;
+    expect(typeof mutator).toBe("function");
+    expect(mutator({ schemaVersion: 1, mode: "off", showStatus: true })).toEqual({
       schemaVersion: 1,
       mode: "full",
       showStatus: true,
     });
+    expect(harness.getConfig()).toEqual({ schemaVersion: 1, mode: "full", showStatus: true });
     expect(harness.getCache()?.mode).toBe("full");
     expect(harness.setStatus).toHaveBeenCalledWith("caveman", "caveman: full");
   });
 
-  it("does not activate a mode when persistence fails", async () => {
+  it("does not activate a mode when the locked update fails", async () => {
     const harness = createHarness({ schemaVersion: 1, mode: "off", showStatus: true });
-    harness.persist.mockImplementationOnce(() => {
-      throw new Error("write failed");
-    });
+    harness.update.mockImplementationOnce(() => Promise.reject(new Error("write failed")));
 
     await expect(harness.run("full")).rejects.toThrow("write failed");
     expect(harness.getCache()).toBeNull();
     expect(harness.setStatus).not.toHaveBeenCalled();
   });
 
-  it("changes footer visibility without changing mode", async () => {
+  it("changes footer visibility through a locked field-level update without changing mode", async () => {
     const harness = createHarness({ schemaVersion: 1, mode: "ultra", showStatus: true });
 
     await harness.run("status off");
 
-    expect(harness.persist).toHaveBeenCalledWith({
+    expect(harness.update).toHaveBeenCalledTimes(1);
+    const mutator = harness.update.mock.calls[0]?.[0] as (
+      current: CavemanConfig,
+    ) => CavemanConfig;
+    expect(typeof mutator).toBe("function");
+    expect(mutator({ schemaVersion: 1, mode: "ultra", showStatus: true })).toEqual({
       schemaVersion: 1,
       mode: "ultra",
       showStatus: false,
     });
+    expect(harness.getConfig()).toEqual({ schemaVersion: 1, mode: "ultra", showStatus: false });
     expect(harness.setStatus).toHaveBeenCalledWith("caveman", undefined);
   });
 

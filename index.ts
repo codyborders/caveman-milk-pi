@@ -6,13 +6,14 @@
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { registerCavemanCommand } from "./src/command.js";
-import { loadConfig, saveConfig } from "./src/config.js";
+import { loadConfig, updateConfig } from "./src/config.js";
 import { computeInjection } from "./src/injection.js";
 import type { CavemanConfig, InjectionCache } from "./src/types.js";
 
 export interface ExtensionDependencies {
   loadConfig: () => CavemanConfig;
-  saveConfig: (config: CavemanConfig) => void;
+  // Concurrent-safe write path; see updateConfig in src/config.ts.
+  updateConfig: (mutator: (config: CavemanConfig) => CavemanConfig) => Promise<CavemanConfig>;
 }
 
 export function registerExtension(
@@ -42,10 +43,10 @@ export function registerExtension(
       cache = newCache;
     },
     loadConfig: dependencies.loadConfig,
-    persist: dependencies.saveConfig,
+    update: dependencies.updateConfig,
   });
 }
 
 export default function cavemanMilkExtension(pi: ExtensionAPI): void {
-  registerExtension(pi, { loadConfig, saveConfig });
+  registerExtension(pi, { loadConfig, updateConfig });
 }

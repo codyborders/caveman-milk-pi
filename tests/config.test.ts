@@ -78,6 +78,22 @@ describe("loadConfigAtPath", () => {
     );
   });
 
+  it.each([
+    ["{\"schemaVersion\":2,\"mode\":\"off\",\"showStatus\":true}", /unsupported schemaVersion/],
+    ["{\"schemaVersion\":1,\"mode\":\"bogus\",\"showStatus\":true}", /invalid mode/],
+    ["{\"schemaVersion\":1,\"mode\":\"off\",\"showStatus\":\"yes\"}", /showStatus must be a boolean/],
+    ["{\"schemaVersion\":1,\"mode\":\"off\",\"showStatus\":true,\"extra\":1}", /unknown field 'extra'/],
+    ["[1,2,3]", /is not a JSON object/],
+    ["{\"mode\":\"lite\",\"enabled\":\"yes\"}", /legacy enabled must be a boolean/],
+    ["{\"mode\":\"lite\",\"extra\":true}", /unknown field 'extra'/],
+  ])("reports the loaded path on validation failure %#", (content, message) => {
+    const targetPath = path.join(makeTempDirectory(), "config.json");
+    fs.writeFileSync(targetPath, content, "utf8");
+
+    expect(() => loadConfigAtPath(targetPath)).toThrow(message);
+    expect(() => loadConfigAtPath(targetPath)).toThrow(new RegExp(targetPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  });
+
   it("moves the old filename when the target is absent", () => {
     const directory = makeTempDirectory();
     const targetPath = path.join(directory, "caveman-milk-pi.json");
@@ -89,5 +105,23 @@ describe("loadConfigAtPath", () => {
     expect(config.mode).toBe("full");
     expect(fs.existsSync(targetPath)).toBe(true);
     expect(fs.existsSync(legacyPath)).toBe(false);
+  });
+
+  it("normalizes a schema-versioned migrated file to mode 0600", () => {
+    const directory = makeTempDirectory();
+    const targetPath = path.join(directory, "caveman-milk-pi.json");
+    const legacyPath = path.join(directory, "pi-caveman.json");
+    fs.writeFileSync(
+      legacyPath,
+      '{"schemaVersion":1,"mode":"full","showStatus":true}\n',
+      { encoding: "utf8", mode: 0o644 },
+    );
+
+    const config = loadConfigAtPath(targetPath, legacyPath);
+
+    expect(config.mode).toBe("full");
+    if (process.platform !== "win32") {
+      expect(fs.statSync(targetPath).mode & 0o777).toBe(0o600);
+    }
   });
 });

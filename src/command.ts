@@ -13,7 +13,9 @@ export interface CommandDeps {
   getCache: () => InjectionCache | null;
   setCache: (cache: InjectionCache) => void;
   loadConfig: () => CavemanConfig;
-  persist: (config: CavemanConfig) => void;
+  // Locked, concurrent-safe update: reloads latest config, applies exactly
+  // one field-level change, saves atomically, releases its own lock.
+  update: (mutator: (config: CavemanConfig) => CavemanConfig) => Promise<CavemanConfig>;
 }
 
 export function registerCavemanCommand(pi: ExtensionAPI, deps: CommandDeps): void {
@@ -46,11 +48,10 @@ export function registerCavemanCommand(pi: ExtensionAPI, deps: CommandDeps): voi
           return;
         }
         const show = arg === "on";
-        const config: CavemanConfig = { ...deps.loadConfig(), showStatus: show };
-        deps.persist(config);
+        const updated = await deps.update((config) => ({ ...config, showStatus: show }));
         if (show) {
           const current = deps.getCache();
-          const mode = current?.mode ?? config.mode;
+          const mode = current?.mode ?? updated.mode;
           ctx.ui.setStatus("caveman", `caveman: ${mode}`);
         } else {
           ctx.ui.setStatus("caveman", undefined);
@@ -88,13 +89,12 @@ export function registerCavemanCommand(pi: ExtensionAPI, deps: CommandDeps): voi
 
       // Invalid modes throw and surface through Pi's extension error handling.
       const newMode: CavemanMode = validateMode(trimmed);
-      const config: CavemanConfig = { ...deps.loadConfig(), mode: newMode };
-      deps.persist(config);
+      const updated = await deps.update((config) => ({ ...config, mode: newMode }));
 
       const newCache = computeInjection(newMode);
       deps.setCache(newCache);
 
-      if (config.showStatus) {
+      if (updated.showStatus) {
         ctx.ui.setStatus("caveman", `caveman: ${newMode}`);
       }
       ctx.ui.notify(

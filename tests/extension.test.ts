@@ -18,7 +18,7 @@ describe("extension lifecycle", () => {
     const harness = createPiHarness();
     registerExtension(harness.pi as never, {
       loadConfig: () => ({ schemaVersion: 1, mode: "full", showStatus: true }),
-      saveConfig: vi.fn(),
+      updateConfig: vi.fn(),
     });
     const beforeAgentStart = harness.handlers.get("before_agent_start");
     if (beforeAgentStart === undefined) throw new Error("handler was not registered");
@@ -32,7 +32,7 @@ describe("extension lifecycle", () => {
     const setStatus = vi.fn();
     registerExtension(harness.pi as never, {
       loadConfig: () => config,
-      saveConfig: vi.fn(),
+      updateConfig: vi.fn(),
     });
 
     const sessionStart = harness.handlers.get("session_start");

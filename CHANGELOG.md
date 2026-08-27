@@ -6,11 +6,21 @@ This file records caveman-milk-pi releases. Version numbers follow [Semantic Ver
 
 ### Added
 
+Configuration updates now run through a locked `updateConfig` operation. A short-lived same-directory lock serializes concurrent Pi sessions. Simultaneous `mode` and `showStatus` changes both survive. Stale locks from crashed writers recover conservatively after ten seconds. Waiting is bounded at fifteen seconds.
+
+Multi-process tests now cover concurrent field updates, first-run creation, legacy migration, and crashed-writer recovery.
+
+A config-root override is now supported through `CAVEMAN_MILK_CONFIG_DIR`. Configuration honors `XDG_CONFIG_HOME` on Linux, `~/Library/Application Support` on macOS, and `%APPDATA%` on Windows.
+
 Configuration now has schema validation and migration for older flat files. Atomic writes use random temporary names and clean failed writes.
 
 Tests now cover commands, Pi lifecycle hooks, configuration, prompt generation, and evaluation. Offline evaluation contains 105 matched cases. Anthropic execution requires explicit paid-run authorization.
 
 ### Changed
+
+Every configuration validation error now names the exact path being loaded.
+
+Mode and status changes now apply exactly one field-level change per locked update. A zero-field mutator reloads without rewriting the file. Migrated files are normalized to `0600` permissions.
 
 Runtime prompts now use one versioned contract instead of filtered markdown. Active prompts contain 603 to 706 characters.
 

@@ -8,7 +8,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
-const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+const npmCommand = "npm";
 const temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "caveman-packed-smoke-"));
 const homeDirectory = path.join(temporaryDirectory, "home");
 fs.mkdirSync(homeDirectory, { recursive: true });
@@ -18,12 +18,13 @@ function run(command, args, cwd, env = process.env) {
     cwd,
     env,
     encoding: "utf8",
+    shell: process.platform === "win32",
     stdio: ["ignore", "pipe", "pipe"],
   });
   if (result.status !== 0) {
     throw new Error(
       `${command} ${args.join(" ")} failed with exit ${String(result.status)}\n` +
-        `${result.stdout}${result.stderr}`,
+        `${result.error?.message ?? ""}\n${result.stdout ?? ""}${result.stderr ?? ""}`,
     );
   }
   return result.stdout.trim();

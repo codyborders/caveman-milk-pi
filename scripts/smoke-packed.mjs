@@ -114,5 +114,15 @@ try {
   assert(notifications.length >= 2, "Packed extension command produced no activation diagnostics.");
   console.log("Packed tarball loaded through Pi extension loader; activation and disable passed.");
 } finally {
-  fs.rmSync(temporaryDirectory, { recursive: true, force: true });
+  try {
+    fs.rmSync(temporaryDirectory, {
+      recursive: true,
+      force: true,
+      maxRetries: 10,
+      retryDelay: 200,
+    });
+  } catch (error) {
+    if (process.platform !== "win32" || error?.code !== "EPERM") throw error;
+    process.stderr.write(`Temporary smoke directory remained locked: ${temporaryDirectory}\n`);
+  }
 }

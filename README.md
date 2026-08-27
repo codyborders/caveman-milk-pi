@@ -34,7 +34,7 @@ All active prompts remain below the 800-character limit. Exact token counts vary
 ## Install
 
 ```bash
-pi install npm:@tomooshi/caveman-milk-pi
+pi install git:github.com/codyborders/caveman-milk-pi
 ```
 
 Activate a mode inside Pi:
@@ -137,11 +137,17 @@ npm test
 npm run typecheck
 npm run evaluate:offline
 npm pack --dry-run
+npm run test:package
 ```
 
-The development dependency targets Pi `0.84.3`. Current Pi event types include all session-start reasons used by the extension.
+The development dependency targets Pi `0.84.3`. That Pi release requires Node `22.19.0` or newer.
 
-## Upstream and credits
+CI also runs unit checks on Node 20. Real Pi loader checks run only on supported Node versions.
+
+## Fork identity and credits
+
+This fork lives at [codyborders/caveman-milk-pi](https://github.com/codyborders/caveman-milk-pi).
+Install from GitHub so npm scope ownership is not assumed.
 
 Rules were reviewed against caveman commit `17f9f2ec2377b0bfe16b52ee03a462e7f0a02bc8`, dated 2026-08-25.
 

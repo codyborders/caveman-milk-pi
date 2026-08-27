@@ -22,14 +22,14 @@ The compact generator replaces the former filtered-markdown injector. Measuremen
 
 | Mode | Former characters | Current characters | Former estimated tokens | Current estimated tokens |
 | --- | ---: | ---: | ---: | ---: |
-| `lite` | 4,276 | 641 | 1,069 | 161 |
-| `full` | 4,216 | 648 | 1,054 | 162 |
-| `ultra` | 4,213 | 685 | 1,054 | 172 |
-| `wenyan-lite` | 4,103 | 703 | 1,026 | 176 |
-| `wenyan` | 4,262 | 720 | 1,066 | 180 |
-| `wenyan-ultra` | 4,158 | 733 | 1,040 | 184 |
+| `lite` | 4,276 | 603 | 1,069 | 151 |
+| `full` | 4,216 | 610 | 1,054 | 153 |
+| `ultra` | 4,213 | 647 | 1,054 | 162 |
+| `wenyan-lite` | 4,103 | 672 | 1,026 | 168 |
+| `wenyan` | 4,262 | 696 | 1,066 | 174 |
+| `wenyan-ultra` | 4,158 | 706 | 1,040 | 177 |
 
-All active prompts remain below the 800-character limit. Exact token counts vary by provider tokenizer.
+All active prompts remain below the 800-character limit. Exact token counts remain unreported until a provider count endpoint returns them.
 
 ## Install
 
@@ -113,6 +113,8 @@ npm run evaluate:offline
 ```
 
 Provider execution is disabled by default. It requires a key, a model name, and explicit paid-run authorization.
+
+Optional token accounting uses the provider count endpoint. Reports label counts as `not-run` unless that endpoint returns exact model values.
 
 ```bash
 CAVEMAN_EVAL_PROVIDER=anthropic \

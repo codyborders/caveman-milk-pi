@@ -3,6 +3,7 @@
 import { describe, expect, it } from "vitest";
 import { validateMode } from "../src/config.js";
 import { computeInjection, loadSkillContent } from "../src/injection.js";
+import promptContract from "../src/prompt-contract.json" with { type: "json" };
 import { VALID_MODES } from "../src/types.js";
 
 describe("loadSkillContent", () => {
@@ -50,14 +51,8 @@ describe("computeInjection compact rules", () => {
     const result = computeInjection("full");
     expect(result.text).toBe(
       "\n\nCAVEMAN MODE ACTIVE — level: full\n" +
-        "Answer concisely in the user’s language. Remove filler and repetition. " +
-        "Apply this style to every chat response until the user disables caveman. " +
-        "Use clear complete prose for security warnings, irreversible confirmations, ordered safety steps, and clarification. " +
-        "Preserve negation, exact values, technical terms, warnings, and step order. " +
-        "Use normal prose in files, code comments, commits, PRs, messages, and tool arguments. " +
-        "Use full prose for explicitly requested documents or tutorials. " +
-        "Do not invent abbreviations or use symbols merely to appear terse. " +
-        "Use concise sentences or clear fragments when unambiguous.",
+        promptContract.commonRules +
+        promptContract.modeRules.full,
     );
     expect(result.text).not.toContain("## Intensity");
     expect(result.text).not.toContain("| **full** |");
@@ -73,14 +68,15 @@ describe("computeInjection compact rules", () => {
     for (const mode of ["wenyan-lite", "wenyan", "wenyan-ultra"] as const) {
       const text = computeInjection(mode).text;
       expect(text, `mode=${mode}`).toContain("For Chinese input");
-      expect(text, `mode=${mode}`).toContain("Keep other input languages unchanged");
+      expect(text, `mode=${mode}`).toContain("For non-Chinese input, preserve original language");
+      expect(text, `mode=${mode}`).toContain("Keep style in assistant chat responses until disabled");
     }
   });
 
   it("keeps document and persisted-content rules in every active mode", () => {
     for (const mode of VALID_MODES.filter((item) => item !== "off")) {
       const text = computeInjection(mode).text;
-      expect(text, `mode=${mode}`).toContain("Use normal prose in files");
+      expect(text, `mode=${mode}`).toContain("Normal prose for files");
       expect(text, `mode=${mode}`).toContain("full prose for explicitly requested documents");
     }
   });

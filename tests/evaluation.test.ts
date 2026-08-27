@@ -4,12 +4,19 @@ import { execFileSync, spawnSync } from "node:child_process";
 import * as path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { computeInjection } from "../src/injection.js";
-import { createOfflineReport, loadFixtures, runProviderEvaluation } from "../scripts/evaluate.mjs";
+import {
+  countPromptTokens,
+  createOfflineReport,
+  loadFixtures,
+  runProviderEvaluation,
+} from "../scripts/evaluate.mjs";
 
 const fixtures = loadFixtures();
 
 describe("offline evaluation", () => {
   it("keeps committed runtime prompts equal to production output", () => {
+    expect(fixtures).not.toHaveProperty("commonRules");
+    expect(fixtures).not.toHaveProperty("modeRules");
     for (const mode of fixtures.modes) {
       expect(fixtures.runtimePrompts[mode], `mode=${mode}`).toBe(computeInjection(mode).text);
     }
@@ -23,6 +30,11 @@ describe("offline evaluation", () => {
     expect(first.categoryCount).toBe(15);
     expect(first.caseCount).toBe(105);
     expect(Math.max(...Object.values(first.injectionLengths))).toBeLessThanOrEqual(800);
+    expect(first.tokenAccounting).toMatchObject({
+      method: "provider-count-endpoint",
+      status: "not-run",
+      endpointPath: "/v1/messages/count_tokens",
+    });
   });
 
   it("writes structured output from the CLI", () => {
@@ -85,6 +97,26 @@ describe("provider evaluation", () => {
     expect(report.passed).toBe(true);
     expect(report.results.every((result) => result.requiredTermRatio === 1)).toBe(true);
     expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it("records exact token count from provider count endpoint", async () => {
+    const fetchImpl = vi.fn(async () =>
+      new Response(JSON.stringify({ input_tokens: 123 }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    await expect(
+      countPromptTokens({
+        apiKey: "test-key",
+        model: "test-model",
+        prompt: "prompt",
+        endpoint: "https://example.invalid/v1/messages/count_tokens",
+        fetchImpl,
+      }),
+    ).resolves.toEqual({ model: "test-model", inputTokens: 123 });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
   it("captures persisted text from an Anthropic tool call", async () => {

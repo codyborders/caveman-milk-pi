@@ -12,7 +12,7 @@ Tests now cover commands, Pi lifecycle hooks, configuration, prompt generation, 
 
 ### Changed
 
-Runtime prompts now use typed constants instead of filtered markdown. Active prompts contain 641 to 733 characters.
+Runtime prompts now use one versioned contract instead of filtered markdown. Active prompts contain 603 to 706 characters.
 
 Development now targets Pi `0.84.3`. Vendored rules match caveman commit `17f9f2ec2377b0bfe16b52ee03a462e7f0a02bc8`.
 

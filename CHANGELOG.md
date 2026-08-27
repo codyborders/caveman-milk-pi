@@ -16,6 +16,22 @@ Configuration now has schema validation and migration for older flat files. Atom
 
 Tests now cover commands, Pi lifecycle hooks, configuration, prompt generation, and evaluation. Offline evaluation contains 105 matched cases. Anthropic execution requires explicit paid-run authorization.
 
+The evaluation validates the provider name against an allowlist. It rejects selections without the `off` baseline before any paid request. Comparative scoring requires at least three repetitions per pair.
+
+Provider runs append caveman runtime text after a captured Pi 0.84.3 base system prompt. The new `pi` provider runs each case through the real Pi CLI in JSON mode with the extension loaded.
+
+Brevity gates now use provider-reported output tokens. Word counts remain a readability diagnostic.
+
+Deterministic validators now cover exact negation, numbered step order, warning prose, confirmation language, TypeScript code syntax, and persisted prose. They also cover requested paragraph count, tool-call structure, and term retention.
+
+A blinded quality judge with committed prompt and rubric can fail the overall report when the active arm loses quality.
+
+Paid calls get a per-attempt timeout plus bounded retry for rate limits and transient failures. CLI execution also requires an explicit maximum call count.
+
+An incremental atomic checkpoint resumes recorded calls. Its identity binds the model, commit, prompt, provider, matrix, repetition count, and seed.
+
+Reports pair raw results with aggregate statistics. Aggregates cover token counts, cache traffic, latency, quality scores, and provider cost when pricing is set. Environment metadata records the Git commit and the Pi version. It also records the stored seed and the run order.
+
 ### Changed
 
 Every configuration validation error now names the exact path being loaded.

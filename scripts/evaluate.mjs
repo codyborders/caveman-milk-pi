@@ -6,33 +6,53 @@ import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fixturePath = path.join(here, "evaluation-fixtures.json");
+const contractPath = path.join(here, "..", "src", "prompt-contract.json");
+
+function loadPromptContract() {
+  const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"));
+  if (typeof contract.commonRules !== "string") {
+    throw new Error("Prompt contract must define commonRules.");
+  }
+  if (typeof contract.modeRules !== "object" || contract.modeRules === null) {
+    throw new Error("Prompt contract must define modeRules.");
+  }
+  if (
+    contract.tokenAccounting?.method !== "provider-count-endpoint" ||
+    typeof contract.tokenAccounting.endpointPath !== "string"
+  ) {
+    throw new Error("Prompt contract must define provider token accounting.");
+  }
+  return contract;
+}
+
+function createRuntimePrompts(modes, contract) {
+  return Object.fromEntries(
+    modes.map((mode) => {
+      if (mode === "off") return [mode, ""];
+      const modeRule = contract.modeRules[mode];
+      if (typeof modeRule !== "string") {
+        throw new Error(`Prompt contract has no rule for mode '${mode}'.`);
+      }
+      const label = mode === "wenyan" ? "wenyan-full" : mode;
+      return [
+        mode,
+        `\n\nCAVEMAN MODE ACTIVE — level: ${label}\n${contract.commonRules}${modeRule}`,
+      ];
+    }),
+  );
+}
 
 export function loadFixtures() {
   const fixtures = JSON.parse(fs.readFileSync(fixturePath, "utf8"));
   if (!Array.isArray(fixtures.modes) || !Array.isArray(fixtures.categories)) {
     throw new Error("Evaluation fixture must define modes and categories.");
   }
-  if (typeof fixtures.commonRules !== "string") {
-    throw new Error("Evaluation fixture must define commonRules.");
-  }
-  if (typeof fixtures.modeRules !== "object" || fixtures.modeRules === null) {
-    throw new Error("Evaluation fixture must define modeRules.");
-  }
-  const runtimePrompts = Object.fromEntries(
-    fixtures.modes.map((mode) => {
-      if (mode === "off") return [mode, ""];
-      const modeRule = fixtures.modeRules[mode];
-      if (typeof modeRule !== "string") {
-        throw new Error(`Evaluation fixture has no rule for mode '${mode}'.`);
-      }
-      const label = mode === "wenyan" ? "wenyan-full" : mode;
-      return [
-        mode,
-        `\n\nCAVEMAN MODE ACTIVE — level: ${label}\n${fixtures.commonRules}${modeRule}`,
-      ];
-    }),
-  );
-  return { ...fixtures, runtimePrompts };
+  const promptContract = loadPromptContract();
+  return {
+    ...fixtures,
+    promptContract,
+    runtimePrompts: createRuntimePrompts(fixtures.modes, promptContract),
+  };
 }
 
 function selectNamedItems(items, selection) {
@@ -64,6 +84,52 @@ const WORD_RATIO_LIMITS = {
   wenyan: 0.85,
   "wenyan-ultra": 0.7,
 };
+
+export async function countPromptTokens({
+  apiKey,
+  model,
+  prompt,
+  endpoint,
+  fetchImpl = globalThis.fetch,
+}) {
+  if (typeof apiKey !== "string" || apiKey.length === 0) {
+    throw new Error("Prompt token counting requires ANTHROPIC_API_KEY.");
+  }
+  if (typeof model !== "string" || model.length === 0) {
+    throw new Error("Prompt token counting requires a model.");
+  }
+  if (typeof prompt !== "string") {
+    throw new Error("Prompt token counting requires a prompt.");
+  }
+  if (typeof endpoint !== "string" || endpoint.length === 0) {
+    throw new Error("Prompt token counting requires a count endpoint.");
+  }
+  if (typeof fetchImpl !== "function") {
+    throw new Error("Prompt token counting requires fetch support.");
+  }
+
+  const response = await fetchImpl(endpoint, {
+    method: "POST",
+    headers: {
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+      "x-api-key": apiKey,
+    },
+    body: JSON.stringify({
+      model,
+      system: prompt,
+      messages: [{ role: "user", content: "Count this prompt." }],
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`Prompt token count failed with HTTP ${response.status}: ${await response.text()}`);
+  }
+  const payload = await response.json();
+  if (!Number.isInteger(payload.input_tokens) || payload.input_tokens < 0) {
+    throw new Error("Prompt token count response did not contain input_tokens.");
+  }
+  return { model, inputTokens: payload.input_tokens };
+}
 
 function createRequestBody(model, modePrompt, category) {
   const body = {
@@ -115,6 +181,12 @@ export function createOfflineReport(fixtures = loadFixtures()) {
   return {
     fixtureVersion: fixtures.version,
     provider: "offline",
+    tokenAccounting: fixtures.promptContract?.tokenAccounting ?? {
+      method: "provider-count-endpoint",
+      endpointPath: "/v1/messages/count_tokens",
+      status: "not-run",
+      exactCountsByModel: {},
+    },
     thresholds: {
       maxInjectionChars: 800,
       minimumRequiredTermRatio: 1,
@@ -140,6 +212,8 @@ export async function runProviderEvaluation(options) {
     fixtures = loadFixtures(),
     modes: modeSelection,
     categories: categorySelection,
+    countTokens = false,
+    countEndpoint,
   } = options;
 
   if (allowPaid !== true) {
@@ -157,6 +231,40 @@ export async function runProviderEvaluation(options) {
 
   const modes = selectNamedItems(fixtures.modes, modeSelection);
   const categories = selectNamedItems(fixtures.categories, categorySelection);
+  const tokenAccounting = {
+    method: "provider-count-endpoint",
+    endpointPath: fixtures.promptContract?.tokenAccounting?.endpointPath ??
+      "/v1/messages/count_tokens",
+    status: countTokens === true ? "exact" : "not-run",
+    model,
+    totalRequestInputTokens: {},
+    incrementalActiveMinusOffTokens: {},
+    exactCounts: {},
+  };
+  if (countTokens === true) {
+    const resolvedCountEndpoint =
+      countEndpoint ?? new URL(tokenAccounting.endpointPath, endpoint).toString();
+    const countModes = modes.includes("off") ? modes : ["off", ...modes];
+    for (const mode of countModes) {
+      const count = await countPromptTokens({
+        apiKey,
+        model,
+        prompt: fixtures.runtimePrompts[mode] ?? "",
+        endpoint: resolvedCountEndpoint,
+        fetchImpl,
+      });
+      tokenAccounting.totalRequestInputTokens[mode] = count.inputTokens;
+      tokenAccounting.exactCounts[mode] = count;
+    }
+    const offTokens = tokenAccounting.totalRequestInputTokens.off;
+    for (const mode of modes) {
+      if (mode === "off") continue;
+      tokenAccounting.incrementalActiveMinusOffTokens[mode] =
+        tokenAccounting.totalRequestInputTokens[mode] - offTokens;
+      tokenAccounting.exactCounts[mode].incrementalInputTokens =
+        tokenAccounting.incrementalActiveMinusOffTokens[mode];
+    }
+  }
   const results = [];
 
   for (const category of categories) {
@@ -217,6 +325,7 @@ export async function runProviderEvaluation(options) {
     fixtureVersion: fixtures.version,
     provider: "anthropic",
     model,
+    tokenAccounting,
     generatedAt: new Date().toISOString(),
     caseCount: results.length,
     passed: results.every((result) => result.passed),
@@ -244,6 +353,8 @@ async function main() {
           fixtures,
           modes: parseList(process.env.CAVEMAN_EVAL_MODES),
           categories: parseList(process.env.CAVEMAN_EVAL_CATEGORIES),
+          countTokens: process.env.CAVEMAN_EVAL_COUNT_TOKENS === "1",
+          countEndpoint: process.env.CAVEMAN_EVAL_COUNT_ENDPOINT,
         });
 
   const serialized = JSON.stringify(report, null, 2) + "\n";

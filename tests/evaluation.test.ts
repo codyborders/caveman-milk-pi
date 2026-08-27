@@ -4,13 +4,21 @@ import { execFileSync, spawnSync } from "node:child_process";
 import * as path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { computeInjection } from "../src/injection.js";
-import { createOfflineReport, loadFixtures, runProviderEvaluation } from "../scripts/evaluate.mjs";
+import { VALID_MODES } from "../src/types.js";
+import {
+  countPromptTokens,
+  createOfflineReport,
+  loadFixtures,
+  runProviderEvaluation,
+} from "../scripts/evaluate.mjs";
 
 const fixtures = loadFixtures();
 
 describe("offline evaluation", () => {
   it("keeps committed runtime prompts equal to production output", () => {
-    for (const mode of fixtures.modes) {
+    expect(fixtures).not.toHaveProperty("commonRules");
+    expect(fixtures).not.toHaveProperty("modeRules");
+    for (const mode of VALID_MODES) {
       expect(fixtures.runtimePrompts[mode], `mode=${mode}`).toBe(computeInjection(mode).text);
     }
   });
@@ -23,6 +31,11 @@ describe("offline evaluation", () => {
     expect(first.categoryCount).toBe(15);
     expect(first.caseCount).toBe(105);
     expect(Math.max(...Object.values(first.injectionLengths))).toBeLessThanOrEqual(800);
+    expect(first.tokenAccounting).toMatchObject({
+      method: "provider-count-endpoint",
+      status: "not-run",
+      endpointPath: "/v1/messages/count_tokens",
+    });
   });
 
   it("writes structured output from the CLI", () => {
@@ -84,7 +97,93 @@ describe("provider evaluation", () => {
     expect(report.caseCount).toBe(2);
     expect(report.passed).toBe(true);
     expect(report.results.every((result) => result.requiredTermRatio === 1)).toBe(true);
+    expect(report.tokenAccounting).toMatchObject({ status: "not-run", model: "test-model" });
     expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it("records exact token count from provider count endpoint", async () => {
+    const fetchImpl = vi.fn(async () =>
+      new Response(JSON.stringify({ input_tokens: 123 }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    await expect(
+      countPromptTokens({
+        apiKey: "test-key",
+        model: "test-model",
+        prompt: "prompt",
+        endpoint: "https://example.invalid/v1/messages/count_tokens",
+        fetchImpl,
+      }),
+    ).resolves.toEqual({ model: "test-model", inputTokens: 123 });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports total and incremental counts while changing only Caveman injection", async () => {
+    const countResponses = [100, 137];
+    const fetchImpl = vi.fn(async (_url, init) => {
+      const body = JSON.parse(String(init?.body));
+      if (body.messages[0].content === "Count this prompt.") {
+        return new Response(JSON.stringify({ input_tokens: countResponses.shift() }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      return new Response(
+        JSON.stringify({
+          content: [{ type: "text", text: "cache_key identity" }],
+          usage: { input_tokens: 10, output_tokens: 4 },
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    });
+    const compactFixtures = {
+      version: 1,
+      modes: ["off", "full"],
+      runtimePrompts: { off: "", full: fixtures.runtimePrompts.full },
+      promptContract: fixtures.promptContract,
+      categories: [fixtures.categories[0]],
+    };
+    const report = await runProviderEvaluation({
+      apiKey: "test-key",
+      model: "test-model",
+      allowPaid: true,
+      endpoint: "https://example.invalid/messages",
+      fetchImpl,
+      fixtures: compactFixtures,
+      countTokens: true,
+      countEndpoint: "https://example.invalid/v1/messages/count_tokens",
+    });
+
+    const countBodies = fetchImpl.mock.calls.slice(0, 2).map((call) =>
+      JSON.parse(String(call[1]?.body)),
+    );
+    expect(countBodies[0]).toMatchObject({
+      model: "test-model",
+      system: "",
+      messages: [{ role: "user", content: "Count this prompt." }],
+    });
+    expect(countBodies[1]).toMatchObject({
+      model: "test-model",
+      system: fixtures.runtimePrompts.full,
+      messages: [{ role: "user", content: "Count this prompt." }],
+    });
+    expect({ ...countBodies[0], system: "Caveman injection removed" }).toEqual({
+      ...countBodies[1],
+      system: "Caveman injection removed",
+    });
+    expect(report.tokenAccounting).toMatchObject({
+      status: "exact",
+      model: "test-model",
+      totalRequestInputTokens: { off: 100, full: 137 },
+      incrementalActiveMinusOffTokens: { full: 37 },
+      exactCounts: {
+        off: { model: "test-model", inputTokens: 100 },
+        full: { model: "test-model", inputTokens: 137, incrementalInputTokens: 37 },
+      },
+    });
   });
 
   it("captures persisted text from an Anthropic tool call", async () => {

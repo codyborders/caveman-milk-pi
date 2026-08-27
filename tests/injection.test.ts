@@ -1,12 +1,8 @@
-// Real-data tests per DOD rule #14.
-// No fixtures — run against the actual vendored skill/SKILL.md.
+// Injection tests cover the vendored artifact and deterministic compact prompt generation.
 
-import { describe, it, expect } from "vitest";
-import {
-  loadSkillContent,
-  computeInjection,
-} from "../src/injection.js";
+import { describe, expect, it } from "vitest";
 import { validateMode } from "../src/config.js";
+import { computeInjection, loadSkillContent } from "../src/injection.js";
 import { VALID_MODES } from "../src/types.js";
 
 describe("loadSkillContent", () => {
@@ -14,97 +10,101 @@ describe("loadSkillContent", () => {
     const content = loadSkillContent();
     expect(content.length).toBeGreaterThan(1000);
     expect(content).toContain("## Intensity");
-    expect(content).toContain("## Document Exemption");
+    expect(content).toContain("## Boundaries");
   });
 });
 
-describe("computeInjection determinism (cache-safety invariant #1)", () => {
-  const content = loadSkillContent();
-
+describe("computeInjection determinism", () => {
   for (const mode of VALID_MODES) {
-    it(`mode=${mode}: same input produces same output`, () => {
-      const a = computeInjection(mode, content);
-      const b = computeInjection(mode, content);
-      expect(a.text).toBe(b.text);
-      expect(a.sourceHash).toBe(b.sourceHash);
+    it(`mode=${mode}: repeated calls return identical output`, () => {
+      const first = computeInjection(mode);
+      const second = computeInjection(mode);
+      expect(first.text).toBe(second.text);
+      expect(first.sourceHash).toBe(second.sourceHash);
     });
   }
 
-  it("10-turn stability: hash identical across many calls", () => {
+  it("keeps one hash across repeated calls", () => {
     const hashes = new Set<string>();
-    for (let i = 0; i < 10; i++) {
-      const result = computeInjection("full", content);
-      hashes.add(result.sourceHash);
+    for (let index = 0; index < 10; index++) {
+      hashes.add(computeInjection("full").sourceHash);
     }
     expect(hashes.size).toBe(1);
   });
 });
 
-describe("computeInjection mode filtering", () => {
-  const content = loadSkillContent();
-
-  it("off mode produces empty text (zero-cost skip)", () => {
-    const result = computeInjection("off", content);
+describe("computeInjection compact rules", () => {
+  it("off mode produces empty text", () => {
+    const result = computeInjection("off");
     expect(result.text).toBe("");
     expect(result.sourceHash).toBe("");
   });
 
-  it("full mode includes full row, excludes ultra row", () => {
-    const result = computeInjection("full", content);
-    expect(result.text).toContain("| **full** |");
-    expect(result.text).not.toContain("| **ultra** |");
-    expect(result.text).not.toContain("| **lite** |");
-  });
-
-  it("ultra mode includes ultra row, excludes full row", () => {
-    const result = computeInjection("ultra", content);
-    expect(result.text).toContain("| **ultra** |");
-    expect(result.text).not.toContain("| **full** |");
-  });
-
-  it("wenyan alias resolves to wenyan-full", () => {
-    const result = computeInjection("wenyan", content);
-    expect(result.text).toContain("| **wenyan-full** |");
-    expect(result.text).not.toContain("| **wenyan-lite** |");
-    expect(result.text).not.toContain("| **wenyan-ultra** |");
-  });
-
-  it("Document Exemption section present in every non-off mode", () => {
-    const modes: ReadonlyArray<"lite" | "full" | "ultra" | "wenyan"> = [
-      "lite",
-      "full",
-      "ultra",
-      "wenyan",
-    ];
-    for (const mode of modes) {
-      const result = computeInjection(mode, content);
-      expect(result.text, `mode=${mode}`).toContain("## Document Exemption");
+  it("keeps every active mode below 800 characters", () => {
+    for (const mode of VALID_MODES.filter((item) => item !== "off")) {
+      expect(computeInjection(mode).text.length, `mode=${mode}`).toBeLessThanOrEqual(800);
     }
   });
 
-  it("header line includes canonical mode label", () => {
-    const full = computeInjection("full", content);
-    expect(full.text).toContain("CAVEMAN MODE ACTIVE — level: full");
-    const wenyan = computeInjection("wenyan", content);
-    expect(wenyan.text).toContain("CAVEMAN MODE ACTIVE — level: wenyan-full");
+  it("full mode uses exact compact runtime rules", () => {
+    const result = computeInjection("full");
+    expect(result.text).toBe(
+      "\n\nCAVEMAN MODE ACTIVE — level: full\n" +
+        "Answer concisely in the user’s language. Remove filler and repetition. " +
+        "Apply this style to every chat response until the user disables caveman. " +
+        "Use clear complete prose for security warnings, irreversible confirmations, ordered safety steps, and clarification. " +
+        "Preserve negation, exact values, technical terms, warnings, and step order. " +
+        "Use normal prose in files, code comments, commits, PRs, messages, and tool arguments. " +
+        "Use full prose for explicitly requested documents or tutorials. " +
+        "Do not invent abbreviations or use symbols merely to appear terse. " +
+        "Use concise sentences or clear fragments when unambiguous.",
+    );
+    expect(result.text).not.toContain("## Intensity");
+    expect(result.text).not.toContain("| **full** |");
+  });
+
+  it("uses distinct intensity rules", () => {
+    expect(computeInjection("lite").text).toContain("concise complete sentences");
+    expect(computeInjection("full").text).toContain("clear fragments");
+    expect(computeInjection("ultra").text).toContain("fewest clear words");
+  });
+
+  it("uses literary Chinese rules only for Chinese input", () => {
+    for (const mode of ["wenyan-lite", "wenyan", "wenyan-ultra"] as const) {
+      const text = computeInjection(mode).text;
+      expect(text, `mode=${mode}`).toContain("For Chinese input");
+      expect(text, `mode=${mode}`).toContain("Keep other input languages unchanged");
+    }
+  });
+
+  it("keeps document and persisted-content rules in every active mode", () => {
+    for (const mode of VALID_MODES.filter((item) => item !== "off")) {
+      const text = computeInjection(mode).text;
+      expect(text, `mode=${mode}`).toContain("Use normal prose in files");
+      expect(text, `mode=${mode}`).toContain("full prose for explicitly requested documents");
+    }
+  });
+
+  it("uses the canonical wenyan-full header", () => {
+    expect(computeInjection("wenyan").text).toContain(
+      "CAVEMAN MODE ACTIVE — level: wenyan-full",
+    );
   });
 });
 
-describe("validateMode (fail-loud per ADR-012)", () => {
+describe("validateMode", () => {
   it("accepts all valid modes", () => {
     for (const mode of VALID_MODES) {
       expect(validateMode(mode)).toBe(mode);
     }
   });
 
-  it("throws on unknown mode with valid list in message", () => {
-    expect(() => validateMode("bogus")).toThrow(/invalid mode 'bogus'/);
-    expect(() => validateMode("bogus")).toThrow(/off, lite, full/);
+  it("throws on an unknown mode and lists valid modes", () => {
+    expect(() => validateMode("turbo")).toThrow(/invalid mode 'turbo'/);
+    expect(() => validateMode("turbo")).toThrow(/off, lite, full, ultra/);
   });
 
   it("throws on non-string input", () => {
-    expect(() => validateMode(42)).toThrow(/must be a string/);
-    expect(() => validateMode(null)).toThrow(/must be a string/);
-    expect(() => validateMode(undefined)).toThrow(/must be a string/);
+    expect(() => validateMode(42)).toThrow(/mode must be a string/);
   });
 });

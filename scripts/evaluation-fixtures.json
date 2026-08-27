@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "commonRules": "Answer concisely in the user’s language. Remove filler and repetition. Apply this style to every chat response until the user disables caveman. Use clear complete prose for security warnings, irreversible confirmations, ordered safety steps, and clarification. Preserve negation, exact values, technical terms, warnings, and step order. Use normal prose in files, code comments, commits, PRs, messages, and tool arguments. Use full prose for explicitly requested documents or tutorials. Do not invent abbreviations or use symbols merely to appear terse. ",
+  "modeRules": {
+    "lite": "Use concise complete sentences with normal grammar.",
+    "full": "Use concise sentences or clear fragments when unambiguous.",
+    "ultra": "Use the fewest clear words. State each fact once. Keep grammar when breaking it saves nothing.",
+    "wenyan-lite": "For Chinese input, use light literary Chinese with complete grammar. Keep other input languages unchanged.",
+    "wenyan": "For Chinese input, use literary Chinese while preserving meaning and technical terms. Keep other input languages unchanged.",
+    "wenyan-ultra": "For Chinese input, use the shortest clear literary Chinese. Preserve meaning and technical terms. Keep other input languages unchanged."
+  },
+  "categories": [
+    { "id": "technical-explanation", "prompt": "Explain why a cache key must include model identity. Include the exact term cache_key.", "requiredTerms": ["cache_key"] },
+    { "id": "comparison", "prompt": "Compare Option A and Option B, then recommend Option B. Include both option names.", "requiredTerms": ["Option A", "Option B"] },
+    { "id": "negation", "prompt": "Explain this backup policy. Include this exact sentence: Do not delete backups.", "requiredTerms": ["Do not delete backups."] },
+    { "id": "ordered-migration", "prompt": "Give exactly five numbered migration steps. Keep safe execution order.", "requiredTerms": ["1.", "5."] },
+    { "id": "security-warning", "prompt": "Write a security warning that contains the exact marker SECURITY WARNING.", "requiredTerms": ["SECURITY WARNING"] },
+    { "id": "irreversible-confirmation", "prompt": "Request confirmation before deletion. Include the exact phrase cannot be undone.", "requiredTerms": ["cannot be undone"] },
+    { "id": "code-generation", "prompt": "Write a TypeScript function with a complete sentence in its doc comment. Name it parsePort.", "requiredTerms": ["parsePort"] },
+    { "id": "file-writing", "prompt": "Draft one README paragraph with full grammar. Include the heading Installation.", "requiredTerms": ["Installation"] },
+    { "id": "commit-pr", "prompt": "Draft a normal commit subject and PR description. Include Config migration.", "requiredTerms": ["Config migration"] },
+    { "id": "tool-argument", "prompt": "Call write_artifact with the exact sentence: Configuration remains valid after restart.", "requiredTerms": ["Configuration remains valid after restart."], "expectsTool": true },
+    { "id": "tutorial", "prompt": "Write a four-paragraph tutorial. Include the exact heading Setup.", "requiredTerms": ["Setup"] },
+    { "id": "one-line", "prompt": "Answer in one line. Include latency_ms.", "requiredTerms": ["latency_ms"] },
+    { "id": "clarification", "prompt": "Clarify an ambiguous rollback instruction. Include before deployment.", "requiredTerms": ["before deployment"] },
+    { "id": "wenyan-chinese", "prompt": "用文言文回答技术问题，并保留英文术语 cache key。", "requiredTerms": ["cache key"] },
+    { "id": "wenyan-english", "prompt": "Answer this English technical question. Include request timeout.", "requiredTerms": ["request timeout"] }
+  ],
+  "modes": ["off", "lite", "full", "ultra", "wenyan-lite", "wenyan", "wenyan-ultra"]
+}

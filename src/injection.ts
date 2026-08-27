@@ -1,25 +1,37 @@
-// Injection computation: SKILL.md + mode -> cached injection string.
+// Compact prompt generation for caveman-milk-pi.
 //
-// Pure function. No filesystem reads, no Date.now(), no randomness.
-// See ADR-015 cache-safety invariants.
-//
-// Transform pipeline:
-//   1. loadSkillContent() reads vendored skill/SKILL.md ONCE at session_start
-//   2. computeInjection(mode, content) filters the ruleset to active mode
-//   3. Result cached in closure; reused byte-identically every turn
-//
-// Mode aliases: "wenyan" is canonical label "wenyan-full" in the SKILL
-// intensity table.
+// Runtime text depends only on the selected mode and committed constants.
+// The vendored skill remains available for provenance review, but it does not
+// determine bytes appended to Pi's system prompt.
 
+import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import * as crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import type { CavemanMode, InjectionCache } from "./types.js";
 
-const FRONTMATTER_REGEX = /^---[\s\S]*?---\s*/;
-const TABLE_ROW_REGEX = /^\|\s*\*\*(\S+?)\*\*\s*\|/;
-const EXAMPLE_LINE_REGEX = /^- (\S+?):\s/;
+type ActiveMode = Exclude<CavemanMode, "off">;
+
+const COMMON_RULES =
+  "Answer concisely in the user’s language. Remove filler and repetition. " +
+  "Apply this style to every chat response until the user disables caveman. " +
+  "Use clear complete prose for security warnings, irreversible confirmations, ordered safety steps, and clarification. " +
+  "Preserve negation, exact values, technical terms, warnings, and step order. " +
+  "Use normal prose in files, code comments, commits, PRs, messages, and tool arguments. " +
+  "Use full prose for explicitly requested documents or tutorials. " +
+  "Do not invent abbreviations or use symbols merely to appear terse. ";
+
+const MODE_RULES: Readonly<Record<ActiveMode, string>> = {
+  lite: "Use concise complete sentences with normal grammar.",
+  full: "Use concise sentences or clear fragments when unambiguous.",
+  ultra: "Use the fewest clear words. State each fact once. Keep grammar when breaking it saves nothing.",
+  "wenyan-lite":
+    "For Chinese input, use light literary Chinese with complete grammar. Keep other input languages unchanged.",
+  wenyan:
+    "For Chinese input, use literary Chinese while preserving meaning and technical terms. Keep other input languages unchanged.",
+  "wenyan-ultra":
+    "For Chinese input, use the shortest clear literary Chinese. Preserve meaning and technical terms. Keep other input languages unchanged.",
+};
 
 function getSkillPath(): string {
   const here = path.dirname(fileURLToPath(import.meta.url));
@@ -31,9 +43,10 @@ export function loadSkillContent(): string {
   if (!fs.existsSync(skillPath)) {
     throw new Error(
       `caveman-milk-pi could not load SKILL.md at ${skillPath}. ` +
-        `Reinstall the extension or verify skill/SKILL.md exists.`,
+        "Reinstall the extension or verify skill/SKILL.md exists.",
     );
   }
+
   const content = fs.readFileSync(skillPath, "utf8");
   if (content.length === 0) {
     throw new Error(
@@ -43,54 +56,31 @@ export function loadSkillContent(): string {
   if (!content.includes("## Intensity")) {
     throw new Error(
       `caveman-milk-pi SKILL.md at ${skillPath} is malformed (no "## Intensity" section). ` +
-        `Restore via scripts/sync-skill.sh.`,
+        "Restore via scripts/sync-skill.sh.",
     );
   }
   return content;
 }
 
-function canonicalModeLabel(mode: CavemanMode): string {
+function canonicalModeLabel(mode: ActiveMode): string {
   return mode === "wenyan" ? "wenyan-full" : mode;
 }
 
-function filterSkillBody(body: string, activeLabel: string): string {
-  const lines = body.split("\n");
-  const kept = lines.filter((line) => {
-    const tableMatch = line.match(TABLE_ROW_REGEX);
-    if (tableMatch) {
-      // Keep only the active mode's intensity row, drop others
-      return tableMatch[1] === activeLabel;
-    }
-    const exampleMatch = line.match(EXAMPLE_LINE_REGEX);
-    if (exampleMatch) {
-      // Keep only the active mode's example lines
-      return exampleMatch[1] === activeLabel;
-    }
-    // Everything else (prose, headings, code, blank lines) stays
-    return true;
-  });
-  return kept.join("\n");
-}
-
-export function computeInjection(
-  mode: CavemanMode,
-  skillContent: string,
-): InjectionCache {
+export function computeInjection(mode: CavemanMode): InjectionCache {
   if (mode === "off") {
     return { mode, text: "", sourceHash: "" };
   }
 
   const activeLabel = canonicalModeLabel(mode);
-  const body = skillContent.replace(FRONTMATTER_REGEX, "");
-  const filtered = filterSkillBody(body, activeLabel);
-
-  const header = `CAVEMAN MODE ACTIVE — level: ${activeLabel}\n\n`;
-  const text = "\n\n" + header + filtered;
+  const text =
+    `\n\nCAVEMAN MODE ACTIVE — level: ${activeLabel}\n` +
+    COMMON_RULES +
+    MODE_RULES[mode];
   const sourceHash = crypto
     .createHash("sha256")
     .update(text)
     .digest("hex")
-    .slice(0, 16);
+    .substring(0, 16);
 
   return { mode, text, sourceHash };
 }

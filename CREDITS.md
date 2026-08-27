@@ -1,44 +1,17 @@
 # Credits
 
-## caveman upstream
+## caveman
 
-caveman-milk-pi is a pi-native port of caveman by Julius Brussee.
+caveman-milk-pi adapts the caveman response style by [Julius Brussee](https://github.com/JuliusBrussee). The original [caveman repository](https://github.com/JuliusBrussee/caveman) uses the MIT license.
 
-- **Project:** caveman
-- **Author:** Julius Brussee ([@JuliusBrussee](https://github.com/JuliusBrussee))
-- **Repository:** https://github.com/JuliusBrussee/caveman
-- **License:** MIT
-- **Used from:** `skills/caveman/SKILL.md` — the canonical caveman ruleset
+Review used commit `17f9f2ec2377b0bfe16b52ee03a462e7f0a02bc8` from 2026-08-25. The source path was `skills/caveman/SKILL.md`. Vendored file `skill/SKILL.md` matches that source.
 
-The ruleset text, intensity levels (lite/full/ultra + wenyan variants),
-auto-clarity exemptions, and behavior examples are Julius's work. This
-extension ports that ruleset into pi's extension system with cache-safe
-injection and pi-native toggling.
+Runtime injection uses smaller constants derived from core upstream behavior. Upstream reductions from selected workloads do not transfer automatically to this extension. Upstream `docs/HONEST-NUMBERS.md` explains its measurement limits.
 
-### Vendored SKILL.md version
+## Pi
 
-- Upstream commit: `c2ed24b3e5d412cd0c25197b2bc9af587621fd99`
-- Last sync: 2026-04-16 (initial vendoring)
-- Source path: `skills/caveman/SKILL.md`
+This package uses the documented API from [pi-mono](https://github.com/badlogic/pi-mono). It registers `session_start`, `before_agent_start`, `registerCommand`, and `ctx.ui.setStatus`.
 
-Locally, the vendored `skill/SKILL.md` appends a `## Document Exemption`
-section added by caveman-milk-pi (not in upstream). This exemption instructs
-the model to use full prose for long-form documents when caveman is active.
+## Related projects
 
-To update: run `bash scripts/sync-skill.sh`, review the diff, commit.
-
-## pi / pi-mono
-
-Built as an extension for pi (pi-mono) by Mario Zechner:
-
-- https://github.com/badlogic/pi-mono
-
-Uses the documented extension API (`before_agent_start`,
-`session_start`, `registerCommand`).
-
-## Stacks cleanly with
-
-- **condensed-milk** (`@tomooshi/condensed-milk` / pi extension) —
-  tool output compression
-- **pi-vcc** by sting8k (`@sting8k/pi-vcc`) —
-  algorithmic conversation compaction
+[condensed-milk](https://github.com/tomooshi/condensed-milk-pi) compresses tool output and older context. [pi-vcc](https://github.com/sting8k/pi-vcc) provides conversation compaction. These projects remain independent. Compatibility depends on matched tests against selected versions.

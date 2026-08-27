@@ -1,7 +1,7 @@
 // Config load/save for caveman-milk-pi.
 //
 // Transform: ~/.config/caveman-milk-pi.json  ->  CavemanConfig
-// Fail loud per ADR-012 — no silent defaults on invalid data.
+// Invalid data stops loading instead of falling back to partial defaults.
 //
 // The "default config when file missing" case is NOT a fallback on
 // error. A missing file is a valid first-run state that we write a
@@ -12,6 +12,7 @@
 // transitioning to v0.2.x get their persisted mode preserved with
 // no manual action.
 
+import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
@@ -22,14 +23,31 @@ const CONFIG_DIR = path.join(os.homedir(), ".config");
 const CONFIG_PATH = path.join(CONFIG_DIR, "caveman-milk-pi.json");
 const LEGACY_CONFIG_PATH = path.join(CONFIG_DIR, "pi-caveman.json");
 
-function migrateLegacyConfig(): void {
-  if (fs.existsSync(LEGACY_CONFIG_PATH) && !fs.existsSync(CONFIG_PATH)) {
-    fs.renameSync(LEGACY_CONFIG_PATH, CONFIG_PATH);
+export function getConfigPath(): string {
+  return CONFIG_PATH;
+}
+
+function validateConfigPath(configPath: string): void {
+  if (configPath.length === 0) {
+    throw new Error("caveman-milk-pi config path must not be empty.");
+  }
+  if (!path.isAbsolute(configPath)) {
+    throw new Error(`caveman-milk-pi config path must be absolute: ${configPath}`);
   }
 }
 
-export function getConfigPath(): string {
-  return CONFIG_PATH;
+function rejectUnknownFields(
+  config: Record<string, unknown>,
+  allowedFields: readonly string[],
+): void {
+  const allowed = new Set(allowedFields);
+  const unknownFields = Object.keys(config).filter((field) => !allowed.has(field));
+  if (unknownFields.length > 0) {
+    throw new Error(
+      `caveman-milk-pi config: unknown field${unknownFields.length === 1 ? "" : "s"} ` +
+        `'${unknownFields.join("', '")}'.`,
+    );
+  }
 }
 
 export function validateMode(raw: unknown): CavemanMode {
@@ -50,40 +68,129 @@ export function validateMode(raw: unknown): CavemanMode {
   return raw as CavemanMode;
 }
 
-export function loadConfig(): CavemanConfig {
-  // One-time migration from old config file name (v0.1.x -> v0.2.x).
-  migrateLegacyConfig();
+export function validateConfigShape(raw: unknown): CavemanConfig {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+    throw new Error(
+      `caveman-milk-pi config at ${CONFIG_PATH} is not a JSON object. ` +
+        "Delete the file to reset to defaults.",
+    );
+  }
+  const obj = raw as Record<string, unknown>;
+  if (obj.schemaVersion !== 1) {
+    throw new Error(
+      `caveman-milk-pi config: unsupported schemaVersion '${String(obj.schemaVersion)}'. ` +
+        "Delete the file to reset to defaults.",
+    );
+  }
+  rejectUnknownFields(obj, ["schemaVersion", "mode", "showStatus"]);
+  const mode = validateMode(obj.mode);
+  if (typeof obj.showStatus !== "boolean") {
+    throw new Error("caveman-milk-pi config: showStatus must be a boolean.");
+  }
+  return { schemaVersion: 1, mode, showStatus: obj.showStatus };
+}
 
-  // Missing file is first-run, not an error. Create default and return it.
-  if (!fs.existsSync(CONFIG_PATH)) {
-    saveConfig(DEFAULT_CONFIG);
+export function migrateLegacyConfigShape(raw: unknown): CavemanConfig {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+    throw new Error("caveman-milk-pi config: legacy value must be an object.");
+  }
+  const obj = raw as Record<string, unknown>;
+  rejectUnknownFields(obj, ["mode", "enabled", "showStatus"]);
+  if (obj.enabled !== undefined && typeof obj.enabled !== "boolean") {
+    throw new Error("caveman-milk-pi config: legacy enabled must be a boolean.");
+  }
+  const showStatus = obj.showStatus === undefined ? true : obj.showStatus;
+  if (typeof showStatus !== "boolean") {
+    throw new Error("caveman-milk-pi config: showStatus must be a boolean.");
+  }
+  return { schemaVersion: 1, mode: validateMode(obj.mode), showStatus };
+}
+
+export function loadConfigAtPath(
+  configPath: string,
+  legacyConfigPath?: string,
+): CavemanConfig {
+  validateConfigPath(configPath);
+  if (legacyConfigPath !== undefined) validateConfigPath(legacyConfigPath);
+  if (
+    legacyConfigPath !== undefined &&
+    fs.existsSync(legacyConfigPath) &&
+    !fs.existsSync(configPath)
+  ) {
+    fs.mkdirSync(path.dirname(configPath), { recursive: true });
+    fs.renameSync(legacyConfigPath, configPath);
+  }
+
+  if (!fs.existsSync(configPath)) {
+    saveConfigAtPath(DEFAULT_CONFIG, configPath);
     return { ...DEFAULT_CONFIG };
   }
 
-  // Present file must parse cleanly. Fail loud otherwise.
-  const raw = fs.readFileSync(CONFIG_PATH, "utf8");
-  const parsed = JSON.parse(raw) as unknown;
-
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(fs.readFileSync(configPath, "utf8")) as unknown;
+  } catch (error) {
+    throw new Error(`caveman-milk-pi config at ${configPath} contains invalid JSON.`, {
+      cause: error,
+    });
+  }
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
     throw new Error(
-      `caveman-milk-pi config at ${CONFIG_PATH} is not a JSON object. ` +
-        `Delete the file to reset to defaults.`,
+      `caveman-milk-pi config at ${configPath} is not a JSON object. ` +
+        "Delete the file to reset to defaults.",
     );
   }
 
-  const obj = parsed as Record<string, unknown>;
-  const mode = validateMode(obj.mode);
-  const enabled = typeof obj.enabled === "boolean" ? obj.enabled : true;
-  const showStatus = typeof obj.showStatus === "boolean" ? obj.showStatus : true;
-  return { mode, enabled, showStatus };
+  if (!("schemaVersion" in parsed)) {
+    const migrated = migrateLegacyConfigShape(parsed);
+    saveConfigAtPath(migrated, configPath);
+    return migrated;
+  }
+
+  return validateConfigShape(parsed);
+}
+
+export function loadConfig(): CavemanConfig {
+  return loadConfigAtPath(CONFIG_PATH, LEGACY_CONFIG_PATH);
+}
+
+export function saveConfigAtPath(
+  config: CavemanConfig,
+  configPath: string,
+): void {
+  validateConfigPath(configPath);
+  validateConfigShape(config);
+  const configDirectory = path.dirname(configPath);
+  fs.mkdirSync(configDirectory, { recursive: true });
+
+  const randomSuffix = crypto.randomBytes(8).toString("hex");
+  const tempPath = path.join(
+    configDirectory,
+    `.${path.basename(configPath)}.${process.pid}.${randomSuffix}.tmp`,
+  );
+
+  try {
+    fs.writeFileSync(tempPath, JSON.stringify(config, null, 2) + "\n", {
+      encoding: "utf8",
+      flag: "wx",
+      mode: 0o600,
+    });
+    fs.renameSync(tempPath, configPath);
+  } catch (error) {
+    try {
+      fs.unlinkSync(tempPath);
+    } catch (cleanupError) {
+      if ((cleanupError as NodeJS.ErrnoException).code !== "ENOENT") {
+        throw new AggregateError(
+          [error, cleanupError],
+          "caveman-milk-pi config write and temporary-file cleanup both failed.",
+        );
+      }
+    }
+    throw error;
+  }
 }
 
 export function saveConfig(config: CavemanConfig): void {
-  if (!fs.existsSync(CONFIG_DIR)) {
-    fs.mkdirSync(CONFIG_DIR, { recursive: true });
-  }
-  // Atomic write: write to tmp then rename
-  const tmpPath = `${CONFIG_PATH}.tmp`;
-  fs.writeFileSync(tmpPath, JSON.stringify(config, null, 2) + "\n", "utf8");
-  fs.renameSync(tmpPath, CONFIG_PATH);
+  saveConfigAtPath(config, CONFIG_PATH);
 }

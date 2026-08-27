@@ -1,229 +1,154 @@
 # caveman-milk-pi
 
-A [pi](https://github.com/badlogic/pi-mono) extension that injects [caveman](https://github.com/JuliusBrussee/caveman) terseness rules into pi's system prompt. Shorter chat output, without breaking the prompt cache.
+caveman-milk-pi is an opt-in [Pi](https://github.com/badlogic/pi-mono) extension. It adds compact response-style rules to Pi's system prompt.
 
-Cache-safe. Opt-in. Designed to stack cleanly with [condensed-milk](https://github.com/tomooshi/condensed-milk-pi) and [pi-vcc](https://github.com/sting8k/pi-vcc).
+## Behavior
 
-## What it does
+Active modes add deterministic prompt text. Mode `off` adds nothing and remains the default.
 
-Caveman is a prompt-engineering technique that reduces assistant chat output by dropping filler, articles, and pleasantries while preserving technical substance. caveman-milk-pi brings this into pi as a native extension with programmatic toggling.
+The extension computes prompt text during `session_start`. The `before_agent_start` handler only appends cached text.
 
-Upstream caveman benchmarks claim ~30–70% reduction depending on prompt type. caveman-milk-pi has not yet performed independent benchmarks; observed terseness on Opus 4.7 in live sessions is qualitative and noticeable but not yet quantified.
+The rules shorten chat responses. They do not compress context, tool results, files, code, comments, commits, PR text, or model reasoning.
 
-| Feature | Status |
-|--------|--------|
-| **Cache-safe** | Injection bytes are static per mode (verified by 18 deterministic tests). Live observation: cached prefix reusable across turns. Controlled A/B not yet measured. |
-| **Opt-in** | Default mode is `off`. Baseline pi behavior unchanged on install. |
-| **Tool-args exempt** | Code, file contents, tool arguments, and thinking traces are never terse-ified by design. Not yet stress-tested with v0.1.1. |
-| **Document exemption** | Long-form prose drafts produce full grammar (v0.1.1 narrowed the rule scope after v0.1.0 over-exempted technical Q&A). Not 100% reliable; manual workflow available as fallback. |
-| **Plays nicely** | Uses only documented pi extension hooks. Zero overlap with condensed-milk or pi-vcc, verified by reading pi-mono source. Three-way stack run successfully for ~10 turns. |
+Persisted content and tool arguments use normal prose. Security warnings, irreversible confirmations, ordered safety steps, and clarification requests use clear prose.
 
-## Quick Start
+Caveman can lose on already-terse tasks. Each active turn has fixed prompt overhead. Compare matched provider totals before selecting a mode.
+
+Output-token reduction alone does not establish lower total cost.
+
+## Prompt footprint
+
+The compact generator replaces the former filtered-markdown injector. Measurements use JavaScript character counts and a four-characters-per-token estimate.
+
+| Mode | Former characters | Current characters | Former estimated tokens | Current estimated tokens |
+| --- | ---: | ---: | ---: | ---: |
+| `lite` | 4,276 | 641 | 1,069 | 161 |
+| `full` | 4,216 | 648 | 1,054 | 162 |
+| `ultra` | 4,213 | 685 | 1,054 | 172 |
+| `wenyan-lite` | 4,103 | 703 | 1,026 | 176 |
+| `wenyan` | 4,262 | 720 | 1,066 | 180 |
+| `wenyan-ultra` | 4,158 | 733 | 1,040 | 184 |
+
+All active prompts remain below the 800-character limit. Exact token counts vary by provider tokenizer.
+
+## Install
 
 ```bash
 pi install npm:@tomooshi/caveman-milk-pi
-# or from source:
-pi install https://github.com/tomooshi/caveman-milk-pi
 ```
 
-Then inside pi:
+Activate a mode inside Pi:
 
-```
+```text
+/caveman lite
 /caveman full
+/caveman ultra
 ```
 
-That's it. Your next chat turn will be terse. Run `/caveman off` to disable.
+Disable the extension with `/caveman off`.
 
 ## Modes
 
-```
-/caveman               # show current mode and usage
-/caveman off           # disable injection (default on install)
-/caveman lite          # drop filler, keep full sentences and grammar
-/caveman full          # classic caveman — fragments, short synonyms
-/caveman ultra         # maximum compression, abbreviations, arrows
-/caveman wenyan-lite   # semi-classical Chinese terseness
-/caveman wenyan        # full 文言文 — classical literary Chinese
-/caveman wenyan-ultra  # extreme classical abbreviation
-```
-
-Your mode persists to `~/.config/caveman-milk-pi.json` and survives pi restarts and `/reload`.
-
-### Statusbar
-
-By default the extension publishes `caveman: <mode>` to the pi footer. Hide it without changing mode:
-
-```
-/caveman status off    # hide footer entry (mode keeps running)
-/caveman status on     # show again
+```text
+/caveman               show current mode and usage
+/caveman off           disable prompt injection
+/caveman lite          use concise complete sentences
+/caveman full          use concise sentences or clear fragments
+/caveman ultra         use the fewest clear words
+/caveman wenyan-lite   use light literary Chinese for Chinese input
+/caveman wenyan        use literary Chinese for Chinese input
+/caveman wenyan-ultra  use compressed literary Chinese for Chinese input
 ```
 
-The `showStatus` flag is persisted alongside `mode`.
+Wenyan modes affect Chinese input only. English prompts remain English.
 
-### Examples
+Technical terms, commands, identifiers, quoted errors, and persisted content keep their appropriate original language.
 
-**"Why is my React component re-rendering?"**
+## Status and diagnostics
 
-- `lite`: *"Your component re-renders because you create a new object reference each render. Wrap it in `useMemo`."*
-- `full`: *"New object ref each render. Inline object prop = new ref = re-render. Wrap in `useMemo`."*
-- `ultra`: *"Inline obj prop → new ref → re-render. `useMemo`."*
+The footer shows `caveman: <mode>` by default.
 
-Same answer. You pick how many words.
-
-## Default is `off` (differs from upstream caveman)
-
-Upstream caveman auto-activates on install. caveman-milk-pi does not. We prefer explicit consent — the baseline pi experience is unchanged until you type `/caveman full`. Your mode persists after that, so it's a one-time decision.
-
-If you want caveman always-on across all sessions, run `/caveman full` once. The config file records your preference and every future session starts with caveman active at that level.
-
-## Document drafting
-
-Long-form documents (READMEs, ADRs, design docs, tutorials, emails) should use full grammar, not caveman style. caveman-milk-pi's vendored SKILL.md includes an explicit Document Exemption rule that tells the model to produce normal prose for these tasks even when caveman is active.
-
-**This works most of the time, but it is not 100% reliable.** The exemption depends on the model honoring an instruction in its system prompt. Opus 4.7's stricter instruction following makes compliance more consistent than on earlier models, but you may occasionally see a model produce a gruntified document anyway.
-
-If that happens, use the manual workflow:
-
-```
-/caveman off
-# ... draft your document ...
-/caveman full
+```text
+/caveman status off    hide the footer entry without changing mode
+/caveman status on     show the footer entry
+/caveman diff          show cached mode, hash, size, token estimate, and prompt text
 ```
 
-Each switch causes exactly one cache miss at the system prompt breakpoint, then cache hits resume. The cost is negligible compared to a long drafting session.
+## Configuration
 
-Tool call arguments (contents of `Write(...)`, `Edit(...)`) are always normal code or prose regardless of caveman mode. This is enforced by both caveman's ruleset and by how models treat structured tool arguments.
+Configuration is stored at `~/.config/caveman-milk-pi.json`.
 
-### v0.1.1 exemption scope
-
-The Document Exemption rule was tightened in v0.1.1 after live dogfooding showed the v0.1.0 rule was too permissive (it treated most technical Q&A as exempt, defeating caveman's persistence for chat). The current rule:
-
-- **Exempts:** explicit document drafts, markdown files written to disk, extended tutorials the user explicitly requests (>3 paragraphs of instructional prose), emails or PR descriptions the user asks to draft, content inside Write/Edit tool arguments
-- **Does NOT exempt:** technical Q&A ("what do you think", "is this correct", "explain X"), comparisons, recommendations, code review, debugging analysis, status updates
-
-If you observe verbose chat responses despite caveman being active, run `/caveman diff` first to confirm the v0.1.1 SKILL is loaded (look for the "Persistence Anchor — Bottom" section in the output).
-
-## What caveman does NOT affect
-
-- **Thinking / reasoning tokens** — caveman is a system prompt rule, applied only to final chat output. Thinking traces are untouched (confirmed by upstream caveman docs and pi-ai's separate handling of `thinking` blocks).
-- **Tool arguments** — `Write`, `Edit`, `Bash` commands are designed to receive normal content. The vendored SKILL explicitly says "Code/commits/PRs: write normal" and "Content inside Write/Edit tool call arguments — always normal prose." Not yet independently stress-tested in this fork; report regressions if you see them.
-- **Tool results you read** — file contents, bash output, and search results pass through unchanged. (For compression of those, see condensed-milk.)
-- **Error messages and confirmations** — caveman's auto-clarity exemption kicks in for security warnings and irreversible-action prompts.
-
-## What we verified
-
-Claims in this README that are backed by actual measurement on this fork (Opus 4.7, full caveman + condensed-milk + pi-vcc stack):
-
-| Claim | How verified |
-|-------|--------------|
-| Injection bytes are deterministic per mode | 18 unit tests pass, all asserting byte-identical output across repeated calls |
-| Injection bytes contain expected mode-specific intensity row | 18 unit tests covering all 7 modes |
-| Cache prefix remains reusable with caveman active | Controlled A/B: P1 activation-turn delta = −1% (92% with caveman=full vs 93% with caveman=off), within the ±1% architectural target |
-| Code written via Write tool is full prose, not gruntified | Wrote a real Python file with caveman=full active; docstrings + comments rendered as full grammar (test-fib.py with Args/Returns/Raises sections) |
-| `/caveman diff` reports current injection state correctly | Live verification: diff output showed correct mode, hash, and full SKILL content |
-| Document Exemption v0.1.1 rule produces terse chat for technical Q&A | Live verification: after the v0.1.1 fix, technical questions consistently produced caveman-style fragmented responses |
-| Zero handler conflict with enforcement extensions that also use `before_agent_start` | Source audit confirmed: maintainer's enforcement extension explicitly avoids modifying systemPrompt for caching reasons. caveman is the only systemPrompt mutator in the documented stack |
-| Compatibility with condensed-milk and pi-vcc | Three-way stack ran cleanly for ~10+ turns with no crashes, command collisions, or extension errors |
-| `wenyan-full` mode produces correct classical Chinese | Live test on Opus 4.7: SKILL parser correctly filters to only the `wenyan-full` intensity row (no leakage from other modes), CJK content survives injection round-trip, model output matches classical register criteria (verb-object order, classical particles 之/故, technical terms preserved as English, ~70% character density vs English equivalent) |
-
-## Not yet verified
-
-Claims that are architecturally sound but not yet backed by measurement:
-
-| Claim | What's needed |
-|-------|---------------|
-| Cache hit-rate delta in tool-heavy long-form workloads | A/B verified for the 5-prompt mixed-content scenario. Workloads dominated by large tool outputs (heavy file reads, big bash returns) may show different cache dynamics and have not been measured. |
-| `wenyan-lite` and `wenyan-ultra` modes | `wenyan-full` was validated in v0.1.4. The other two classical Chinese variants are not yet verified. SKILL.md file-level integrity confirmed for all three, so the storage layer is fine; what remains is runtime behavior testing for the lite and ultra variants. |
-| Caveman persistence holds across 30+ turn sessions | Real long-session work with sample points at turn 5, 15, 30. Score caveman compliance against a 5-point rubric. |
-| Tool-call quality holds in `ultra` mode (more aggressive than `full`) | Same Write/Edit test as v0.2.0-01 but with `/caveman ultra` |
-| Larger files (500+ lines) don't trigger caveman drift in tool args | Write or Edit a substantial file with caveman=full. Inspect for fragmentation. |
-
-If you run any of these tests, results are welcome as PRs to the upstream caveman project or as issues here.
-
-## Compatibility with other extensions
-
-caveman-milk-pi operates on the system prompt via pi's `before_agent_start` hook. It does not touch tool results, message history, or compaction. This means it stacks cleanly with:
-
-### condensed-milk
-
-Compresses tool output (bash, reads, grep, build logs, test runners) and stale history messages. Runs on `tool_execution_end` and `context` hooks — entirely different from caveman's hook. Zero overlap. Different commands (`/compress-stats`, `/compress-config` vs `/caveman`).
-
-### pi-vcc
-
-Algorithmic conversation compactor. Runs on `session_before_compact` — not touched by caveman. Bonus property: pi-vcc replaces pi's default LLM-based summarization, which means caveman cannot affect summary quality even in degenerate cases. Running all three together is strictly safer than running caveman with pi's default compactor.
-
-### The full stack
-
-| Layer | Extension |
-|-------|-----------|
-| System prompt | caveman-milk-pi |
-| Tool output (write-time) | condensed-milk |
-| Message history (retroactive) | condensed-milk |
-| Compaction summary | pi-vcc |
-
-Each owns one event, one transform, one concern. None share state.
-
-## Cache safety
-
-caveman-milk-pi is designed around one invariant: the injected text is a pure function of `(mode, SKILL.md)`. Nothing else influences injection bytes — no timestamps, no turn counters, no session IDs, no per-request filesystem reads.
-
-This means Anthropic's prompt cache stays warm across turns. Mode changes cause exactly one cache miss (expected, user-initiated), then cache hits resume.
-
-**Cache safety (measured).** Controlled A/B with identical 5-prompt scripted workload across two fresh sessions shows a **−1% cache-hit delta on the caveman activation turn** (92% with caveman=full vs 93% with caveman=off), well within the ±1% architectural target. The system-prompt injection lands after the cacheable prefix breakpoint and does not invalidate the prior cached context. Steady-state turns showed a **+10.8% mean hit-rate improvement** with caveman=full, but this is driven by shorter assistant outputs producing smaller cache-write tails on each turn — a second-order benefit of brevity, not a property of the cache-breakpoint placement. Total session cost dropped 55% in the caveman=full A/B run.
-
-Further backing: 18 deterministic unit tests confirm injection bytes are byte-identical per mode and stable across repeated computations. Full A/B numbers in the maintainer's measurement notes.
-
-The full set of invariants:
-
-1. Injection is a pure function of `(mode, SKILL.md)` — no timestamps, counters, or per-request content
-2. Mode change is the only valid cache invalidation trigger
-3. No filesystem reads during `before_agent_start` — injection cached in memory
-4. No conditional content varying per request
-5. Config file changes take effect at next session start, not mid-session
-6. No `cache_control` manipulation — pi-ai owns placement
-7. No `anthropic-beta` header injection
-8. SKILL.md content is append-only to systemPrompt
-
-## Diagnostic: `/caveman diff`
-
-If caveman seems to not be reducing your output tokens as expected, run:
-
-```
-/caveman diff
+```json
+{
+  "schemaVersion": 1,
+  "mode": "off",
+  "showStatus": true
+}
 ```
 
-This prints the current mode, the cached injection hash, and the full text that is being appended to your system prompt. Use this to verify the extension is active and that the injection content matches what you expect for your mode.
+The loader migrates older flat configuration. It also migrates the former `~/.config/pi-caveman.json` filename.
 
-If the injection text is empty (mode=off) or shows a mode other than what you set, run `/caveman <mode>` to correct it. If `/caveman diff` says the cache is not initialized, run `/reload` or restart pi.
+Unknown schema versions and invalid field types stop loading with a specific error.
 
-## Troubleshooting
+Writes use a random temporary filename in the configuration directory. The extension renames that file atomically and removes it after failures.
 
-**`caveman-milk-pi could not load SKILL.md at <path>`**
+## Cache behavior
 
-The vendored SKILL.md is missing. Reinstall the extension or verify `skill/SKILL.md` exists in the extension directory.
+Prompt bytes depend only on the selected mode and committed runtime constants.
 
-**`caveman-milk-pi SKILL.md ... is empty`** or **`is malformed`**
+They contain no timestamps, counters, session identifiers, request text, or filesystem data.
 
-The vendored file was corrupted. Restore via `bash scripts/sync-skill.sh`, review the diff, and commit.
+Repeated calls within one mode return identical text. A mode change intentionally changes the system prompt.
 
-**`caveman-milk-pi config: invalid mode 'X'`**
+## Evaluation
 
-The config file has an unknown mode. Delete `~/.config/caveman-milk-pi.json` to reset to defaults, or edit it to use one of the valid modes.
+The repository includes 15 deterministic fixtures across seven modes. The matrix contains 105 matched cases.
 
-**`caveman-milk-pi config ... is not a JSON object`**
+Fixtures cover technical explanations, comparisons, critical negation, ordered migrations, warnings, and confirmations. They also cover persisted content, tutorials, clarification, and Wenyan language behavior.
 
-The config file is corrupted. Delete `~/.config/caveman-milk-pi.json` to reset.
+Offline validation checks fixture structure, matrix size, prompt parity, and prompt length.
 
-**Extension not activating on new session**
+```bash
+npm run evaluate:offline
+```
 
-caveman-milk-pi only runs when pi's extension loader discovers it. Verify the install path with `pi install --list` or check that `@tomooshi/caveman-milk-pi` is in your pi settings `packages` array.
+Provider execution is disabled by default. It requires a key, a model name, and explicit paid-run authorization.
 
-## Credits
+```bash
+CAVEMAN_EVAL_PROVIDER=anthropic \
+CAVEMAN_EVAL_ALLOW_PAID=1 \
+ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
+CAVEMAN_EVAL_MODEL="$CAVEMAN_EVAL_MODEL" \
+CAVEMAN_EVAL_OUTPUT="evaluation-report.json" \
+npm run evaluate
+```
 
-Based on [caveman](https://github.com/JuliusBrussee/caveman) by Julius Brussee (MIT). The ruleset, intensity levels, and exemption concepts are Julius's work — this extension ports them into pi's extension system with cache-safe injection and native toggling. See [CREDITS.md](./CREDITS.md) for the pinned upstream SHA.
+`CAVEMAN_EVAL_MODES` and `CAVEMAN_EVAL_CATEGORIES` accept comma-separated filters. Filters support smaller controlled runs before the full matrix.
 
-pi extension system by [Mario Zechner](https://github.com/badlogic/pi-mono).
+Provider reports include responses, timing, tool-call counts, word ratios, term retention, threshold status, and provider usage fields.
+
+The provider runner does not infer monetary cost. It does not publish an aggregate savings percentage.
+
+## Development
+
+```bash
+npm ci
+npm test
+npm run typecheck
+npm run evaluate:offline
+npm pack --dry-run
+```
+
+The development dependency targets Pi `0.84.3`. Current Pi event types include all session-start reasons used by the extension.
+
+## Upstream and credits
+
+Rules were reviewed against caveman commit `17f9f2ec2377b0bfe16b52ee03a462e7f0a02bc8`, dated 2026-08-25.
+
+Runtime injection uses purpose-built compact constants. `skill/SKILL.md` preserves the reviewed upstream artifact byte for byte.
+
+See [CREDITS.md](./CREDITS.md) for source details and licensing.
 
 ## License
 
-MIT, matching upstream caveman.
+MIT.

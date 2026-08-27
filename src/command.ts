@@ -1,17 +1,18 @@
 // /caveman slash command: display status or switch mode.
 //
-// Mode changes are the only legitimate cache-invalidation trigger
-// (ADR-015). Takes effect on the NEXT before_agent_start call.
+// Mode changes are the only prompt-cache invalidation trigger.
+// A change takes effect on the next before_agent_start call.
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import type { CavemanConfig, CavemanMode, InjectionCache } from "./types.js";
 import { VALID_MODES } from "./types.js";
-import { validateMode, loadConfig } from "./config.js";
-import { computeInjection, loadSkillContent } from "./injection.js";
+import { validateMode } from "./config.js";
+import { computeInjection } from "./injection.js";
 
 export interface CommandDeps {
   getCache: () => InjectionCache | null;
   setCache: (cache: InjectionCache) => void;
+  loadConfig: () => CavemanConfig;
   persist: (config: CavemanConfig) => void;
 }
 
@@ -25,7 +26,7 @@ export function registerCavemanCommand(pi: ExtensionAPI, deps: CommandDeps): voi
       if (trimmed.length === 0) {
         const current = deps.getCache();
         const mode = current?.mode ?? "off";
-        const showStatus = loadConfig().showStatus;
+        const showStatus = deps.loadConfig().showStatus;
         ctx.ui.notify(
           `caveman: ${mode} (statusbar: ${showStatus ? "on" : "off"}). ` +
             `Run /caveman <mode> to change. Valid: ${VALID_MODES.join(", ")}. ` +
@@ -36,7 +37,7 @@ export function registerCavemanCommand(pi: ExtensionAPI, deps: CommandDeps): voi
       }
 
       if (trimmed.startsWith("status")) {
-        const arg = trimmed.slice("status".length).trim();
+        const arg = trimmed.substring("status".length).trim();
         if (arg !== "on" && arg !== "off") {
           ctx.ui.notify(
             `caveman: invalid status arg '${arg}'. Usage: /caveman status on|off`,
@@ -45,7 +46,7 @@ export function registerCavemanCommand(pi: ExtensionAPI, deps: CommandDeps): voi
           return;
         }
         const show = arg === "on";
-        const config: CavemanConfig = { ...loadConfig(), showStatus: show };
+        const config: CavemanConfig = { ...deps.loadConfig(), showStatus: show };
         deps.persist(config);
         if (show) {
           const current = deps.getCache();
@@ -63,7 +64,7 @@ export function registerCavemanCommand(pi: ExtensionAPI, deps: CommandDeps): voi
         return;
       }
 
-      // Diagnostic: dump the cached injection text so user can verify what the model actually sees.
+      // Show the exact cached text that the next model request will receive.
       if (trimmed === "diff") {
         const current = deps.getCache();
         if (!current) {
@@ -79,18 +80,18 @@ export function registerCavemanCommand(pi: ExtensionAPI, deps: CommandDeps): voi
           `mode: ${current.mode}\n` +
           `hash: ${current.sourceHash}\n` +
           `length: ${current.text.length} chars\n` +
+          `approximate tokens: ${Math.ceil(current.text.length / 4)}\n` +
           `--- injection text ---\n${text}\n--- end ---`;
         ctx.ui.notify(info, "info");
         return;
       }
 
-      // validateMode throws on invalid input. Errors surface via pi's error listener.
+      // Invalid modes throw and surface through Pi's extension error handling.
       const newMode: CavemanMode = validateMode(trimmed);
-      const config: CavemanConfig = { ...loadConfig(), mode: newMode };
+      const config: CavemanConfig = { ...deps.loadConfig(), mode: newMode };
       deps.persist(config);
 
-      const skillContent = loadSkillContent();
-      const newCache = computeInjection(newMode, skillContent);
+      const newCache = computeInjection(newMode);
       deps.setCache(newCache);
 
       if (config.showStatus) {

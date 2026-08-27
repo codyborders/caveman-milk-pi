@@ -1,91 +1,61 @@
 # Changelog
 
-All notable changes to caveman-milk-pi are documented in this file.
+This file records caveman-milk-pi releases. Version numbers follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [0.2.0] - 2026-04-16
-
-### Changed (BREAKING)
-
-- **npm package renamed:** `@tomooshi/pi-caveman` → `@tomooshi/caveman-milk-pi`. Install command is now `pi install npm:@tomooshi/caveman-milk-pi`.
-- **Config file path renamed:** `~/.config/pi-caveman.json` → `~/.config/caveman-milk-pi.json`. **Auto-migration shipped:** on first load after upgrade, if the legacy file exists and the new path does not, it is renamed (preserves your persisted mode with no manual action). The migration is one-shot and silent. After the first session post-upgrade you can verify with `ls ~/.config/caveman-milk-pi.json`.
-- Both renames bring the project into full alignment with the repo name `caveman-milk-pi`.
-
-## [0.1.5] - 2026-04-16
-
-### Changed
-
-- **Project name aligned with repo name in user-facing copy.** README, CHANGELOG, code comments, and error messages now refer to the project as `caveman-milk-pi` (matching the GitHub repo). The npm package name and config file path were intentionally deferred to v0.2.0 to keep this release non-breaking.
-
-## [0.1.4] - 2026-04-16
-
-### Verified
-
-- **`wenyan-full` mode validated.** Live test on Opus 4.7 confirmed: SKILL parser correctly filters to only the `wenyan-full` intensity row (no leakage from other modes), CJK content survives injection round-trip, model output matches classical register criteria (verb-object order, classical particles 之/故, technical terms preserved as English, ~70% character density vs English equivalent). SKILL.md file-level integrity confirmed for all three wenyan variants (storage layer is fine for all of them).
-
-### Changed
-
-- **README "What we verified" table.** Added wenyan-full row with the validation criteria above.
-- **README "Not yet verified" table.** Replaced the generic "wenyan modes" entry with a more precise note that `wenyan-lite` and `wenyan-ultra` runtime behavior are still pending — file-level integrity already confirmed for all three.
-
-## [0.1.3] - 2026-04-16
-
-### Verified
-
-- **Cache safety claim now measured.** Controlled A/B with identical 5-prompt scripted workload (Opus 4.7, full caveman + condensed-milk + pi-vcc stack) showed a **−1% cache-hit delta on the caveman activation turn** (92% with caveman=full vs 93% with caveman=off), well within the ±1% architectural target. The injection lands after the cacheable prefix breakpoint and does not invalidate prior cached context. Steady-state showed +10.8% mean hit-rate improvement, but this is a second-order brevity effect (shorter outputs → smaller cache-write tails), not a cache-architecture property. Total A/B session cost dropped 55% with caveman=full.
-
-### Changed
-
-- **README cache-safety section.** Replaced soft "designed to be cache-safe" wording with measured P1 −1% delta plus the brevity-effect caveat, so users understand both the architectural property and the secondary cost win.
-- **README "What we verified" table.** Updated cache row from "diagnostic turn at 100% hit" to the controlled A/B P1 activation-turn delta.
-- **README "Not yet verified" table.** Removed the now-measured A/B claim; replaced with the more honest residual: tool-heavy long-form workloads (e.g. very large bash returns or file reads) have not been A/B'd and may show different cache dynamics.
-
-## [0.1.2] - 2026-04-16
+## Unreleased
 
 ### Added
 
-- **CHANGELOG.md.** Version history for v0.1.0 and v0.1.1, surfacing what was previously buried in git log.
-- **README "What we verified" section.** Lists the empirical tests that have actually been run against this fork, so users can distinguish measured claims from architectural ones.
-- **README "Not yet verified" section.** Honest list of validation work pending for v0.2.0 (controlled A/B cache measurement, wenyan mode validation, long-session drift check).
+Configuration now has schema validation and migration for older flat files. Atomic writes use random temporary names and clean failed writes.
+
+Tests now cover commands, Pi lifecycle hooks, configuration, prompt generation, and evaluation. Offline evaluation contains 105 matched cases. Anthropic execution requires explicit paid-run authorization.
 
 ### Changed
 
-- No behavior changes. Documentation only.
+Runtime prompts now use typed constants instead of filtered markdown. Active prompts contain 641 to 733 characters.
 
-## [0.1.1] - 2026-04-16
+Development now targets Pi `0.84.3`. Vendored rules match caveman commit `17f9f2ec2377b0bfe16b52ee03a462e7f0a02bc8`.
 
-### Fixed
+Documentation now separates prompt-size measurements from provider cost claims.
 
-- **Document Exemption rule was too permissive.** The v0.1.0 SKILL.md included an "Explanations the user asks for in detail" bullet that caused the model to treat most technical Q&A as exempt from caveman terseness. Live dogfooding confirmed the bug: caveman appeared inactive on chat responses despite mode=full. The rule has been narrowed to only exempt explicit document drafting requests. A new explicit DO-NOT-exempt list covers technical questions, comparisons, recommendations, code review, and debugging.
-- **Persistence drift over long sessions.** Added a second "Persistence Anchor — Bottom" section at the end of the SKILL so the rule is reinforced by recency bias on each model read.
+## 0.2.0 - 2026-04-16
 
-### Added
+The npm package changed from `@tomooshi/pi-caveman` to `@tomooshi/caveman-milk-pi`.
 
-- **`/caveman diff` diagnostic command.** Prints the current mode, cached injection hash, character length, and full injection text. Useful for verifying the extension is active, the correct mode is loaded, and the SKILL content matches expectations.
-- **Mixed-response example in SKILL.** Demonstrates how to handle a request that combines document drafting (full prose) with technical explanation (caveman). Helps the model understand the boundary.
+The config path changed from `~/.config/pi-caveman.json` to `~/.config/caveman-milk-pi.json`. First load moves the old file when needed.
 
-### Changed
+## 0.1.5 - 2026-04-16
 
-- **README cache-safety claim softened.** The v0.1.0 README claimed "Measured impact on cache hit rate with caveman active versus off: under 1% difference." That number was architectural, not measured. The README now states the architectural guarantee (verified by 18 deterministic tests) and notes that controlled A/B measurement against a matched no-caveman session is pending.
-- **README ADR links removed.** The v0.1.0 README linked to ADR files that exist only in the maintainer's private vault. Public users got broken relative paths. The 8 cache-safety invariants are now inlined directly in the README.
+User-facing project names changed to `caveman-milk-pi`. Package and config names remained unchanged until `0.2.0`.
 
-## [0.1.0] - 2026-04-16
+## 0.1.4 - 2026-04-16
 
-### Added
+A live Opus 4.7 check covered `wenyan-full`. It confirmed mode filtering, CJK round trips, classical register, and preserved English technical terms.
 
-- Initial release.
-- pi extension that injects caveman terseness rules into the system prompt via the `before_agent_start` hook.
-- Seven intensity modes: `off`, `lite`, `full`, `ultra`, `wenyan-lite`, `wenyan`, `wenyan-ultra`.
-- `/caveman <mode>` command for runtime mode switching.
-- Default mode `off` (opt-in, differs from upstream caveman's auto-activate behavior).
-- Document Exemption rule for long-form prose tasks.
-- Vendored caveman SKILL.md with sync script (`scripts/sync-skill.sh`).
-- Cache safety: injection bytes are a pure function of `(mode, SKILL.md)` — no per-request variation, no filesystem reads in the hot path.
-- Fail-loud error handling: missing or malformed SKILL.md crashes with actionable error messages.
-- 18 unit tests against the real vendored SKILL.md (no fixtures).
-- Stacks cleanly with [condensed-milk](https://github.com/tomooshi/condensed-milk-pi) (tool output compression) and [pi-vcc](https://github.com/sting8k/pi-vcc) (algorithmic compaction).
+`wenyan-lite` and `wenyan-ultra` still lacked equivalent runtime checks.
 
-### Credits
+## 0.1.3 - 2026-04-16
 
-Based on [caveman](https://github.com/JuliusBrussee/caveman) by Julius Brussee.
+A five-prompt Opus 4.7 comparison measured a one-point cache-hit decrease on activation. Results were 92 percent active and 93 percent inactive.
+
+Steady-state cache hits improved by 10.8 percent during that run. Shorter outputs caused smaller cache-write tails, so this was not a placement property.
+
+Total session cost fell by 55 percent in that workload. Tool-heavy workloads remained unmeasured.
+
+## 0.1.2 - 2026-04-16
+
+This release added the changelog and separated completed checks from pending checks. Runtime behavior did not change.
+
+## 0.1.1 - 2026-04-16
+
+Document exemption rules became narrower after technical chat bypassed terse output. Technical questions, comparisons, recommendations, reviews, and debugging stayed concise.
+
+A second persistence reminder reduced style drift in long sessions. `/caveman diff` began reporting mode, hash, length, and injected text.
+
+Broken private documentation links were removed. Cache claims were reduced until matched testing existed.
+
+## 0.1.0 - 2026-04-16
+
+Initial release added seven modes, persistent configuration, `/caveman`, status display, vendored rules, and deterministic prompt caching.
+
+Mode `off` was the installation default. The extension used `before_agent_start` without changing tool results or message history.

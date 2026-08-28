@@ -1571,9 +1571,13 @@ function defaultSpawn(args, options) {
     // shell shims in .bin are not portable either. Route them through the
     // current node executable so the same piBin value works everywhere.
     const isJavaScriptEntryPoint = /\.(js|mjs|cjs)$/.test(command);
+    // Pi reads stdin to EOF before acting, so a piped-but-never-closed
+    // stdin makes every non-interactive run hang until the spawn timeout.
+    // Ignore stdin instead: the child sees an immediately closed stream.
+    const stdio = ["ignore", "pipe", "pipe"];
     const child = isJavaScriptEntryPoint
-      ? nodeSpawn(process.execPath, [command, ...commandArgs], options)
-      : nodeSpawn(command, commandArgs, options);
+      ? nodeSpawn(process.execPath, [command, ...commandArgs], { ...options, stdio })
+      : nodeSpawn(command, commandArgs, { ...options, stdio });
     let stdout = "";
     let stderr = "";
     child.stdout?.on("data", (chunk) => {
@@ -1583,7 +1587,22 @@ function defaultSpawn(args, options) {
       stderr += chunk;
     });
     child.on("error", reject);
-    child.on("close", (code) => resolve({ code: code ?? 0, stdout, stderr }));
+    child.on("close", (code, signal) => {
+      if (code === null) {
+        // A signal kill (for example the spawn timeout) is an explicit
+        // failure. Mapping it to exit code 0 masks the termination as an
+        // empty-output success path downstream.
+        const timeoutNote =
+          options?.timeout !== undefined ? ` (spawn timeout ${options.timeout}ms)` : "";
+        reject(
+          new Error(
+            `pi runner terminated by signal ${signal ?? "unknown"} before exiting${timeoutNote}`,
+          ),
+        );
+        return;
+      }
+      resolve({ code, stdout, stderr });
+    });
   });
 }
 

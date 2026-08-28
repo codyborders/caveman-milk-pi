@@ -22,12 +22,12 @@ The compact generator replaces the former filtered-markdown injector. Measuremen
 
 | Mode | Former characters | Current characters | Former estimated tokens | Current estimated tokens |
 | --- | ---: | ---: | ---: | ---: |
-| `lite` | 4,276 | 665 | 1,069 | 166 |
-| `full` | 4,216 | 672 | 1,054 | 168 |
-| `ultra` | 4,213 | 709 | 1,054 | 177 |
-| `wenyan-lite` | 4,103 | 734 | 1,026 | 184 |
-| `wenyan` | 4,262 | 758 | 1,066 | 190 |
-| `wenyan-ultra` | 4,158 | 768 | 1,040 | 192 |
+| `lite` | 4,276 | 663 | 1,069 | 166 |
+| `full` | 4,216 | 670 | 1,054 | 168 |
+| `ultra` | 4,213 | 707 | 1,054 | 177 |
+| `wenyan-lite` | 4,103 | 732 | 1,026 | 183 |
+| `wenyan` | 4,262 | 756 | 1,066 | 189 |
+| `wenyan-ultra` | 4,158 | 766 | 1,040 | 192 |
 
 All active prompts remain below the 800-character limit. Exact token counts remain unreported until a provider count endpoint returns them.
 
@@ -194,6 +194,18 @@ Reports contain paired raw results and aggregate statistics. Aggregates cover in
 Every report records the Git commit, Pi version, Node version, platform, provider, model, fixture version, seed, run id, and execution order.
 
 The evaluation never publishes a savings percentage. Publish claims only from committed raw reports.
+
+### Evaluation status
+
+The paid benchmark-regression-v2 report records prompt contract v2 results. Its raw usage fields remain unchanged.
+
+The corrected offline rescore uses validator v3 and makes zero provider calls. It is separate from paid results.
+
+The current prompt contract v3 has not been tested. The prepared targeted 60-call regression command remains unexecuted.
+
+The prepared fresh-v1 180-call holdout command also remains unexecuted. Fresh-v1 is the release gate after regression-v2 passes.
+
+Mode `off` remains the default. Reported total tokens are usage, not cost. Provider-priced cost is calculated only when pricing values are known.
 
 ## Development
 

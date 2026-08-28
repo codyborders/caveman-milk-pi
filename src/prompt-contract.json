@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "commonRules": "Answer concisely in user's language. Remove filler; prefer replacement over repetition. Explicit output constraints outrank brevity. Requested exact phrases stay verbatim; negation stays intact. Protect file bodies, requested artifacts, tool arguments, quoted errors, code, identifiers, technical terms, exact values, warnings, ordered safety steps. Irreversible actions require a direct confirmation question, then wait for approval. Use complete prose for security warnings, irreversible confirmations, clarification, files, commits, PRs, documents, tutorials, and artifacts. ",
+  "commonRules": "Answer concisely in user's language. Remove filler; prefer replacement over repetition. Explicit output constraints outrank brevity. Requested exact phrases stay verbatim; negation stays intact. Protect file bodies, requested artifacts, tool arguments, quoted errors, code, identifiers, technical terms, exact values, warnings, ordered safety steps. When an action requires confirmation, ask a direct question and wait for approval. Use complete prose for security warnings, irreversible confirmations, clarification, files, commits, PRs, documents, tutorials, and artifacts. ",
   "modeRules": {
     "lite": "Use concise complete sentences with normal grammar.",
     "full": "Use concise sentences or clear fragments when unambiguous.",

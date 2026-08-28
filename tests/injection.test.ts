@@ -39,7 +39,7 @@ describe("computeInjection compact rules", () => {
   it("keeps explicit constraints, exact phrases, negation, and confirmation rules", () => {
     expect(promptContract.commonRules).toContain("Explicit output constraints outrank brevity.");
     expect(promptContract.commonRules).toContain("Requested exact phrases stay verbatim; negation stays intact.");
-    expect(promptContract.commonRules).toContain("Irreversible actions require a direct confirmation question, then wait for approval.");
+    expect(promptContract.commonRules).toContain("When an action requires confirmation, ask a direct question and wait for approval.");
     expect(promptContract.commonRules).toContain("prefer replacement over repetition");
   });
 

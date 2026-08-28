@@ -60,10 +60,15 @@ export function summarizeReport(report) {
   const results = Array.isArray(report.results) ? report.results : [];
   const judgeEnabled = report.judge?.enabled === true;
   const pricing = report.pricing ?? null;
-  const modeOrder = [];
+  const observedModes = [];
   for (const result of results) {
-    if (!modeOrder.includes(result.mode)) modeOrder.push(result.mode);
+    if (!observedModes.includes(result.mode)) observedModes.push(result.mode);
   }
+  const configuredModes = Array.isArray(report.modes) ? report.modes : [];
+  const modeOrder = [
+    ...configuredModes.filter((mode) => observedModes.includes(mode)),
+    ...observedModes.filter((mode) => !configuredModes.includes(mode)),
+  ];
   const modes = modeOrder.map((mode) => {
     const modeResults = results.filter((result) => result.mode === mode);
     const ratio = report.aggregates?.byMode?.[mode]?.outputTokenRatio ?? null;
@@ -96,6 +101,12 @@ export function summarizeReport(report) {
     runner: report.runner ?? null,
     model: report.model ?? null,
     seed: report.seed ?? null,
+    repetitions: report.repetitions ?? null,
+    categoryCount: Array.isArray(report.categories) ? report.categories.length : null,
+    evaluatorCommit: report.environment?.commit ?? report.runIdentity?.commit ?? null,
+    piVersion: report.environment?.piVersion ?? null,
+    runtimePromptHash: report.runIdentity?.runtimePromptHash ?? null,
+    promptContractHash: report.runIdentity?.promptContractHash ?? null,
     judgeEnabled,
     judgeModel: report.judge?.model ?? null,
     modes,
@@ -137,8 +148,8 @@ function formatTokens(value) {
 }
 
 /**
- * Render a summary as deterministic Markdown: no dates, no randomness, no
- * environment data, so the same report always renders the same bytes.
+ * Render deterministic Markdown from stable run identity and result fields.
+ * The same report always renders the same bytes.
  *
  * @param {Record<string, unknown>} summary
  * @returns {string}
@@ -148,13 +159,29 @@ export function renderSummaryMarkdown(summary) {
     throw new Error("renderSummaryMarkdown requires a summary object.");
   }
   const lines = [];
-  lines.push("# Evaluation Report Summary", "");
-  lines.push(`- Run: \`${summary.runId ?? "unknown"}\` (schema ${summary.schemaVersion ?? "unknown"})`);
+  lines.push("# Evaluation Report Summary", "", "## Run identity", "");
+  lines.push("| Field | Value |", "| --- | --- |");
+  lines.push(`| Run | \`${summary.runId ?? "unknown"}\` |`);
+  lines.push(`| Schema | ${summary.schemaVersion ?? "unknown"} |`);
   lines.push(
-    `- Provider: \`${summary.provider ?? "unknown"}\` via \`${summary.runner ?? "unknown"}\`, model \`${summary.model ?? "unknown"}\`, seed \`${summary.seed ?? "unknown"}\``,
+    `| Provider | \`${summary.provider ?? "unknown"}\` via \`${summary.runner ?? "unknown"}\` |`,
+  );
+  lines.push(`| Primary model | \`${summary.model ?? "unknown"}\` |`);
+  lines.push(`| Seed | \`${summary.seed ?? "unknown"}\` |`);
+  lines.push(
+    `| Evaluator commit | ${summary.evaluatorCommit === null ? "n/a" : `\`${summary.evaluatorCommit}\``} |`,
+  );
+  lines.push(`| Pi version | ${summary.piVersion === null ? "n/a" : `\`${summary.piVersion}\``} |`);
+  lines.push(
+    `| Runtime prompt hash | ${summary.runtimePromptHash === null ? "n/a" : `\`${summary.runtimePromptHash}\``} |`,
   );
   lines.push(
-    `- Judge: ${summary.judgeEnabled ? `enabled (model \`${summary.judgeModel ?? "unknown"}\`)` : "disabled"}`,
+    `| Prompt contract hash | ${summary.promptContractHash === null ? "n/a" : `\`${summary.promptContractHash}\``} |`,
+  );
+  lines.push(`| Repetitions | ${formatTokens(summary.repetitions)} |`);
+  lines.push(`| Categories | ${formatTokens(summary.categoryCount)} |`);
+  lines.push(
+    `| Judge | ${summary.judgeEnabled ? `enabled with \`${summary.judgeModel ?? "unknown"}\`` : "disabled"} |`,
   );
   lines.push("", "## Per-mode results", "");
   lines.push(
@@ -169,18 +196,18 @@ export function renderSummaryMarkdown(summary) {
     );
   }
   const totals = summary.totals ?? {};
-  lines.push("", "## Totals", "");
-  lines.push(`- Primary cost: ${formatUsd(totals.primaryCostUsd)}`);
-  lines.push(`- Judge cost (separate): ${formatUsd(totals.judgeCostUsd)}`);
+  lines.push("", "## Totals", "", "| Field | Value |", "| --- | ---: |");
+  lines.push(`| Primary cost | ${formatUsd(totals.primaryCostUsd)} |`);
+  lines.push(`| Judge cost, separate | ${formatUsd(totals.judgeCostUsd)} |`);
   lines.push(
-    `- Counted process attempts: ${
+    `| Counted process attempts | ${
       totals.countedProcessAttempts === null
         ? "n/a"
         : `${totals.countedProcessAttempts.total} total (${totals.countedProcessAttempts.provider} primary, ${totals.countedProcessAttempts.judge} judge, ${totals.countedProcessAttempts.countEndpoint} count)`
-    }`,
+    } |`,
   );
-  lines.push(`- Assistant model turns: ${formatTokens(totals.assistantModelTurns)}`);
-  lines.push(`- Paid-call cap: ${totals.paidCallCap === null ? "n/a" : totals.paidCallCap}`);
+  lines.push(`| Assistant model turns | ${formatTokens(totals.assistantModelTurns)} |`);
+  lines.push(`| Paid-call cap | ${totals.paidCallCap === null ? "n/a" : totals.paidCallCap} |`);
   lines.push(
     "",
     "Process attempts cap spawned provider processes: one primary, judge, or count process each reserves one attempt. Tool-loop turns are assistant responses inside one process, so assistant model turns can exceed counted process attempts.",

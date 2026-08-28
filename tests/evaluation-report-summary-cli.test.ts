@@ -58,7 +58,7 @@ describe("evaluation report summary CLI", () => {
       const markdown = fs.readFileSync(outputPath, "utf8");
       expect(markdown).toContain("# Evaluation Report Summary");
       expect(markdown).toContain("`run-summary-cli`");
-      expect(markdown).toContain("- Assistant model turns: 1");
+      expect(markdown).toContain("| Assistant model turns | 1 |");
       expect(markdown).not.toContain(directory);
     } finally {
       fs.rmSync(directory, { recursive: true, force: true });

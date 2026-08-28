@@ -173,6 +173,16 @@ describe("report summary", () => {
       runner: "pi",
       model: "test-model",
       seed: "0xdeadbeef",
+      modes: ["off", "full"],
+      repetitions: 3,
+      environment: {
+        commit: "abcdef1234567890",
+        piVersion: "0.84.3",
+      },
+      runIdentity: {
+        runtimePromptHash: "runtime-hash",
+        promptContractHash: "contract-hash",
+      },
       judge: { enabled: true, model: "judge-model", tolerance: 0 },
       pricing: null,
       paidCallAccounting: {
@@ -217,13 +227,19 @@ describe("report summary", () => {
 
     expect(markdown).not.toBeNull();
     expect(markdown).toContain("# Evaluation Report Summary");
-    expect(markdown).toContain("- Run: `caveman-eval-md` (schema 3)");
+    expect(markdown).toContain("| Run | `caveman-eval-md` |");
+    expect(markdown).toContain("| Schema | 3 |");
+    expect(markdown).toContain("| Evaluator commit | `abcdef1234567890` |");
+    expect(markdown).toContain("| Pi version | `0.84.3` |");
+    expect(markdown).toContain("| Runtime prompt hash | `runtime-hash` |");
+    expect(markdown).toContain("| Prompt contract hash | `contract-hash` |");
+    expect(markdown).toContain("| Repetitions | 3 |");
     expect(markdown).toContain("| Mode | Cases | Passed | Validator | Brevity | Judge quality |");
     expect(markdown).toContain("| `full` | 1 | 1 | 1 | 1 | 1 |");
     expect(markdown).toContain("| `off` | 1 | 1 | 1 | 1 | n/a |");
-    expect(markdown).toContain("- Assistant model turns: 4");
-    expect(markdown).toContain("- Counted process attempts: 13 total (6 primary, 3 judge, 4 count)");
-    expect(markdown).toContain("- Paid-call cap: 225");
+    expect(markdown).toContain("| Assistant model turns | 4 |");
+    expect(markdown).toContain("| Counted process attempts | 13 total (6 primary, 3 judge, 4 count) |");
+    expect(markdown).toContain("| Paid-call cap | 225 |");
     expect(markdown).toContain("0.8125");
     expect(markdown).toContain("0.8000");
     // The cap-vs-turns explanation must appear verbatim in every render.

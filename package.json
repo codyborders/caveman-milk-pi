@@ -28,9 +28,6 @@
     "@earendil-works/pi-coding-agent": "*",
     "@sinclair/typebox": "*"
   },
-  "dependencies": {
-    "typescript": "^6.0.2"
-  },
   "pi": {
     "extensions": [
       "./index.ts"
@@ -40,21 +37,6 @@
     "index.ts",
     "src/",
     "skill/",
-    "scripts/evaluate.mjs",
-    "scripts/evaluation-fixtures.json",
-    "scripts/evaluation-fixtures-regression-v2.json",
-    "scripts/evaluation-fixtures-fresh-v1.json",
-    "scripts/eval/benchmark-audit.mjs",
-    "evaluation/fixture-manifest.json",
-    "evaluation/rescore-manifest.json",
-    "evaluation/source-fixtures/benchmark-regression-v2.json",
-    "evaluation/results/benchmark-regression-v2.json",
-    "evaluation/results/pilot-v1-benchmark-audit.md",
-    "evaluation/results/benchmark-v2-run-plan.md",
-    "scripts/sync-skill.sh",
-    "scripts/eval/",
-    "evaluation/results/benchmark-regression-v2-rescored.json",
-    "evaluation/results/benchmark-regression-v2-rescored.md",
     "README.md",
     "CREDITS.md",
     "LICENSE"
@@ -71,6 +53,7 @@
   },
   "devDependencies": {
     "@earendil-works/pi-coding-agent": "0.84.3",
+    "typescript": "^6.0.2",
     "@types/node": "^25.6.0",
     "vitest": "^4.1.4"
   }

@@ -26,6 +26,8 @@ Deterministic validators now cover exact negation, numbered step order, warning 
 
 A blinded quality judge with committed prompt and rubric can fail the overall report when the active arm loses quality.
 
+The blinded judge can also run through the `pi` provider. Each judge call spawns a fresh Pi process using `CAVEMAN_EVAL_JUDGE_MODEL` or the case model. The committed judge prompt and rubric become the Pi system prompt, and only the blinded task plus responses travel as user content. Judge processes run with mode `off` in an isolated temporary config directory and require no Anthropic key. Each judge process reserves one shared-cap attempt reported under judge. A Pi process is counted once while its internal retries remain unobservable.
+
 Paid calls get a per-attempt timeout plus bounded retry for rate limits and transient failures. CLI execution also requires an explicit maximum call count.
 
 An incremental atomic checkpoint resumes recorded calls. Its identity binds the model, commit, prompt, provider, matrix, repetition count, and seed.

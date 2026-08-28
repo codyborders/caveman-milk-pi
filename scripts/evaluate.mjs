@@ -610,7 +610,11 @@ export async function runProviderEvaluation(options) {
   if (provider !== "pi" && (typeof apiKey !== "string" || apiKey.length === 0)) {
     throw new Error("Provider evaluation requires ANTHROPIC_API_KEY.");
   }
-  if (judge === true && (typeof apiKey !== "string" || apiKey.length === 0)) {
+  if (
+    judge === true &&
+    provider !== "pi" &&
+    (typeof apiKey !== "string" || apiKey.length === 0)
+  ) {
     throw new Error("Blinded judge evaluation requires ANTHROPIC_API_KEY.");
   }
   if (typeof model !== "string" || model.length === 0) {
@@ -935,6 +939,13 @@ export async function runProviderEvaluation(options) {
       throw new Error("The blinded judge requires paired off and active arms.");
     }
     const judgeClient = async ({ system, user }) => {
+      if (piRunner !== null) {
+        // One reserved shared-cap judge attempt per Pi judge process,
+        // checked immediately before the process starts. Retries inside the
+        // Pi process are not observable here and are never counted.
+        reservePaidAttempt("judge");
+        return piRunner.executeJudge({ system, user, model: judgeModel });
+      }
       const outcome = await requestJsonWithRetry({
         url: endpoint,
         headers: {
@@ -1403,6 +1414,10 @@ function createMemoryCheckpoint(runId) {
 // JSON mode with the extension loaded. Every call is single-turn and carries
 // an isolated CAVEMAN_MILK_CONFIG_DIR holding the mode config, so the user's
 // own config is never read or written and no session context accumulates.
+// The blinded judge runs through the same session path: the committed judge
+// prompt plus rubric becomes the Pi system prompt, only the blinded task and
+// responses travel as user content, mode is always off, and no tools are
+// offered so the judge can only reply with verdict text.
 // Production use passes a real spawn; tests inject a fake so no provider
 // call happens.
 export function createPiRunner({
@@ -1425,14 +1440,76 @@ export function createPiRunner({
   mkdtempImpl = (prefix) => fs.mkdtempSync(path.join(os.tmpdir(), prefix)),
   baseEnv = process.env,
 }) {
+  // Shared single-turn Pi session: isolated config directory holding the
+  // requested mode, exactly one spawned process, documented JSON event
+  // parsing, and best-effort directory removal in a finally block.
+  async function runPiSession({ mode, args }) {
+    const configDir = mkdtempImpl("caveman-pi-config-");
+    fs.writeFileSync(
+      path.join(configDir, "caveman-milk-pi.json"),
+      JSON.stringify({ schemaVersion: 1, mode, showStatus: false }, null, 2) + "\n",
+      { mode: 0o600 },
+    );
+    try {
+      const startedAtMs = nowImpl();
+      const result = await spawnImpl(args, {
+        env: { ...baseEnv, CAVEMAN_MILK_CONFIG_DIR: configDir },
+        timeout: timeoutMs,
+      });
+      const elapsedMs = nowImpl() - startedAtMs;
+      if (result.code !== 0) {
+        throw new Error(
+          `pi runner exited with code ${result.code}: ${(result.stderr ?? "").substring(0, 500)}`,
+        );
+      }
+      let text = "";
+      let toolCall = null;
+      let toolCallCount = 0;
+      let usage = { input: null, output: null, cacheWrite: null, cacheRead: null };
+      let rawUsage = null;
+      let costUsd = null;
+      for (const line of (result.stdout ?? "").split("\n")) {
+        const trimmed = line.trim();
+        if (trimmed.length === 0) continue;
+        let event;
+        try {
+          event = JSON.parse(trimmed);
+        } catch {
+          continue;
+        }
+        if (event.type === "tool_execution_start") {
+          toolCallCount += 1;
+          if (event.toolName === "write_artifact") {
+            toolCall = { name: event.toolName, input: event.args };
+          }
+        }
+        if (event.type === "message_end" && event.message?.role === "assistant") {
+          const message = event.message;
+          text = (message.content ?? [])
+            .filter((block) => block.type === "text")
+            .map((block) => block.text)
+            .join("");
+          if (message.usage !== undefined && message.usage !== null) {
+            usage = normalizeUsage(message.usage);
+            rawUsage = message.usage;
+            if (message.usage.cost && typeof message.usage.cost.total === "number") {
+              costUsd = message.usage.cost.total;
+            }
+          }
+        }
+      }
+      return { text, toolCall, toolCallCount, usage, rawUsage, costUsd, elapsedMs };
+    } finally {
+      // Best-effort cleanup: a locked file must not fail the finished call.
+      try {
+        fs.rmSync(configDir, { recursive: true, force: true });
+      } catch {
+        // Leave the temp directory for the operating system to reap.
+      }
+    }
+  }
   return {
     async execute({ mode, category }) {
-      const configDir = mkdtempImpl("caveman-pi-config-");
-      fs.writeFileSync(
-        path.join(configDir, "caveman-milk-pi.json"),
-        JSON.stringify({ schemaVersion: 1, mode, showStatus: false }, null, 2) + "\n",
-        { mode: 0o600 },
-      );
       const args = [
         piBin,
         "--mode",
@@ -1450,77 +1527,39 @@ export function createPiRunner({
         "-p",
         category.prompt,
       ];
-      try {
-        const startedAtMs = nowImpl();
-        const result = await spawnImpl(args, {
-          env: { ...baseEnv, CAVEMAN_MILK_CONFIG_DIR: configDir },
-          timeout: timeoutMs,
-        });
-        const elapsedMs = nowImpl() - startedAtMs;
-        if (result.code !== 0) {
-          throw new Error(
-            `pi runner exited with code ${result.code}: ${(result.stderr ?? "").substring(0, 500)}`,
-          );
-        }
-        let text = "";
-        let toolCall = null;
-        let toolCallCount = 0;
-        let usage = { input: null, output: null, cacheWrite: null, cacheRead: null };
-        let rawUsage = null;
-        let costUsd = null;
-        for (const line of (result.stdout ?? "").split("\n")) {
-          const trimmed = line.trim();
-          if (trimmed.length === 0) continue;
-          let event;
-          try {
-            event = JSON.parse(trimmed);
-          } catch {
-            continue;
-          }
-          if (event.type === "tool_execution_start") {
-            toolCallCount += 1;
-            if (event.toolName === "write_artifact") {
-              toolCall = { name: event.toolName, input: event.args };
-            }
-          }
-          if (event.type === "message_end" && event.message?.role === "assistant") {
-            const message = event.message;
-            text = (message.content ?? [])
-              .filter((block) => block.type === "text")
-              .map((block) => block.text)
-              .join("");
-            if (message.usage !== undefined && message.usage !== null) {
-              usage = normalizeUsage(message.usage);
-              rawUsage = message.usage;
-              if (message.usage.cost && typeof message.usage.cost.total === "number") {
-                costUsd = message.usage.cost.total;
-              }
-            }
-          }
-        }
-        if (text.length === 0) {
-          throw new Error("pi runner produced no assistant text for the case.");
-        }
-        return {
-          text,
-          toolCall,
-          toolCallCount,
-          usage,
-          rawUsage,
-          attempts: 1,
-          elapsedMs,
-          costUsd,
-          systemPromptSent: null,
-          sessionId: null,
-        };
-      } finally {
-        // Best-effort cleanup: a locked file must not fail the finished call.
-        try {
-          fs.rmSync(configDir, { recursive: true, force: true });
-        } catch {
-          // Leave the temp directory for the operating system to reap.
-        }
+      const session = await runPiSession({ mode, args });
+      if (session.text.length === 0) {
+        throw new Error("pi runner produced no assistant text for the case.");
       }
+      return { ...session, attempts: 1, systemPromptSent: null, sessionId: null };
+    },
+    // Blinded judge session: system prompt is the committed judge prompt
+    // plus rubric, user content is the blinded task and responses only, the
+    // caveman extension runs with mode off, and tools stay disabled.
+    async executeJudge({ system, user, model: judgeModel }) {
+      const args = [
+        piBin,
+        "--mode",
+        "json",
+        "--no-extensions",
+        "--no-skills",
+        "--no-context-files",
+        "--no-prompt-templates",
+        "--no-tools",
+        "-e",
+        extensionPath,
+        "--system-prompt",
+        system,
+        "--model",
+        judgeModel ?? model,
+        "-p",
+        user,
+      ];
+      const session = await runPiSession({ mode: "off", args });
+      if (session.text.length === 0) {
+        throw new Error("pi runner produced no assistant text for the judge.");
+      }
+      return { text: session.text, usage: session.usage, rawUsage: session.rawUsage };
     },
   };
 }

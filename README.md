@@ -159,7 +159,7 @@ npm run evaluate
 
 `CAVEMAN_EVAL_MODES` and `CAVEMAN_EVAL_CATEGORIES` accept comma-separated filters. A selection with an active mode must also include `off`. The runner rejects other selections before any paid request. Comparative scoring also requires at least three repetitions per pair.
 
-Paid CLI runs require `CAVEMAN_EVAL_MAX_PAID_CALLS`. The cap counts each direct-provider, token-count, and judge HTTP attempt. For Pi runs, it counts each Pi process launch. Retries inside Pi are not observable. The run stops before the next counted attempt would exceed the cap. Reports list logical cases separately from counted attempts. Timeout and retry controls use `CAVEMAN_EVAL_TIMEOUT_MS` and `CAVEMAN_EVAL_MAX_ATTEMPTS`.
+Paid CLI runs require `CAVEMAN_EVAL_MAX_PAID_CALLS`. The cap counts each direct-provider, token-count, and judge HTTP attempt. For Pi runs, it counts each Pi process launch, judge processes included. A Pi process is counted once while internal retries remain unobservable. The run stops before the next counted attempt would exceed the cap. Reports list logical cases separately from counted attempts. Timeout and retry controls use `CAVEMAN_EVAL_TIMEOUT_MS` and `CAVEMAN_EVAL_MAX_ATTEMPTS`.
 
 `CAVEMAN_EVAL_BASE_SYSTEM_PROMPT_FILE` can replace the committed Pi prompt capture. `CAVEMAN_EVAL_PI_BIN` selects another Pi executable. `CAVEMAN_EVAL_COMMIT` records an explicit candidate commit.
 
@@ -174,6 +174,8 @@ Brevity gates use provider-reported output tokens as the primary metric. An outp
 Deterministic validators check exact negation, numbered step order, warning prose, confirmation language, TypeScript code syntax, requested paragraph count, tool-call structure, term retention, and persisted prose. A validator failure fails the case and the overall report.
 
 Set `CAVEMAN_EVAL_JUDGE=1` to enable the blinded quality judge. The judge uses the committed prompt and rubric under `scripts/eval/`. It never learns which arm is which. A judge score below the baseline fails the overall report even when output is shorter.
+
+With `CAVEMAN_EVAL_PROVIDER=pi`, the judge also runs through Pi. Each judge call spawns a fresh Pi process using `CAVEMAN_EVAL_JUDGE_MODEL` or the case model. The committed judge prompt and rubric become the Pi system prompt, and the blinded task plus both responses are the only user content. Judge processes run with mode `off` in an isolated temporary `CAVEMAN_MILK_CONFIG_DIR` and require no Anthropic key. Each judge process reserves one shared-cap attempt reported under judge. A Pi process is counted once while internal retries remain unobservable.
 
 Each completed paid call is written to an incremental atomic checkpoint. Checkpointed runs require `CAVEMAN_EVAL_SEED` so a retry rebuilds the same call order.
 

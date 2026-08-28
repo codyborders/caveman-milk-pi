@@ -14,8 +14,8 @@
 | Source run ID | `caveman-eval-d37242b07e700ebd` |
 | Validator version | `schema4-corrected-v2` |
 | Source fixture hash | `da6ff6b621fa512301c954cc94850ca7a1ff3873766302c97ad69ec1cd4d0adb` |
-| Rescore evaluator commit | `00531303bec4a4330849cafd5e501803602f0107` |
-| Rescore generation time | `2026-08-28T22:15:15.000Z` |
+| Rescore evaluator commit | `beb7d3eb95a46c5f2ac3967d77cffd2ff68d4c62` |
+| Rescore generation time | `2026-08-28T22:25:48.000Z` |
 | External model calls | 0 |
 | Provider | `pi` via `pi` |
 | Primary model | `z-ai/glm-5.3` |
@@ -32,8 +32,8 @@
 
 | Mode | Cases | Behavior | Correct | Grounded | Contract | Safety | Quality score | Grounding score | Brevity score | Compression ratio | Eligible pairs |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `off` | 45 | 41 | 44 | 45 | 42 | 45 | n/a | n/a | n/a | n/a | 0 |
-| `lite` | 45 | 38 | 42 | 45 | 41 | 45 | 0.8417 | 0.8333 | 0.9481 | 0.6804 | 23 |
+| `off` | 45 | 40 | 44 | 45 | 41 | 45 | n/a | n/a | n/a | n/a | 0 |
+| `lite` | 45 | 37 | 42 | 45 | 40 | 45 | 0.8417 | 0.8333 | 0.9481 | 0.6804 | 23 |
 | `full` | 45 | 41 | 45 | 45 | 43 | 43 | 0.9056 | 0.7500 | 0.9662 | 0.6356 | 26 |
 
 ### Whole-run usage
@@ -91,10 +91,10 @@
 | `full` | `code-generation` | groundedness | 0 | 0 | 0 | 3 |
 | `full` | `code-generation` | user contract | 0 | 0 | 0 | 3 |
 | `full` | `code-generation` | safety | 0 | 0 | 0 | 3 |
-| `full` | `file-writing` | overall | 0 | 0 | 0 | 3 |
+| `full` | `file-writing` | overall | 0 | 1 | 0 | 2 |
 | `full` | `file-writing` | correctness | 0 | 0 | 0 | 3 |
 | `full` | `file-writing` | groundedness | 0 | 0 | 0 | 3 |
-| `full` | `file-writing` | user contract | 0 | 0 | 0 | 3 |
+| `full` | `file-writing` | user contract | 0 | 1 | 0 | 2 |
 | `full` | `file-writing` | safety | 0 | 0 | 0 | 3 |
 | `full` | `commit-pr` | overall | 0 | 1 | 2 | 0 |
 | `full` | `commit-pr` | correctness | 0 | 0 | 0 | 3 |
@@ -166,10 +166,10 @@
 | `lite` | `code-generation` | groundedness | 0 | 0 | 0 | 3 |
 | `lite` | `code-generation` | user contract | 0 | 0 | 0 | 3 |
 | `lite` | `code-generation` | safety | 0 | 0 | 0 | 3 |
-| `lite` | `file-writing` | overall | 0 | 0 | 0 | 3 |
+| `lite` | `file-writing` | overall | 0 | 0 | 1 | 2 |
 | `lite` | `file-writing` | correctness | 0 | 0 | 0 | 3 |
 | `lite` | `file-writing` | groundedness | 0 | 0 | 0 | 3 |
-| `lite` | `file-writing` | user contract | 0 | 0 | 0 | 3 |
+| `lite` | `file-writing` | user contract | 0 | 0 | 1 | 2 |
 | `lite` | `file-writing` | safety | 0 | 0 | 0 | 3 |
 | `lite` | `commit-pr` | overall | 0 | 0 | 3 | 0 |
 | `lite` | `commit-pr` | correctness | 0 | 0 | 0 | 3 |

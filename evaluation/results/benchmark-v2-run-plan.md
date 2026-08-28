@@ -49,7 +49,7 @@ npm run rescore:offline
 
 The command writes `evaluation/results/benchmark-regression-v2-rescored.json` and its Markdown summary. It does not replace the paid report. No new paid calls were made.
 
-The rescored JSON SHA-256 is `62310f3e2eaa8db76539443f1b3d0fb7eb73409fb5ee5111a8ce6e2bf59f3c03`. The original and rescored conclusions both fail. Rescored hard behavior passed 41/45 `off` cases, 38/45 `lite` cases, and 41/45 `full` cases.
+The rescored JSON SHA-256 is `18134df57c8017c65a42ca02463d517d08afb741f36e050643fcbdf69d776e31`. The original and rescored conclusions both fail. Rescored hard behavior passed 40/45 `off` cases, 37/45 `lite` cases, and 41/45 `full` cases.
 
 The rescore retains two clear `lite` negation regressions and two clear `full` confirmation regressions. Commit and PR failures also occur in `off`. Corrected casing removes several clarification failures, but one `lite` paired regression remains.
 

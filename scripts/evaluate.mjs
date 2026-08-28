@@ -82,6 +82,11 @@ export function validateRunConfiguration({ modes, repetitions, plannedCalls, max
   return true;
 }
 
+export function hashFixtureContent(content) {
+  const normalized = String(content).replaceAll("\r\n", "\n");
+  return crypto.createHash("sha256").update(normalized).digest("hex");
+}
+
 export function loadFixtures(fixtureSetOption) {
   const manifest = JSON.parse(fs.readFileSync(fixtureManifestPath, "utf8"));
   const requestedSet = fixtureSetOption ?? "pilot-v1";
@@ -91,7 +96,7 @@ export function loadFixtures(fixtureSetOption) {
   }
   const selectedPath = path.resolve(here, "..", entry.path);
   const fixtureBytes = fs.readFileSync(selectedPath, "utf8");
-  const fixtureHash = crypto.createHash("sha256").update(fixtureBytes).digest("hex");
+  const fixtureHash = hashFixtureContent(fixtureBytes);
   if (fixtureHash !== entry.sha256) {
     throw new Error(`Fixture set '${requestedSet}' hash mismatch: expected ${entry.sha256}, got ${fixtureHash}.`);
   }

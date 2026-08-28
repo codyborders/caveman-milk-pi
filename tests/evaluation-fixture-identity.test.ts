@@ -10,6 +10,12 @@ import { baseOptions, createMockServer } from "./helpers/mock-provider-server.js
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 describe("fixture-set identity", () => {
+  it("uses the same fixture hash for LF and CRLF checkouts", () => {
+    const lf = '{"version":1}\n';
+    const crlf = lf.replaceAll("\n", "\r\n");
+    expect(evaluate.hashFixtureContent(crlf)).toBe(evaluate.hashFixtureContent(lf));
+  });
+
   it("selects a fixture set through the CLI and records its verified hash", () => {
     const manifest = JSON.parse(fs.readFileSync(path.join(repositoryRoot, "evaluation/fixture-manifest.json"), "utf8"));
     const fresh = evaluate.loadFixtures("fresh-v1");

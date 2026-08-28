@@ -1854,6 +1854,9 @@ export function createPiRunner({
         "--no-skills",
         "--no-context-files",
         "--no-prompt-templates",
+        ...(category.expectsTool === true
+          ? ["--tools", "write_artifact"]
+          : ["--no-tools"]),
         "-e",
         extensionPath,
         "-e",

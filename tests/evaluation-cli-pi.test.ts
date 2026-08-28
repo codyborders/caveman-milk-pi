@@ -14,10 +14,12 @@ describe("Pi CLI evaluation controls", () => {
     fs.writeFileSync(
       fakePi,
       `#!/usr/bin/env node
-const args = process.argv;
-const sessionIndex = args.indexOf("--session-id");
-const sessionId = args[sessionIndex + 1];
-const active = sessionId.endsWith("-full");
+import * as fs from "node:fs";
+import * as path from "node:path";
+const config = JSON.parse(
+  fs.readFileSync(path.join(process.env.CAVEMAN_MILK_CONFIG_DIR, "caveman-milk-pi.json"), "utf8"),
+);
+const active = config.mode !== "off";
 process.stdout.write(JSON.stringify({
   type: "message_end",
   message: {

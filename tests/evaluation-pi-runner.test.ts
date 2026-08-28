@@ -1,6 +1,7 @@
 // Pi runner adapter: spawns Pi in documented JSON mode with the extension
-// loaded, a controlled HOME carrying the mode config, and a stable session id.
-// The fake spawn replaces the child process, so no provider call happens.
+// loaded and an isolated config directory for the mode setting. Every call is
+// a single-turn session: no --session-id reuse, no accumulated context. The
+// fake spawn replaces the child process, so no provider call happens.
 
 import * as fs from "node:fs";
 import * as os from "node:os";
@@ -23,7 +24,7 @@ const jsonlEvents = [
 ].join("\n");
 
 describe("pi runner adapter", () => {
-  it("runs Pi in JSON mode with the extension and parses usage", async () => {
+  it("runs Pi single-turn with an isolated CAVEMAN_MILK_CONFIG_DIR and parses usage", async () => {
     const spawns = [];
     const homeRoot = fs.mkdtempSync(path.join(os.tmpdir(), "caveman-pi-test-"));
     const runner = evaluate.createPiRunner({
@@ -31,7 +32,16 @@ describe("pi runner adapter", () => {
       extensionPath: "/repo/index.ts",
       model: "test-model",
       spawnImpl: async (args, options) => {
-        spawns.push({ args, options });
+        spawns.push({
+          args,
+          options,
+          config: JSON.parse(
+            fs.readFileSync(
+              path.join(options.env.CAVEMAN_MILK_CONFIG_DIR, "caveman-milk-pi.json"),
+              "utf8",
+            ),
+          ),
+        });
         return { code: 0, stdout: jsonlEvents, stderr: "" };
       },
       mkdtempImpl: (prefix) => fs.mkdtempSync(path.join(homeRoot, prefix)),
@@ -51,23 +61,36 @@ describe("pi runner adapter", () => {
     expect(flags[flags.indexOf("--mode") + 1]).toBe("json");
     expect(flags).toContain("--no-extensions");
     expect(flags[flags.indexOf("-e") + 1]).toBe("/repo/index.ts");
-    expect(flags).toContain("--session-id");
-    expect(flags[flags.indexOf("--session-id") + 1]).toBe("caveman-eval-2-negation-full");
+    // Single-turn: no reused session id accumulates context across calls.
+    expect(flags).not.toContain("--session-id");
     expect(flags).toContain("--model");
     expect(flags[flags.indexOf("--model") + 1]).toBe("test-model");
     expect(flags[flags.indexOf("-p") + 1]).toBe("Explain this backup policy.");
 
-    const home = spawn.options.env.HOME;
-    const config = JSON.parse(
-      fs.readFileSync(path.join(home, ".config", "caveman-milk-pi.json"), "utf8"),
-    );
-    expect(config).toEqual({ schemaVersion: 1, mode: "full", showStatus: false });
-    expect(spawn.options.env.HOME).not.toBe(process.env.HOME);
+    // The extension config is isolated through the documented override and
+    // carries the selected mode while the child process is running.
+    const configDir = spawn.options.env.CAVEMAN_MILK_CONFIG_DIR;
+    expect(typeof configDir).toBe("string");
+    expect(spawn.config).toEqual({ schemaVersion: 1, mode: "full", showStatus: false });
+    // The override isolates the extension from any platform user config, so
+    // the runner must not depend on HOME semantics at all.
+    expect(spawn.options.env.HOME).toBe(process.env.HOME);
+    // Cleanup: the per-call config directory is removed after execution.
+    expect(fs.existsSync(configDir)).toBe(false);
 
     expect(outcome.text).toBe("Do not delete backups. cache_key uses model identity.");
     expect(outcome.usage).toEqual({ input: 120, output: 32, cacheWrite: 12, cacheRead: 80 });
+    // The raw message_end usage object is preserved verbatim, including
+    // fields the normalized view drops such as cost.
+    expect(outcome.rawUsage).toEqual({
+      input: 120,
+      output: 32,
+      cacheRead: 80,
+      cacheWrite: 12,
+      cost: { total: 0.001 },
+    });
     expect(outcome.costUsd).toBe(0.001);
-    expect(outcome.sessionId).toBe("caveman-eval-2-negation-full");
+    expect(outcome.sessionId).toBeNull();
     expect(outcome.elapsedMs).toBeGreaterThan(0);
     fs.rmSync(homeRoot, { recursive: true, force: true });
   });

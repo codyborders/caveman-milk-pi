@@ -159,17 +159,17 @@ npm run evaluate
 
 `CAVEMAN_EVAL_MODES` and `CAVEMAN_EVAL_CATEGORIES` accept comma-separated filters. A selection with an active mode must also include `off`. The runner rejects other selections before any paid request. Comparative scoring also requires at least three repetitions per pair.
 
-Paid CLI runs require `CAVEMAN_EVAL_MAX_PAID_CALLS`. Timeout and retry controls use `CAVEMAN_EVAL_TIMEOUT_MS` and `CAVEMAN_EVAL_MAX_ATTEMPTS`.
+Paid CLI runs require `CAVEMAN_EVAL_MAX_PAID_CALLS`. The cap counts each direct-provider, token-count, and judge HTTP attempt. For Pi runs, it counts each Pi process launch. Retries inside Pi are not observable. The run stops before the next counted attempt would exceed the cap. Reports list logical cases separately from counted attempts. Timeout and retry controls use `CAVEMAN_EVAL_TIMEOUT_MS` and `CAVEMAN_EVAL_MAX_ATTEMPTS`.
 
 `CAVEMAN_EVAL_BASE_SYSTEM_PROMPT_FILE` can replace the committed Pi prompt capture. `CAVEMAN_EVAL_PI_BIN` selects another Pi executable. `CAVEMAN_EVAL_COMMIT` records an explicit candidate commit.
 
 The runner appends caveman runtime text after a captured Pi base system prompt. The capture lives in `scripts/eval/pi-base-system-prompt.json` and comes from Pi 0.84.3.
 
-The `pi` provider runs each case through the real Pi CLI in JSON mode. It loads the extension, sets a controlled HOME with the mode config, and keeps one session id per case.
+The `pi` provider runs each case through the real Pi CLI in JSON mode. It loads the extension and gives every call a fresh temporary `CAVEMAN_MILK_CONFIG_DIR` holding the mode config. Each call is single-turn, so no session context accumulates, and the temporary directory is removed afterwards. Supplied seeds must be valid hexadecimal. Malformed seeds are rejected instead of silently randomized.
 
 Arm order is randomized per repetition and category from a stored seed. The seed appears in the report, so any run can be reproduced.
 
-Brevity gates use provider-reported output tokens as the primary metric. Word counts remain in the report as a readability diagnostic only.
+Brevity gates use provider-reported output tokens as the primary metric. An output ratio requires positive integer output usage in both arms. A pair with missing or invalid output usage is reported as incomplete, fails brevity fail-closed, and stays out of paired deltas. Word counts remain in the report as a readability diagnostic only. Raw provider usage objects are preserved verbatim on every result.
 
 Deterministic validators check exact negation, numbered step order, warning prose, confirmation language, TypeScript code syntax, requested paragraph count, tool-call structure, term retention, and persisted prose. A validator failure fails the case and the overall report.
 

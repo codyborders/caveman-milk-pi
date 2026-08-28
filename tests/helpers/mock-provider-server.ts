@@ -11,6 +11,7 @@ export function createMockServer() {
   let serverUrl;
   let requestLog = [];
   let failKeys = new Set();
+  let failOnceKeys = new Set();
   let judgeOverride = null;
   let caseOverride = null;
 
@@ -19,6 +20,16 @@ export function createMockServer() {
     if (failKeys.has(`${metadata.repetition}::${metadata.category}::${metadata.mode}`)) {
       response.writeHead(500, { "content-type": "application/json" });
       response.end(JSON.stringify({ error: "injected failure" }));
+      return;
+    }
+    const failOnceKey = `${metadata.repetition}::${metadata.category}::${metadata.mode}`;
+    if (failOnceKeys.has(failOnceKey)) {
+      failOnceKeys.delete(failOnceKey);
+      response.writeHead(429, {
+        "content-type": "application/json",
+        "retry-after": "0",
+      });
+      response.end(JSON.stringify({ error: "rate_limited" }));
       return;
     }
     const isJudge =
@@ -88,6 +99,9 @@ export function createMockServer() {
     requestCount: () => requestLog.length,
     fail(key) {
       failKeys.add(key);
+    },
+    failOnce(key) {
+      failOnceKeys.add(key);
     },
     clearFailures() {
       failKeys.clear();

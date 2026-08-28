@@ -4,7 +4,7 @@ import * as crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { spawn as nodeSpawn } from "node:child_process";
+import { execFileSync, spawn as nodeSpawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -115,8 +115,15 @@ function scoreRequiredTerms(text, requiredTerms) {
 
 function parseSeed(seedOption) {
   if (seedOption === undefined) return Math.floor(Math.random() * 0xffffffff);
-  const parsed = Number.parseInt(String(seedOption), 16);
-  return Number.isFinite(parsed) ? parsed >>> 0 : Math.floor(Math.random() * 0xffffffff);
+  const text = String(seedOption).trim();
+  const isHexSeed = /^(?:0x)?[0-9a-f]+$/i.test(text);
+  if (!isHexSeed) {
+    throw new Error(
+      `CAVEMAN_EVAL_SEED '${seedOption}' is malformed. Supply a hexadecimal seed ` +
+        "such as 0xa1b2c3d4, or omit the seed for a random one.",
+    );
+  }
+  return Number.parseInt(text, 16) >>> 0;
 }
 
 function formatSeed(seed) {
@@ -146,17 +153,25 @@ function validatePricing(pricing) {
 
 function computeCostUsd(usage, pricing) {
   if (pricing === null) return null;
-  if (usage.input === null && usage.output === null) return null;
+  // Cost needs every pricing-relevant field. A missing field must stay
+  // missing: substituting zero would silently understate the run cost.
+  if (
+    usage.input === null ||
+    usage.output === null ||
+    usage.cacheWrite === null ||
+    usage.cacheRead === null
+  ) {
+    return null;
+  }
   const cost =
-    ((usage.input ?? 0) / 1e6) * pricing.inputPerMTok +
-    ((usage.output ?? 0) / 1e6) * pricing.outputPerMTok +
-    ((usage.cacheWrite ?? 0) / 1e6) * pricing.cacheWritePerMTok +
-    ((usage.cacheRead ?? 0) / 1e6) * pricing.cacheReadPerMTok;
+    (usage.input / 1e6) * pricing.inputPerMTok +
+    (usage.output / 1e6) * pricing.outputPerMTok +
+    (usage.cacheWrite / 1e6) * pricing.cacheWritePerMTok +
+    (usage.cacheRead / 1e6) * pricing.cacheReadPerMTok;
   return Number(cost.toFixed(8));
 }
 
 function defaultExecGit() {
-  const { execFileSync } = require("node:child_process");
   return execFileSync("git", ["rev-parse", "HEAD"], {
     cwd: path.resolve(here, ".."),
     encoding: "utf8",
@@ -224,29 +239,52 @@ function stats(values) {
   return { mean: Number(mean.toFixed(6)), median: Number(median.toFixed(6)), count: values.length };
 }
 
+function isPositiveIntegerOutput(value) {
+  return Number.isInteger(value) && value > 0;
+}
+
+// A paired delta is only defined when both arms report the metric. Pairs with
+// a missing side stay out of the statistic instead of contributing a zero.
+function pairedDelta(pairs, read) {
+  const values = pairs
+    .map((pair) => ({ active: read(pair.active), off: read(pair.off) }))
+    .filter((values) => typeof values.active === "number" && typeof values.off === "number")
+    .map((values) => values.active - values.off);
+  return stats(values);
+}
+
 function aggregatePairs(pairs, pricing, judgeEnabled) {
-  const numeric = (accessor) =>
-    stats(pairs.map(accessor).filter((value) => typeof value === "number"));
-  const tokenRatios = pairs
-    .map((pair) => ((pair.off.usage.output ?? 0) > 0 ? (pair.active.usage.output ?? 0) / pair.off.usage.output : null))
-    .filter((value) => value !== null);
+  const completePairs = pairs.filter(
+    (pair) =>
+      isPositiveIntegerOutput(pair.off.usage.output) &&
+      isPositiveIntegerOutput(pair.active.usage.output),
+  );
+  const tokenRatios = completePairs.map(
+    (pair) => pair.active.usage.output / pair.off.usage.output,
+  );
   const judgeOk =
     judgeEnabled && pairs.every((pair) => pair.active.judge !== null && pair.active.judge.failed !== true);
   return {
     pairCount: pairs.length,
+    completePairCount: completePairs.length,
+    incompletePairCount: pairs.length - completePairs.length,
     outputTokenRatio: stats(tokenRatios),
     deltas: {
-      inputTokens: numeric((pair) => (pair.active.usage.input ?? 0) - (pair.off.usage.input ?? 0)),
-      cacheWriteTokens: numeric((pair) => (pair.active.usage.cacheWrite ?? 0) - (pair.off.usage.cacheWrite ?? 0)),
-      cacheReadTokens: numeric((pair) => (pair.active.usage.cacheRead ?? 0) - (pair.off.usage.cacheRead ?? 0)),
-      outputTokens: numeric((pair) => (pair.active.usage.output ?? 0) - (pair.off.usage.output ?? 0)),
+      inputTokens: pairedDelta(pairs, (result) => result.usage.input),
+      cacheWriteTokens: pairedDelta(pairs, (result) => result.usage.cacheWrite),
+      cacheReadTokens: pairedDelta(pairs, (result) => result.usage.cacheRead),
+      outputTokens: pairedDelta(pairs, (result) => result.usage.output),
       costUsd:
         pricing === null
           ? null
-          : numeric((pair) => (pair.active.costUsd ?? 0) - (pair.off.costUsd ?? 0)),
-      latencyMs: numeric((pair) => pair.active.elapsedMs - pair.off.elapsedMs),
+          : pairedDelta(pairs, (result) => result.costUsd),
+      latencyMs: pairedDelta(pairs, (result) => result.elapsedMs),
       qualityTotal: judgeOk
-        ? numeric((pair) => pair.active.judge.activeQualityTotal - pair.active.judge.offQualityTotal)
+        ? stats(
+            pairs.map(
+              (pair) => pair.active.judge.activeQualityTotal - pair.active.judge.offQualityTotal,
+            ),
+          )
         : null,
     },
     validationPassed: pairs.every((pair) => pair.active.validation.passed),
@@ -584,40 +622,29 @@ export async function runProviderEvaluation(options) {
 
   const modes = selectNamedItems(fixtures.modes, modeSelection);
   const categories = selectNamedItems(fixtures.categories, categorySelection);
-  const tokenAccounting = {
-    method: "provider-count-endpoint",
-    endpointPath: fixtures.promptContract?.tokenAccounting?.endpointPath ??
-      "/v1/messages/count_tokens",
-    status: countTokens === true ? "exact" : "not-run",
-    model,
-    totalRequestInputTokens: {},
-    incrementalActiveMinusOffTokens: {},
-    exactCounts: {},
+  // Attempt guard: the paid cap bounds actual HTTP attempts, not logical
+  // cases. Provider calls, judge calls, and token-count calls all draw from
+  // the same budget, so a retried call consumes budget for every attempt.
+  const attemptState = { provider: 0, judge: 0, countEndpoint: 0 };
+  const paidAttempts = () =>
+    attemptState.provider + attemptState.judge + attemptState.countEndpoint;
+  const reservePaidAttempt = (kind) => {
+    if (maxPaidCalls !== undefined && paidAttempts() >= maxPaidCalls) {
+      throw new PaidCallBudgetExceededError(
+        `paid-call budget exhausted: ${paidAttempts()} of ${maxPaidCalls} actual attempts spent, stopping before the next attempt. ` +
+          "Rerun with a higher CAVEMAN_EVAL_MAX_PAID_CALLS or resume from the checkpoint.",
+        { cap: maxPaidCalls, actualAttempts: paidAttempts() },
+      );
+    }
+    attemptState[kind] += 1;
   };
-  if (countTokens === true) {
-    const resolvedCountEndpoint =
-      countEndpoint ?? new URL(tokenAccounting.endpointPath, endpoint).toString();
-    const countModes = modes.includes("off") ? modes : ["off", ...modes];
-    for (const mode of countModes) {
-      const count = await countPromptTokens({
-        apiKey,
-        model,
-        prompt: fixtures.runtimePrompts[mode] ?? "",
-        endpoint: resolvedCountEndpoint,
-        fetchImpl,
-      });
-      tokenAccounting.totalRequestInputTokens[mode] = count.inputTokens;
-      tokenAccounting.exactCounts[mode] = count;
-    }
-    const offTokens = tokenAccounting.totalRequestInputTokens.off;
-    for (const mode of modes) {
-      if (mode === "off") continue;
-      tokenAccounting.incrementalActiveMinusOffTokens[mode] =
-        tokenAccounting.totalRequestInputTokens[mode] - offTokens;
-      tokenAccounting.exactCounts[mode].incrementalInputTokens =
-        tokenAccounting.incrementalActiveMinusOffTokens[mode];
-    }
-  }
+  const guardPaidAttempt = (kind, baseFetch) => async (url, init) => {
+    reservePaidAttempt(kind);
+    return baseFetch(url, init);
+  };
+  const caseFetch = guardPaidAttempt("provider", fetchImpl);
+  const judgeFetch = guardPaidAttempt("judge", judgeFetchImpl ?? fetchImpl);
+  const countFetch = guardPaidAttempt("countEndpoint", fetchImpl);
   const activeModes = modes.filter((mode) => mode !== "off");
   if (activeModes.length > 0 && !modes.includes("off")) {
     throw new Error(
@@ -643,7 +670,9 @@ export async function runProviderEvaluation(options) {
   });
   const plannedJudgeCalls =
     judge === true ? activeModes.length * categories.length * repetitionCount : 0;
-  const plannedPaidCalls = plan.length + plannedJudgeCalls;
+  const plannedCountCalls =
+    countTokens === true ? (modes.includes("off") ? modes.length : modes.length + 1) : 0;
+  const plannedPaidCalls = plan.length + plannedJudgeCalls + plannedCountCalls;
   validateRunConfiguration({
     modes,
     repetitions: repetitionCount,
@@ -652,6 +681,42 @@ export async function runProviderEvaluation(options) {
     commit: environment.commit,
   });
   const baseSystemPrompt = baseSystemPromptOption ?? loadPiBaseSystemPrompt();
+  // Token counting runs only after every configuration check has passed, so
+  // an invalid run can never issue a count request.
+  const tokenAccounting = {
+    method: "provider-count-endpoint",
+    endpointPath: fixtures.promptContract?.tokenAccounting?.endpointPath ??
+      "/v1/messages/count_tokens",
+    status: countTokens === true ? "exact" : "not-run",
+    model,
+    totalRequestInputTokens: {},
+    incrementalActiveMinusOffTokens: {},
+    exactCounts: {},
+  };
+  if (countTokens === true) {
+    const resolvedCountEndpoint =
+      countEndpoint ?? new URL(tokenAccounting.endpointPath, endpoint).toString();
+    const countModes = modes.includes("off") ? modes : ["off", ...modes];
+    for (const mode of countModes) {
+      const count = await countPromptTokens({
+        apiKey,
+        model,
+        prompt: fixtures.runtimePrompts[mode] ?? "",
+        endpoint: resolvedCountEndpoint,
+        fetchImpl: countFetch,
+      });
+      tokenAccounting.totalRequestInputTokens[mode] = count.inputTokens;
+      tokenAccounting.exactCounts[mode] = count;
+    }
+    const offTokens = tokenAccounting.totalRequestInputTokens.off;
+    for (const mode of modes) {
+      if (mode === "off") continue;
+      tokenAccounting.incrementalActiveMinusOffTokens[mode] =
+        tokenAccounting.totalRequestInputTokens[mode] - offTokens;
+      tokenAccounting.exactCounts[mode].incrementalInputTokens =
+        tokenAccounting.incrementalActiveMinusOffTokens[mode];
+    }
+  }
 
   const piRunner =
     runnerKind === "pi"
@@ -680,6 +745,10 @@ export async function runProviderEvaluation(options) {
     baseSystemPromptHash: crypto
       .createHash("sha256")
       .update(baseSystemPrompt)
+      .digest("hex"),
+    promptContractHash: crypto
+      .createHash("sha256")
+      .update(JSON.stringify(fixtures.promptContract ?? null))
       .digest("hex"),
     runtimePromptHash: crypto
       .createHash("sha256")
@@ -713,6 +782,25 @@ export async function runProviderEvaluation(options) {
     let payload = null;
     let executionExtras = {};
     if (piRunner !== null) {
+      // One reserved provider attempt per Pi process, checked immediately
+      // before the process starts. Retries inside the Pi process are not
+      // observable here and are never claimed as counted attempts.
+      try {
+        reservePaidAttempt("provider");
+      } catch (error) {
+        checkpoint.recordFailure(
+          call.key,
+          error instanceof Error ? error.message : String(error),
+        );
+        throw new EvaluationAbortedError(
+          `evaluation aborted at ${call.key}: ${error instanceof Error ? error.message : String(error)}`,
+          {
+            checkpointPath: checkpoint.path,
+            completedCount: results.length,
+            failedKey: call.key,
+          },
+        );
+      }
       const piOutcome = await piRunner.execute({ mode: call.mode, category, repetition: call.repetition });
       payload = {
         content:
@@ -732,8 +820,9 @@ export async function runProviderEvaluation(options) {
         elapsedMs: piOutcome.elapsedMs,
         costUsd: piOutcome.costUsd ?? null,
         systemPromptSent: null,
-        sessionId: piOutcome.sessionId,
+        sessionId: null,
         toolCallCount: piOutcome.toolCallCount,
+        rawUsage: piOutcome.rawUsage ?? null,
       };
     } else {
       const systemBlocks = buildSystemBlocks(baseSystemPrompt, cavemanText);
@@ -755,7 +844,7 @@ export async function runProviderEvaluation(options) {
             "x-api-key": apiKey,
           },
           body: JSON.stringify(body),
-          fetchImpl,
+          fetchImpl: caseFetch,
           timeoutMs: timeoutMs ?? 120000,
           maxAttempts: maxAttempts ?? 3,
           sleepImpl,
@@ -817,7 +906,7 @@ export async function runProviderEvaluation(options) {
       requiredTermRatio: scoreRequiredTerms(extracted.text, category.requiredTerms ?? []),
       validation,
       usage,
-      rawUsage: payload.usage ?? null,
+      rawUsage: executionExtras.rawUsage ?? payload.usage ?? null,
       costUsd,
       elapsedMs: executionExtras.elapsedMs,
       attempts: executionExtras.attempts,
@@ -859,14 +948,18 @@ export async function runProviderEvaluation(options) {
           system,
           messages: [{ role: "user", content: user }],
         }),
-        fetchImpl: judgeFetchImpl ?? fetchImpl,
+        fetchImpl: judgeFetch,
         timeoutMs: timeoutMs ?? 120000,
         maxAttempts: maxAttempts ?? 3,
         sleepImpl,
         nowImpl,
       });
       const text = outcome.json.content?.find((block) => block.type === "text")?.text ?? "";
-      return { text, usage: normalizeUsage(outcome.json.usage) };
+      return {
+        text,
+        usage: normalizeUsage(outcome.json.usage),
+        rawUsage: outcome.json.usage ?? null,
+      };
     };
     const { promptText, rubricText } = loadJudgeMaterials();
     for (const result of results) {
@@ -899,8 +992,20 @@ export async function runProviderEvaluation(options) {
           activeQualityTotal: activeScore.total,
           notes: verdict.notes,
           usage: outcome.usage,
+          rawUsage: outcome.rawUsage ?? null,
         };
       } catch (error) {
+        if (error instanceof PaidCallBudgetExceededError) {
+          checkpoint.recordFailure(judgeKey, error.message);
+          throw new EvaluationAbortedError(
+            `evaluation aborted during judge for ${result.key}: ${error.message}`,
+            {
+              checkpointPath: checkpoint.path,
+              completedCount: results.length,
+              failedKey: result.key,
+            },
+          );
+        }
         judgeResult = {
           failed: true,
           error: error instanceof Error ? error.message : String(error),
@@ -918,17 +1023,22 @@ export async function runProviderEvaluation(options) {
     result.requiredTermsPassed = result.requiredTermRatio === 1;
     const off = offByPair.get(`${result.repetition}::${result.category}`);
     if (result.mode !== "off" && off !== undefined) {
-      result.tokenRatioToOff =
-        (off.usage.output ?? 0) > 0
-          ? (result.usage.output ?? 0) / off.usage.output
-          : null;
+      // An output ratio requires positive integer output usage in both arms.
+      // Missing or invalid output usage fails brevity fail-closed instead of
+      // silently passing on an undefined ratio.
+      const ratioInputsValid =
+        isPositiveIntegerOutput(off.usage.output) &&
+        isPositiveIntegerOutput(result.usage.output);
+      result.tokenRatioToOff = ratioInputsValid
+        ? result.usage.output / off.usage.output
+        : null;
       result.wordRatioToOff =
         off.wordCount > 0 ? result.wordCount / off.wordCount : null;
       const ratioLimit = TOKEN_RATIO_LIMITS[result.mode];
       result.brevityPassed =
-        ratioLimit === undefined || result.tokenRatioToOff === null
+        ratioLimit === undefined
           ? true
-          : result.tokenRatioToOff <= ratioLimit;
+          : result.tokenRatioToOff !== null && result.tokenRatioToOff <= ratioLimit;
     }
     const judgeResult = result.mode === "off" ? null : judgeResultsByKey.get(result.key) ?? null;
     result.judge = judgeResult;
@@ -962,6 +1072,21 @@ export async function runProviderEvaluation(options) {
     plannedCalls: plannedPaidCalls,
     plannedProviderCalls: plan.length,
     plannedJudgeCalls,
+    paidCallAccounting: {
+      cap: maxPaidCalls ?? null,
+      planned: {
+        provider: plan.length,
+        judge: plannedJudgeCalls,
+        countEndpoint: plannedCountCalls,
+        total: plannedPaidCalls,
+      },
+      actual: {
+        provider: attemptState.provider,
+        judge: attemptState.judge,
+        countEndpoint: attemptState.countEndpoint,
+        total: paidAttempts(),
+      },
+    },
     caseCount: results.length,
     runOrder: results.map((result) => ({
       seq: result.seq,
@@ -976,7 +1101,13 @@ export async function runProviderEvaluation(options) {
     aggregates: aggregateResults(results, { judgeEnabled: judge === true, pricing }),
     failures: checkpoint.state.failures,
     judgeFailures,
-    passed: results.every((result) => result.passed) && judgeFailures === 0,
+    // Primary usage completeness gates the whole run: every result, off arms
+    // included, must report positive integer output usage.
+    primaryUsageComplete: results.every((result) => isPositiveIntegerOutput(result.usage.output)),
+    passed:
+      results.every((result) => result.passed) &&
+      judgeFailures === 0 &&
+      results.every((result) => isPositiveIntegerOutput(result.usage.output)),
   };
 }
 
@@ -1042,6 +1173,11 @@ export async function requestJsonWithRetry(options) {
       });
     } catch (error) {
       clearTimeout(timeoutHandle);
+      // Budget stops are not request failures: retrying would re-check the
+      // same exhausted budget and mislabel the abort as an attempt failure.
+      if (error instanceof PaidCallBudgetExceededError) {
+        throw error;
+      }
       if (attempt === maxAttempts) {
         throw new TerminalRequestError(
           `request failed on attempt ${attempt}: ${error instanceof Error ? error.message : String(error)}`,
@@ -1095,6 +1231,16 @@ export class EvaluationAbortedError extends Error {
     this.checkpointPath = info.checkpointPath ?? null;
     this.completedCount = info.completedCount ?? 0;
     this.failedKey = info.failedKey ?? null;
+  }
+}
+
+// Raised before an HTTP attempt would exceed the configured paid-call cap.
+export class PaidCallBudgetExceededError extends Error {
+  constructor(message, info) {
+    super(message);
+    this.name = "PaidCallBudgetExceededError";
+    this.cap = info.cap ?? null;
+    this.actualAttempts = info.actualAttempts ?? 0;
   }
 }
 
@@ -1254,9 +1400,11 @@ function createMemoryCheckpoint(runId) {
 }
 
 // Pi runner adapter. Executes a case through the real Pi CLI in documented
-// JSON mode with the extension loaded, a controlled HOME carrying the mode
-// config, and a stable session id for accumulated context. Production use
-// passes a real spawn; tests inject a fake so no provider call happens.
+// JSON mode with the extension loaded. Every call is single-turn and carries
+// an isolated CAVEMAN_MILK_CONFIG_DIR holding the mode config, so the user's
+// own config is never read or written and no session context accumulates.
+// Production use passes a real spawn; tests inject a fake so no provider
+// call happens.
 export function createPiRunner({
   piBin,
   extensionPath,
@@ -1269,16 +1417,13 @@ export function createPiRunner({
   baseEnv = process.env,
 }) {
   return {
-    async execute({ mode, category, repetition }) {
-      const homeDir = mkdtempImpl("caveman-pi-home-");
-      const configDir = path.join(homeDir, ".config");
-      fs.mkdirSync(configDir, { recursive: true });
+    async execute({ mode, category }) {
+      const configDir = mkdtempImpl("caveman-pi-config-");
       fs.writeFileSync(
         path.join(configDir, "caveman-milk-pi.json"),
         JSON.stringify({ schemaVersion: 1, mode, showStatus: false }, null, 2) + "\n",
         { mode: 0o600 },
       );
-      const sessionId = `caveman-eval-${repetition}-${category.id}-${mode}`;
       const args = [
         piBin,
         "--mode",
@@ -1291,73 +1436,82 @@ export function createPiRunner({
         extensionPath,
         "-e",
         toolExtensionPath,
-        "--session-id",
-        sessionId,
         "--model",
         model,
         "-p",
         category.prompt,
       ];
-      const startedAtMs = nowImpl();
-      const result = await spawnImpl(args, {
-        env: { ...baseEnv, HOME: homeDir },
-        timeout: timeoutMs,
-      });
-      const elapsedMs = nowImpl() - startedAtMs;
-      if (result.code !== 0) {
-        throw new Error(
-          `pi runner exited with code ${result.code}: ${(result.stderr ?? "").substring(0, 500)}`,
-        );
-      }
-      let text = "";
-      let toolCall = null;
-      let toolCallCount = 0;
-      let usage = { input: null, output: null, cacheWrite: null, cacheRead: null };
-      let costUsd = null;
-      for (const line of (result.stdout ?? "").split("\n")) {
-        const trimmed = line.trim();
-        if (trimmed.length === 0) continue;
-        let event;
-        try {
-          event = JSON.parse(trimmed);
-        } catch {
-          continue;
+      try {
+        const startedAtMs = nowImpl();
+        const result = await spawnImpl(args, {
+          env: { ...baseEnv, CAVEMAN_MILK_CONFIG_DIR: configDir },
+          timeout: timeoutMs,
+        });
+        const elapsedMs = nowImpl() - startedAtMs;
+        if (result.code !== 0) {
+          throw new Error(
+            `pi runner exited with code ${result.code}: ${(result.stderr ?? "").substring(0, 500)}`,
+          );
         }
-        if (event.type === "tool_execution_start") {
-          toolCallCount += 1;
-          if (event.toolName === "write_artifact") {
-            toolCall = { name: event.toolName, input: event.args };
+        let text = "";
+        let toolCall = null;
+        let toolCallCount = 0;
+        let usage = { input: null, output: null, cacheWrite: null, cacheRead: null };
+        let rawUsage = null;
+        let costUsd = null;
+        for (const line of (result.stdout ?? "").split("\n")) {
+          const trimmed = line.trim();
+          if (trimmed.length === 0) continue;
+          let event;
+          try {
+            event = JSON.parse(trimmed);
+          } catch {
+            continue;
           }
-        }
-        if (event.type === "message_end" && event.message?.role === "assistant") {
-          const message = event.message;
-          text = (message.content ?? [])
-            .filter((block) => block.type === "text")
-            .map((block) => block.text)
-            .join("");
-          if (message.usage !== undefined && message.usage !== null) {
-            usage = normalizeUsage(message.usage);
-            if (message.usage.cost && typeof message.usage.cost.total === "number") {
-              costUsd = message.usage.cost.total;
+          if (event.type === "tool_execution_start") {
+            toolCallCount += 1;
+            if (event.toolName === "write_artifact") {
+              toolCall = { name: event.toolName, input: event.args };
+            }
+          }
+          if (event.type === "message_end" && event.message?.role === "assistant") {
+            const message = event.message;
+            text = (message.content ?? [])
+              .filter((block) => block.type === "text")
+              .map((block) => block.text)
+              .join("");
+            if (message.usage !== undefined && message.usage !== null) {
+              usage = normalizeUsage(message.usage);
+              rawUsage = message.usage;
+              if (message.usage.cost && typeof message.usage.cost.total === "number") {
+                costUsd = message.usage.cost.total;
+              }
             }
           }
         }
+        if (text.length === 0) {
+          throw new Error("pi runner produced no assistant text for the case.");
+        }
+        return {
+          text,
+          toolCall,
+          toolCallCount,
+          usage,
+          rawUsage,
+          attempts: 1,
+          elapsedMs,
+          costUsd,
+          systemPromptSent: null,
+          sessionId: null,
+        };
+      } finally {
+        // Best-effort cleanup: a locked file must not fail the finished call.
+        try {
+          fs.rmSync(configDir, { recursive: true, force: true });
+        } catch {
+          // Leave the temp directory for the operating system to reap.
+        }
       }
-      if (text.length === 0) {
-        throw new Error("pi runner produced no assistant text for the case.");
-      }
-      return {
-        text,
-        toolCall,
-        toolCallCount,
-        usage,
-        rawUsage: null,
-        attempts: 1,
-        elapsedMs,
-        costUsd,
-        systemPromptSent: null,
-        sessionId,
-      };
     },
   };
 }

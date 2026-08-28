@@ -44,6 +44,26 @@ Development now targets Pi `0.84.3`. Vendored rules match caveman commit `17f9f2
 
 Documentation now separates prompt-size measurements from provider cost claims.
 
+### Fixed
+
+Git commit discovery now imports `execFileSync` at module scope, so the default discovery works in plain ESM node processes without `CAVEMAN_EVAL_COMMIT`.
+
+Token accounting validity is now strict. Missing usage stays `null`. Output ratios require positive integer output usage in both arms. A pair with missing or invalid output usage is reported as incomplete, fails brevity fail-closed, and stays out of paired deltas. Reports carry complete and incomplete pair counts and preserve raw provider usage verbatim.
+
+The evaluation fixture no longer duplicates prompt rules. Runtime prompts load from the production `src/prompt-contract.json`. Direct requests carry the production text for every mode. Reports carry the runtime prompt hash, and a contract change invalidates checkpoint reuse.
+
+Every Pi call now uses a fresh temporary `CAVEMAN_MILK_CONFIG_DIR` and is single-turn, so user config stays isolated and no session context accumulates.
+
+Malformed supplied seeds are now rejected instead of silently randomized.
+
+The paid cap now counts every direct-provider, token-count, and judge HTTP attempt. The run stops before the next attempt would exceed it. Budget stops are reported immediately instead of being retried or wrapped as request failures. Reports list logical cases separately from counted attempts.
+
+Token-count attempts now consume the same paid budget, and every configuration check finishes before the first count request. Planned and actual totals cover provider, judge, and count-endpoint attempts.
+
+Every Pi process now reserves and reports one provider attempt immediately before it starts. A Pi run stops before any process that would exceed the cap. Retries inside a Pi process are not observable and are never claimed.
+
+Raw provider usage is now preserved verbatim for Pi results and for every judge result. Cost computation returns `null` when any pricing-relevant usage field is missing instead of substituting zero. Reports add a top-level `primaryUsageComplete` gate. It requires positive integer output usage on every result, off arms included, and the overall pass now requires it. The run identity now hashes the entire prompt contract as `promptContractHash`, so any contract-file change invalidates checkpoint reuse.
+
 ## 0.2.0 - 2026-04-16
 
 The npm package changed from `@tomooshi/pi-caveman` to `@tomooshi/caveman-milk-pi`.

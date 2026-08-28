@@ -31,13 +31,25 @@ describe("pi provider routing", () => {
     );
     expect(spawns.length).toBe(6);
     const first = spawns[0];
-    expect(first.args.includes("--session-id")).toBe(true);
-    expect(first.options.env.HOME).not.toBe(process.env.HOME);
+    // Single-turn calls with isolated config directories.
+    expect(first.args.includes("--session-id")).toBe(false);
+    expect(typeof first.options.env.CAVEMAN_MILK_CONFIG_DIR).toBe("string");
+    expect(new Set(spawns.map((spawn) => spawn.options.env.CAVEMAN_MILK_CONFIG_DIR)).size).toBe(6);
+    expect(first.options.env.HOME).toBe(process.env.HOME);
     expect(report.provider).toBe("pi");
     expect(report.runner).toBe("pi");
     expect(report.environment.runner).toBe("pi");
     expect(report.caseCount).toBe(6);
     expect(report.results.every((result) => result.usage.input === 50)).toBe(true);
     expect(report.results.every((result) => result.costUsd === 0.0005)).toBe(true);
+    // Raw Pi message usage is preserved verbatim on every result.
+    expect(report.results.every((result) => result.rawUsage)).toBe(true);
+    expect(report.results[0].rawUsage).toEqual({
+      input: 50,
+      output: 30,
+      cacheRead: 10,
+      cacheWrite: 5,
+      cost: { total: 0.0005 },
+    });
   });
 });

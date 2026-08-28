@@ -66,6 +66,8 @@ Token-count attempts now consume the same paid budget, and every configuration c
 
 Every Pi process now reserves and reports one provider attempt immediately before it starts. A Pi run stops before any process that would exceed the cap. Retries inside a Pi process are not observable and are never claimed.
 
+The paid cap now applies cumulatively across invocations. Every counted attempt is reserved and atomically persisted to the checkpoint before it is issued. Reservations split into provider, judge, and count-endpoint totals. A resumed run loads prior totals and stops before the cumulative total would exceed `CAVEMAN_EVAL_MAX_PAID_CALLS`. The checkpoint now opens before token-count traffic, so count attempts persist too. Completed count results are checkpointed and reused on resume instead of reissued. Reports carry cumulative actual totals plus an `invocation` block for the current process. An empty checkpoint written before this change starts with zero reservations. A non-empty older checkpoint cannot reveal prior retry attempts, so resume is rejected while the file remains intact. Corrupt reservation data also fails closed instead of resetting the budget. Memory checkpoints keep accounting local to the invocation.
+
 Raw provider usage is now preserved verbatim for Pi results and for every judge result. Cost computation returns `null` when any pricing-relevant usage field is missing instead of substituting zero. Reports add a top-level `primaryUsageComplete` gate. It requires positive integer output usage on every result, off arms included, and the overall pass now requires it. The run identity now hashes the entire prompt contract as `promptContractHash`, so any contract-file change invalidates checkpoint reuse.
 
 ## 0.2.0 - 2026-04-16

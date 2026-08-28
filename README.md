@@ -161,6 +161,8 @@ npm run evaluate
 
 Paid CLI runs require `CAVEMAN_EVAL_MAX_PAID_CALLS`. The cap counts each direct-provider, token-count, and judge HTTP attempt. For Pi runs, it counts each Pi process launch, judge processes included. A Pi process is counted once while internal retries remain unobservable. The run stops before the next counted attempt would exceed the cap. Reports list logical cases separately from counted attempts. Timeout and retry controls use `CAVEMAN_EVAL_TIMEOUT_MS` and `CAVEMAN_EVAL_MAX_ATTEMPTS`.
 
+The cap applies cumulatively across invocations. Every counted attempt is reserved and atomically persisted before it is issued. Reservations split into provider, judge, and count-endpoint totals inside the checkpoint. A resumed run loads the prior totals first. It stops before the cumulative total would exceed the cap, so repeated runs cannot re-spend the budget. Completed token-count results are also checkpointed. Resume reuses them instead of reissuing paid count requests. Reports carry cumulative actual totals and an `invocation` block for the current process only. An empty older checkpoint starts with zero reservations. A non-empty older checkpoint cannot reveal prior retry attempts, so resume is rejected. The file stays intact for review. Corrupt reservation data also fails closed instead of resetting the budget. Runs without a checkpoint file keep accounting local to the invocation.
+
 `CAVEMAN_EVAL_BASE_SYSTEM_PROMPT_FILE` can replace the committed Pi prompt capture. `CAVEMAN_EVAL_PI_BIN` selects another Pi executable. `CAVEMAN_EVAL_COMMIT` records an explicit candidate commit.
 
 The runner appends caveman runtime text after a captured Pi base system prompt. The capture lives in `scripts/eval/pi-base-system-prompt.json` and comes from Pi 0.84.3.
@@ -177,7 +179,7 @@ Set `CAVEMAN_EVAL_JUDGE=1` to enable the blinded quality judge. The judge uses t
 
 With `CAVEMAN_EVAL_PROVIDER=pi`, the judge also runs through Pi. Each judge call spawns a fresh Pi process using `CAVEMAN_EVAL_JUDGE_MODEL` or the case model. The committed judge prompt and rubric become the Pi system prompt, and the blinded task plus both responses are the only user content. Judge processes run with mode `off` in an isolated temporary `CAVEMAN_MILK_CONFIG_DIR` and require no Anthropic key. Each judge process reserves one shared-cap attempt reported under judge. A Pi process is counted once while internal retries remain unobservable.
 
-Each completed paid call is written to an incremental atomic checkpoint. Checkpointed runs require `CAVEMAN_EVAL_SEED` so a retry rebuilds the same call order.
+Each completed paid call is written to an incremental atomic checkpoint. Checkpointed runs require `CAVEMAN_EVAL_SEED` so a retry rebuilds the same call order. Attempt reservations use the same atomic writes. They persist before every counted attempt, so an interrupted run resumes with its cumulative budget intact.
 
 After a request failure, rerun the same command to resume completed calls. A provider success followed by local checkpoint failure can still require manual review.
 

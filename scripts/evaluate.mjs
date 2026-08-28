@@ -626,29 +626,6 @@ export async function runProviderEvaluation(options) {
 
   const modes = selectNamedItems(fixtures.modes, modeSelection);
   const categories = selectNamedItems(fixtures.categories, categorySelection);
-  // Attempt guard: the paid cap bounds actual HTTP attempts, not logical
-  // cases. Provider calls, judge calls, and token-count calls all draw from
-  // the same budget, so a retried call consumes budget for every attempt.
-  const attemptState = { provider: 0, judge: 0, countEndpoint: 0 };
-  const paidAttempts = () =>
-    attemptState.provider + attemptState.judge + attemptState.countEndpoint;
-  const reservePaidAttempt = (kind) => {
-    if (maxPaidCalls !== undefined && paidAttempts() >= maxPaidCalls) {
-      throw new PaidCallBudgetExceededError(
-        `paid-call budget exhausted: ${paidAttempts()} of ${maxPaidCalls} actual attempts spent, stopping before the next attempt. ` +
-          "Rerun with a higher CAVEMAN_EVAL_MAX_PAID_CALLS or resume from the checkpoint.",
-        { cap: maxPaidCalls, actualAttempts: paidAttempts() },
-      );
-    }
-    attemptState[kind] += 1;
-  };
-  const guardPaidAttempt = (kind, baseFetch) => async (url, init) => {
-    reservePaidAttempt(kind);
-    return baseFetch(url, init);
-  };
-  const caseFetch = guardPaidAttempt("provider", fetchImpl);
-  const judgeFetch = guardPaidAttempt("judge", judgeFetchImpl ?? fetchImpl);
-  const countFetch = guardPaidAttempt("countEndpoint", fetchImpl);
   const activeModes = modes.filter((mode) => mode !== "off");
   if (activeModes.length > 0 && !modes.includes("off")) {
     throw new Error(
@@ -685,55 +662,6 @@ export async function runProviderEvaluation(options) {
     commit: environment.commit,
   });
   const baseSystemPrompt = baseSystemPromptOption ?? loadPiBaseSystemPrompt();
-  // Token counting runs only after every configuration check has passed, so
-  // an invalid run can never issue a count request.
-  const tokenAccounting = {
-    method: "provider-count-endpoint",
-    endpointPath: fixtures.promptContract?.tokenAccounting?.endpointPath ??
-      "/v1/messages/count_tokens",
-    status: countTokens === true ? "exact" : "not-run",
-    model,
-    totalRequestInputTokens: {},
-    incrementalActiveMinusOffTokens: {},
-    exactCounts: {},
-  };
-  if (countTokens === true) {
-    const resolvedCountEndpoint =
-      countEndpoint ?? new URL(tokenAccounting.endpointPath, endpoint).toString();
-    const countModes = modes.includes("off") ? modes : ["off", ...modes];
-    for (const mode of countModes) {
-      const count = await countPromptTokens({
-        apiKey,
-        model,
-        prompt: fixtures.runtimePrompts[mode] ?? "",
-        endpoint: resolvedCountEndpoint,
-        fetchImpl: countFetch,
-      });
-      tokenAccounting.totalRequestInputTokens[mode] = count.inputTokens;
-      tokenAccounting.exactCounts[mode] = count;
-    }
-    const offTokens = tokenAccounting.totalRequestInputTokens.off;
-    for (const mode of modes) {
-      if (mode === "off") continue;
-      tokenAccounting.incrementalActiveMinusOffTokens[mode] =
-        tokenAccounting.totalRequestInputTokens[mode] - offTokens;
-      tokenAccounting.exactCounts[mode].incrementalInputTokens =
-        tokenAccounting.incrementalActiveMinusOffTokens[mode];
-    }
-  }
-
-  const piRunner =
-    runnerKind === "pi"
-      ? createPiRunner({
-          ...(piBinOption === undefined ? {} : { piBin: piBinOption }),
-          extensionPath: path.resolve(here, "..", "index.ts"),
-          model,
-          spawnImpl: spawnImpl ?? defaultSpawn,
-          timeoutMs,
-          nowImpl,
-        })
-      : null;
-
   const runIdentity = {
     provider,
     endpoint,
@@ -764,6 +692,8 @@ export async function runProviderEvaluation(options) {
     .update(JSON.stringify(runIdentity))
     .digest("hex")
     .substring(0, 16)}`;
+  // The checkpoint opens before any count traffic so every paid attempt,
+  // count requests included, can reserve and persist before it is issued.
   const checkpoint =
     checkpointPath !== undefined
       ? openCheckpoint({
@@ -773,6 +703,89 @@ export async function runProviderEvaluation(options) {
           nowImpl,
         })
       : createMemoryCheckpoint(runId);
+  // Attempt guard: the paid cap bounds actual attempts, not logical cases,
+  // and it applies cumulatively across invocations. Totals load from the
+  // checkpoint so a resumed run stops before the cumulative total exceeds
+  // the cap, and every reservation persists atomically before the attempt.
+  const attemptState = { ...checkpoint.attemptReservations() };
+  const invocationStart = { ...attemptState };
+  const paidAttempts = () =>
+    attemptState.provider + attemptState.judge + attemptState.countEndpoint;
+  const reservePaidAttempt = (kind) => {
+    if (maxPaidCalls !== undefined && paidAttempts() >= maxPaidCalls) {
+      throw new PaidCallBudgetExceededError(
+        `paid-call budget exhausted: ${paidAttempts()} of ${maxPaidCalls} actual attempts spent, stopping before the next attempt. ` +
+          "Rerun with a higher CAVEMAN_EVAL_MAX_PAID_CALLS or resume from the checkpoint.",
+        { cap: maxPaidCalls, actualAttempts: paidAttempts() },
+      );
+    }
+    attemptState[kind] += 1;
+    checkpoint.recordAttempt(kind);
+  };
+  const guardPaidAttempt = (kind, baseFetch) => async (url, init) => {
+    reservePaidAttempt(kind);
+    return baseFetch(url, init);
+  };
+  const caseFetch = guardPaidAttempt("provider", fetchImpl);
+  const judgeFetch = guardPaidAttempt("judge", judgeFetchImpl ?? fetchImpl);
+  const countFetch = guardPaidAttempt("countEndpoint", fetchImpl);
+  // Token counting runs only after every configuration check has passed, so
+  // an invalid run can never issue a count request.
+  const tokenAccounting = {
+    method: "provider-count-endpoint",
+    endpointPath: fixtures.promptContract?.tokenAccounting?.endpointPath ??
+      "/v1/messages/count_tokens",
+    status: countTokens === true ? "exact" : "not-run",
+    model,
+    totalRequestInputTokens: {},
+    incrementalActiveMinusOffTokens: {},
+    exactCounts: {},
+  };
+  if (countTokens === true) {
+    const resolvedCountEndpoint =
+      countEndpoint ?? new URL(tokenAccounting.endpointPath, endpoint).toString();
+    const countModes = modes.includes("off") ? modes : ["off", ...modes];
+    for (const mode of countModes) {
+      // A stored count result is reused instead of reissuing a paid count
+      // request; reservations from the prior invocation already paid for it.
+      if (checkpoint.completedCount(mode)) {
+        const stored = checkpoint.storedCount(mode);
+        tokenAccounting.totalRequestInputTokens[mode] = stored.inputTokens;
+        tokenAccounting.exactCounts[mode] = stored;
+        continue;
+      }
+      const count = await countPromptTokens({
+        apiKey,
+        model,
+        prompt: fixtures.runtimePrompts[mode] ?? "",
+        endpoint: resolvedCountEndpoint,
+        fetchImpl: countFetch,
+      });
+      checkpoint.recordCount(mode, count);
+      tokenAccounting.totalRequestInputTokens[mode] = count.inputTokens;
+      tokenAccounting.exactCounts[mode] = count;
+    }
+    const offTokens = tokenAccounting.totalRequestInputTokens.off;
+    for (const mode of modes) {
+      if (mode === "off") continue;
+      tokenAccounting.incrementalActiveMinusOffTokens[mode] =
+        tokenAccounting.totalRequestInputTokens[mode] - offTokens;
+      tokenAccounting.exactCounts[mode].incrementalInputTokens =
+        tokenAccounting.incrementalActiveMinusOffTokens[mode];
+    }
+  }
+
+  const piRunner =
+    runnerKind === "pi"
+      ? createPiRunner({
+          ...(piBinOption === undefined ? {} : { piBin: piBinOption }),
+          extensionPath: path.resolve(here, "..", "index.ts"),
+          model,
+          spawnImpl: spawnImpl ?? defaultSpawn,
+          timeoutMs,
+          nowImpl,
+        })
+      : null;
 
   const results = [];
   let seq = 0;
@@ -1097,6 +1110,14 @@ export async function runProviderEvaluation(options) {
         countEndpoint: attemptState.countEndpoint,
         total: paidAttempts(),
       },
+      invocation: {
+        provider: attemptState.provider - invocationStart.provider,
+        judge: attemptState.judge - invocationStart.judge,
+        countEndpoint: attemptState.countEndpoint - invocationStart.countEndpoint,
+        total:
+          paidAttempts() -
+          (invocationStart.provider + invocationStart.judge + invocationStart.countEndpoint),
+      },
     },
     caseCount: results.length,
     runOrder: results.map((result) => ({
@@ -1279,6 +1300,8 @@ export function createArmOrder(arms, seed) {
 
 // Incremental checkpoint store. Each completed paid call is persisted with an
 // atomic temp-file rename so an interrupted run resumes without repeating it.
+// Attempt reservations persist the same way, immediately before every paid
+// attempt, so the cumulative cap survives process restarts.
 export function openCheckpoint({
   path: checkpointPath,
   runId,
@@ -1294,7 +1317,14 @@ export function openCheckpoint({
     }
   },
 }) {
-  let state = { runId, completedCalls: {}, runOrder: [], failures: [] };
+  let state = {
+    runId,
+    completedCalls: {},
+    runOrder: [],
+    failures: [],
+    attemptReservations: { provider: 0, judge: 0, countEndpoint: 0 },
+    countResults: {},
+  };
   if (owner !== undefined && !fs.existsSync(checkpointPath)) {
     fs.mkdirSync(path.dirname(checkpointPath), { recursive: true });
     const initialState = { ...state, owner };
@@ -1350,6 +1380,37 @@ export function openCheckpoint({
       );
     }
     state = parsed;
+    // A non-empty legacy checkpoint has no trustworthy attempt total because
+    // retries were not recorded. Refuse resume instead of guessing below the
+    // real spend. An empty checkpoint can safely start with zero reservations.
+    if (state.attemptReservations === undefined) {
+      const hasCompletedCalls = Object.keys(state.completedCalls).length > 0;
+      const hasFailures = Array.isArray(state.failures) && state.failures.length > 0;
+      if (hasCompletedCalls || hasFailures) {
+        throw new Error(
+          `checkpoint at ${checkpointPath} predates cumulative attempt accounting and contains paid work. ` +
+            "Keep it for review, then start a new checkpoint for a safely capped run.",
+        );
+      }
+      state.attemptReservations = { provider: 0, judge: 0, countEndpoint: 0 };
+    } else if (!isValidAttemptReservations(state.attemptReservations)) {
+      throw new Error(
+        `checkpoint at ${checkpointPath} is corrupt (attemptReservations must contain non-negative integers). ` +
+          "Move it aside or delete it, then rerun to rebuild progress.",
+      );
+    }
+    if (state.countResults === undefined) {
+      state.countResults = {};
+    } else if (
+      state.countResults === null ||
+      typeof state.countResults !== "object" ||
+      Array.isArray(state.countResults)
+    ) {
+      throw new Error(
+        `checkpoint at ${checkpointPath} is corrupt (countResults must be an object). ` +
+          "Move it aside or delete it, then rerun to rebuild progress.",
+      );
+    }
   }
   if (owner !== undefined) {
     state.owner = owner;
@@ -1369,6 +1430,23 @@ export function openCheckpoint({
     },
     stored(key) {
       return state.completedCalls[key];
+    },
+    attemptReservations() {
+      return { ...state.attemptReservations };
+    },
+    recordAttempt(kind) {
+      state.attemptReservations[kind] += 1;
+      persist();
+    },
+    completedCount(mode) {
+      return Object.prototype.hasOwnProperty.call(state.countResults, mode);
+    },
+    storedCount(mode) {
+      return { ...state.countResults[mode] };
+    },
+    recordCount(mode, count) {
+      state.countResults[mode] = { ...count };
+      persist();
     },
     recordCall(key, result) {
       state.completedCalls[key] = result;
@@ -1391,13 +1469,38 @@ export function openCheckpoint({
   };
 }
 
+function isValidAttemptReservations(value) {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  for (const kind of ["provider", "judge", "countEndpoint"]) {
+    const count = value[kind];
+    if (!Number.isSafeInteger(count) || count < 0) return false;
+  }
+  return true;
+}
+
 function createMemoryCheckpoint(runId) {
-  const state = { runId, completedCalls: {}, runOrder: [], failures: [] };
+  const state = {
+    runId,
+    completedCalls: {},
+    runOrder: [],
+    failures: [],
+    attemptReservations: { provider: 0, judge: 0, countEndpoint: 0 },
+    countResults: {},
+  };
   return {
     runId,
     path: null,
     completed: (key) => Object.prototype.hasOwnProperty.call(state.completedCalls, key),
     stored: (key) => state.completedCalls[key],
+    attemptReservations: () => ({ ...state.attemptReservations }),
+    recordAttempt: (kind) => {
+      state.attemptReservations[kind] += 1;
+    },
+    completedCount: (mode) => Object.prototype.hasOwnProperty.call(state.countResults, mode),
+    storedCount: (mode) => ({ ...state.countResults[mode] }),
+    recordCount: (mode, count) => {
+      state.countResults[mode] = { ...count };
+    },
     recordCall: (key, result) => {
       state.completedCalls[key] = result;
       if (!state.runOrder.includes(key)) state.runOrder.push(key);

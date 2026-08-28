@@ -16,6 +16,22 @@ Configuration now has schema validation and migration for older flat files. Atom
 
 Tests now cover commands, Pi lifecycle hooks, configuration, prompt generation, and evaluation. Offline evaluation contains 105 matched cases. Anthropic execution requires explicit paid-run authorization.
 
+The evaluation validates the provider name against an allowlist. It rejects selections without the `off` baseline before any paid request. Comparative scoring requires at least three repetitions per pair.
+
+Provider runs append caveman runtime text after a captured Pi 0.84.3 base system prompt. The new `pi` provider runs each case through the real Pi CLI in JSON mode with the extension loaded.
+
+Brevity gates now use provider-reported output tokens. Word counts remain a readability diagnostic.
+
+Deterministic validators now cover exact negation, numbered step order, warning prose, confirmation language, TypeScript code syntax, and persisted prose. They also cover requested paragraph count, tool-call structure, and term retention.
+
+A blinded quality judge with committed prompt and rubric can fail the overall report when the active arm loses quality.
+
+Paid calls get a per-attempt timeout plus bounded retry for rate limits and transient failures. CLI execution also requires an explicit maximum call count.
+
+An incremental atomic checkpoint resumes recorded calls. Its identity binds the model, commit, prompt, provider, matrix, repetition count, and seed.
+
+Reports pair raw results with aggregate statistics. Aggregates cover token counts, cache traffic, latency, quality scores, and provider cost when pricing is set. Environment metadata records the Git commit and the Pi version. It also records the stored seed and the run order.
+
 ### Changed
 
 Every configuration validation error now names the exact path being loaded.
@@ -27,6 +43,28 @@ Runtime prompts now use one versioned contract instead of filtered markdown. Act
 Development now targets Pi `0.84.3`. Vendored rules match caveman commit `17f9f2ec2377b0bfe16b52ee03a462e7f0a02bc8`.
 
 Documentation now separates prompt-size measurements from provider cost claims.
+
+### Fixed
+
+Git commit discovery now imports `execFileSync` at module scope, so the default discovery works in plain ESM node processes without `CAVEMAN_EVAL_COMMIT`.
+
+The default Pi executable now targets the `@earendil-works/pi-coding-agent` CLI JavaScript entry instead of a `.bin` shim. The default spawn runs JavaScript entry points through the current node executable, so `CAVEMAN_EVAL_PI_BIN` accepts `.js`, `.mjs`, and `.cjs` values on every platform. Checkpoint permission assertions now run only where POSIX mode bits are supported.
+
+Token accounting validity is now strict. Missing usage stays `null`. Output ratios require positive integer output usage in both arms. A pair with missing or invalid output usage is reported as incomplete, fails brevity fail-closed, and stays out of paired deltas. Reports carry complete and incomplete pair counts and preserve raw provider usage verbatim.
+
+The evaluation fixture no longer duplicates prompt rules. Runtime prompts load from the production `src/prompt-contract.json`. Direct requests carry the production text for every mode. Reports carry the runtime prompt hash, and a contract change invalidates checkpoint reuse.
+
+Every Pi call now uses a fresh temporary `CAVEMAN_MILK_CONFIG_DIR` and is single-turn, so user config stays isolated and no session context accumulates.
+
+Malformed supplied seeds are now rejected instead of silently randomized.
+
+The paid cap now counts every direct-provider, token-count, and judge HTTP attempt. The run stops before the next attempt would exceed it. Budget stops are reported immediately instead of being retried or wrapped as request failures. Reports list logical cases separately from counted attempts.
+
+Token-count attempts now consume the same paid budget, and every configuration check finishes before the first count request. Planned and actual totals cover provider, judge, and count-endpoint attempts.
+
+Every Pi process now reserves and reports one provider attempt immediately before it starts. A Pi run stops before any process that would exceed the cap. Retries inside a Pi process are not observable and are never claimed.
+
+Raw provider usage is now preserved verbatim for Pi results and for every judge result. Cost computation returns `null` when any pricing-relevant usage field is missing instead of substituting zero. Reports add a top-level `primaryUsageComplete` gate. It requires positive integer output usage on every result, off arms included, and the overall pass now requires it. The run identity now hashes the entire prompt contract as `promptContractHash`, so any contract-file change invalidates checkpoint reuse.
 
 ## 0.2.0 - 2026-04-16
 

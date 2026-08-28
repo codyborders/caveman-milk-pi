@@ -132,7 +132,7 @@ Repeated calls within one mode return identical text. A mode change intentionall
 
 The repository includes 15 deterministic fixtures across seven modes. The matrix contains 105 matched cases.
 
-Fixtures cover technical explanations, comparisons, critical negation, ordered migrations, warnings, and confirmations. They also cover persisted content, tutorials, clarification, and Wenyan language behavior.
+Fixtures cover technical explanations, comparisons, critical negation, ordered migrations, warnings, and irreversible-action confirmations. They also cover persisted content, tutorials, clarification requests, and Wenyan language behavior.
 
 Offline validation checks fixture structure, matrix size, prompt parity, and prompt length.
 
@@ -140,7 +140,7 @@ Offline validation checks fixture structure, matrix size, prompt parity, and pro
 npm run evaluate:offline
 ```
 
-Provider execution is disabled by default. It requires a key, a model name, and explicit paid-run authorization.
+Provider execution is disabled by default. It requires a key, a model name, and explicit paid-run authorization. Supported providers are `offline`, `anthropic`, and `pi`. Other names exit before any request.
 
 Optional token accounting uses the provider count endpoint. Reports label counts as `not-run` unless that endpoint returns exact model values.
 
@@ -149,15 +149,41 @@ CAVEMAN_EVAL_PROVIDER=anthropic \
 CAVEMAN_EVAL_ALLOW_PAID=1 \
 ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
 CAVEMAN_EVAL_MODEL="$CAVEMAN_EVAL_MODEL" \
+CAVEMAN_EVAL_MAX_PAID_CALLS=400 \
+CAVEMAN_EVAL_REPETITIONS=3 \
+CAVEMAN_EVAL_SEED=0xa1b2c3d4 \
+CAVEMAN_EVAL_CHECKPOINT="evaluation-checkpoint.json" \
 CAVEMAN_EVAL_OUTPUT="evaluation-report.json" \
 npm run evaluate
 ```
 
-`CAVEMAN_EVAL_MODES` and `CAVEMAN_EVAL_CATEGORIES` accept comma-separated filters. Filters support smaller controlled runs before the full matrix.
+`CAVEMAN_EVAL_MODES` and `CAVEMAN_EVAL_CATEGORIES` accept comma-separated filters. A selection with an active mode must also include `off`. The runner rejects other selections before any paid request. Comparative scoring also requires at least three repetitions per pair.
 
-Provider reports include responses, timing, tool-call counts, word ratios, term retention, threshold status, and provider usage fields.
+Paid CLI runs require `CAVEMAN_EVAL_MAX_PAID_CALLS`. The cap counts each direct-provider, token-count, and judge HTTP attempt. For Pi runs, it counts each Pi process launch. Retries inside Pi are not observable. The run stops before the next counted attempt would exceed the cap. Reports list logical cases separately from counted attempts. Timeout and retry controls use `CAVEMAN_EVAL_TIMEOUT_MS` and `CAVEMAN_EVAL_MAX_ATTEMPTS`.
 
-The provider runner does not infer monetary cost. It does not publish an aggregate savings percentage.
+`CAVEMAN_EVAL_BASE_SYSTEM_PROMPT_FILE` can replace the committed Pi prompt capture. `CAVEMAN_EVAL_PI_BIN` selects another Pi executable. `CAVEMAN_EVAL_COMMIT` records an explicit candidate commit.
+
+The runner appends caveman runtime text after a captured Pi base system prompt. The capture lives in `scripts/eval/pi-base-system-prompt.json` and comes from Pi 0.84.3.
+
+The `pi` provider runs each case through the real Pi CLI in JSON mode. It loads the extension and gives every call a fresh temporary `CAVEMAN_MILK_CONFIG_DIR` holding the mode config. Each call is single-turn, so no session context accumulates, and the temporary directory is removed afterwards. Supplied seeds must be valid hexadecimal. Malformed seeds are rejected instead of silently randomized.
+
+Arm order is randomized per repetition and category from a stored seed. The seed appears in the report, so any run can be reproduced.
+
+Brevity gates use provider-reported output tokens as the primary metric. An output ratio requires positive integer output usage in both arms. A pair with missing or invalid output usage is reported as incomplete, fails brevity fail-closed, and stays out of paired deltas. Word counts remain in the report as a readability diagnostic only. Raw provider usage objects are preserved verbatim on every result.
+
+Deterministic validators check exact negation, numbered step order, warning prose, confirmation language, TypeScript code syntax, requested paragraph count, tool-call structure, term retention, and persisted prose. A validator failure fails the case and the overall report.
+
+Set `CAVEMAN_EVAL_JUDGE=1` to enable the blinded quality judge. The judge uses the committed prompt and rubric under `scripts/eval/`. It never learns which arm is which. A judge score below the baseline fails the overall report even when output is shorter.
+
+Each completed paid call is written to an incremental atomic checkpoint. Checkpointed runs require `CAVEMAN_EVAL_SEED` so a retry rebuilds the same call order.
+
+After a request failure, rerun the same command to resume completed calls. A provider success followed by local checkpoint failure can still require manual review.
+
+Reports contain paired raw results and aggregate statistics. Aggregates cover input tokens, cache writes, cache reads, output tokens, latency, quality scores, and provider cost. Cost appears only when `CAVEMAN_EVAL_PRICING` supplies a JSON pricing table. Example: `{"inputPerMTok":5,"outputPerMTok":25,"cacheWritePerMTok":6.25,"cacheReadPerMTok":0.5}`.
+
+Every report records the Git commit, Pi version, Node version, platform, provider, model, fixture version, seed, run id, and execution order.
+
+The evaluation never publishes a savings percentage. Publish claims only from committed raw reports.
 
 ## Development
 

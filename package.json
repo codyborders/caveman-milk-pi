@@ -40,6 +40,7 @@
     "scripts/evaluate.mjs",
     "scripts/evaluation-fixtures.json",
     "scripts/sync-skill.sh",
+    "scripts/eval/",
     "README.md",
     "CREDITS.md",
     "LICENSE"

@@ -64,16 +64,19 @@ describe("provider evaluation", () => {
   });
 
   it("scores matched off and active provider responses", async () => {
-    const responses = ["cache_key uses model identity", "cache_key identity"];
-    const fetchImpl = vi.fn(async () =>
-      new Response(
+    const fetchImpl = vi.fn(async (_url, init) => {
+      const body = JSON.parse(String(init?.body));
+      const mode = JSON.parse(body.metadata.user_id).mode;
+      const text = mode === "off" ? "cache_key uses model identity" : "cache_key identity";
+      const outputTokens = mode === "off" ? 40 : 20;
+      return new Response(
         JSON.stringify({
-          content: [{ type: "text", text: responses.shift() }],
-          usage: { input_tokens: 10, output_tokens: 4 },
+          content: [{ type: "text", text }],
+          usage: { input_tokens: 10, output_tokens: outputTokens },
         }),
         { status: 200, headers: { "content-type": "application/json" } },
-      ),
-    );
+      );
+    });
     const compactFixtures = {
       version: 1,
       modes: ["off", "full"],
@@ -94,11 +97,12 @@ describe("provider evaluation", () => {
     });
 
     expect(report.provider).toBe("anthropic");
-    expect(report.caseCount).toBe(2);
+    expect(report.caseCount).toBe(6);
     expect(report.passed).toBe(true);
     expect(report.results.every((result) => result.requiredTermRatio === 1)).toBe(true);
     expect(report.tokenAccounting).toMatchObject({ status: "not-run", model: "test-model" });
-    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(report.results.every((result) => result.mode !== "off" ? result.tokenRatioToOff === 0.5 : true)).toBe(true);
+    expect(fetchImpl).toHaveBeenCalledTimes(6);
   });
 
   it("records exact token count from provider count endpoint", async () => {

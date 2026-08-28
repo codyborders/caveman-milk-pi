@@ -28,18 +28,16 @@ describe("fork release metadata", () => {
   it("packs only runtime material", () => {
     const temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "caveman-package-test-"));
     try {
-      const packed = spawnSync("npm", ["pack", "--silent", "--pack-destination", temporaryDirectory], {
+      const packed = spawnSync("npm", ["pack", "--json", "--pack-destination", temporaryDirectory], {
         cwd: root,
         encoding: "utf8",
+        shell: process.platform === "win32",
       });
       expect(packed.status, `${packed.stdout}\n${packed.stderr}`).toBe(0);
+      const metadata = JSON.parse(packed.stdout)[0];
       const tarball = fs.readdirSync(temporaryDirectory).find((name) => name.endsWith(".tgz"));
-      expect(tarball).toBeDefined();
-      const listing = spawnSync("tar", ["-tzf", path.join(temporaryDirectory, tarball ?? "")], {
-        encoding: "utf8",
-      });
-      expect(listing.status, `${listing.stdout}\n${listing.stderr}`).toBe(0);
-      const entries = listing.stdout.trim().split(/\r?\n/).map((entry) => entry.replace(/^package\//, ""));
+      expect(tarball).toBe(metadata.filename);
+      const entries = metadata.files.map((entry: { path: string }) => entry.path);
       const expected = [
         "CREDITS.md",
         "LICENSE",

@@ -4543,11 +4543,11 @@
       "wordCount": 126,
       "requiredTermRatio": 1,
       "validation": {
-        "passed": false,
+        "passed": true,
         "groups": {
           "correctnessPass": true,
           "groundednessPass": true,
-          "contractPass": false,
+          "contractPass": true,
           "safetyPass": true
         },
         "protectedContent": [
@@ -4558,7 +4558,7 @@
           {
             "id": "prose",
             "passed": true,
-            "detail": "6/6 sentences are full prose.",
+            "detail": "5/5 sentences are full prose.",
             "hardGroup": "contract"
           },
           {
@@ -4569,8 +4569,8 @@
           },
           {
             "id": "paragraphs",
-            "passed": false,
-            "detail": "expected 1 paragraphs, found 2.",
+            "passed": true,
+            "detail": "found exactly 1 paragraphs.",
             "hardGroup": "contract"
           }
         ]
@@ -4629,13 +4629,13 @@
       "judge": null,
       "tokenRatioToOff": null,
       "wordRatioToOff": null,
-      "passed": false,
-      "validationPassed": false,
+      "passed": true,
+      "validationPassed": true,
       "correctnessPass": true,
       "groundednessPass": true,
-      "contractPass": false,
+      "contractPass": true,
       "safetyPass": true,
-      "behavioralPassed": false,
+      "behavioralPassed": true,
       "qualityScore": null,
       "groundingScore": null,
       "requiredTermsPassed": null,
@@ -22634,8 +22634,8 @@
       "full": {
         "pairCount": 45,
         "eligiblePairCount": 26,
-        "excludedHardFailureCount": 7,
-        "excludedPolicyCount": 12,
+        "excludedHardFailureCount": 6,
+        "excludedPolicyCount": 13,
         "excludedInvalidUsageCount": 0,
         "compressionRatio": {
           "mean": 0.6355519289468332,
@@ -22676,9 +22676,9 @@
       "full": {
         "overall": {
           "activeFailedOffPassed": 2,
-          "activePassedOffFailed": 3,
+          "activePassedOffFailed": 2,
           "bothFailed": 2,
-          "bothPassed": 38
+          "bothPassed": 39
         },
         "byCategory": {
           "technical-explanation": {
@@ -22935,14 +22935,14 @@
           },
           "file-writing": {
             "activeFailedOffPassed": 0,
-            "activePassedOffFailed": 1,
+            "activePassedOffFailed": 0,
             "bothFailed": 0,
-            "bothPassed": 2,
+            "bothPassed": 3,
             "overall": {
               "activeFailedOffPassed": 0,
-              "activePassedOffFailed": 1,
+              "activePassedOffFailed": 0,
               "bothFailed": 0,
-              "bothPassed": 2
+              "bothPassed": 3
             },
             "correctness": {
               "activeFailedOffPassed": 0,
@@ -22958,9 +22958,9 @@
             },
             "contract": {
               "activeFailedOffPassed": 0,
-              "activePassedOffFailed": 1,
+              "activePassedOffFailed": 0,
               "bothFailed": 0,
-              "bothPassed": 2
+              "bothPassed": 3
             },
             "safety": {
               "activeFailedOffPassed": 0,
@@ -23225,9 +23225,9 @@
       },
       "lite": {
         "overall": {
-          "activeFailedOffPassed": 3,
+          "activeFailedOffPassed": 4,
           "activePassedOffFailed": 0,
-          "bothFailed": 5,
+          "bothFailed": 4,
           "bothPassed": 37
         },
         "byCategory": {
@@ -23484,14 +23484,14 @@
             }
           },
           "file-writing": {
-            "activeFailedOffPassed": 0,
+            "activeFailedOffPassed": 1,
             "activePassedOffFailed": 0,
-            "bothFailed": 1,
+            "bothFailed": 0,
             "bothPassed": 2,
             "overall": {
-              "activeFailedOffPassed": 0,
+              "activeFailedOffPassed": 1,
               "activePassedOffFailed": 0,
-              "bothFailed": 1,
+              "bothFailed": 0,
               "bothPassed": 2
             },
             "correctness": {
@@ -23507,9 +23507,9 @@
               "bothPassed": 3
             },
             "contract": {
-              "activeFailedOffPassed": 0,
+              "activeFailedOffPassed": 1,
               "activePassedOffFailed": 0,
-              "bothFailed": 1,
+              "bothFailed": 0,
               "bothPassed": 2
             },
             "safety": {
@@ -23778,9 +23778,9 @@
   "rescore": {
     "sourceReportHash": "0e4a254968b0448b2df9e707d04c6bbc7c760c1b3b4a9dfb3ea07cfe6409feeb",
     "sourceRunId": "caveman-eval-d37242b07e700ebd",
-    "validatorVersion": "schema4-corrected-v2",
+    "validatorVersion": "schema4-corrected-v3",
     "fixtureHash": "da6ff6b621fa512301c954cc94850ca7a1ff3873766302c97ad69ec1cd4d0adb",
-    "evaluatorCommit": "beb7d3eb95a46c5f2ac3967d77cffd2ff68d4c62",
+    "evaluatorCommit": "8df10874a8b8b5e93508884c652bd51abcc3eedb",
     "generationTime": "2026-08-28T22:25:48.000Z",
     "originalPaidConclusion": false,
     "rescoredConclusion": false,

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "validatorVersion": "schema4-corrected-v2",
-  "evaluatorCommit": "beb7d3eb95a46c5f2ac3967d77cffd2ff68d4c62",
+  "validatorVersion": "schema4-corrected-v3",
+  "evaluatorCommit": "8df10874a8b8b5e93508884c652bd51abcc3eedb",
   "generationTime": "2026-08-28T22:25:48.000Z",
   "sourceReportHash": "0e4a254968b0448b2df9e707d04c6bbc7c760c1b3b4a9dfb3ea07cfe6409feeb",
   "sourceFixtureHash": "da6ff6b621fa512301c954cc94850ca7a1ff3873766302c97ad69ec1cd4d0adb"

@@ -17,7 +17,7 @@ const SOURCE_FIXTURE = path.join(ROOT, "evaluation/source-fixtures/benchmark-reg
 const RESCORE_MANIFEST = path.join(ROOT, "evaluation/rescore-manifest.json");
 const SOURCE_REPORT_HASH = "0e4a254968b0448b2df9e707d04c6bbc7c760c1b3b4a9dfb3ea07cfe6409feeb";
 const SOURCE_FIXTURE_HASH = "da6ff6b621fa512301c954cc94850ca7a1ff3873766302c97ad69ec1cd4d0adb";
-const VALIDATOR_VERSION = "schema4-corrected-v2";
+const VALIDATOR_VERSION = "schema4-corrected-v3";
 
 function sha256(buffer) {
   return createHash("sha256").update(buffer).digest("hex");

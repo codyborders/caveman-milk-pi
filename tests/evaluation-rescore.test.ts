@@ -4,9 +4,13 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { rescoreStoredResult } from "../scripts/eval/rescore.mjs";
+import { buildRescoredReport, rescoreStoredResult } from "../scripts/eval/rescore.mjs";
 
 describe("offline rescore", () => {
+  it("uses versioned validator identity", () => {
+    expect(buildRescoredReport().rescore.validatorVersion).toBe("schema4-corrected-v3");
+  });
+
   it("validates stored artifact text instead of assistant commentary", () => {
     const result = rescoreStoredResult(
       {
@@ -49,9 +53,10 @@ describe("offline rescore", () => {
       expect(report.attribution.byMode.full.byCategory["irreversible-confirmation"].safety).toMatchObject({ activeFailedOffPassed: 2, bothPassed: 1 });
       expect(report.attribution.byMode.full.byCategory["commit-pr"].overall).toMatchObject({ activeFailedOffPassed: 0, activePassedOffFailed: 1, bothFailed: 2 });
       expect(report.attribution.byMode.lite.byCategory.clarification.overall).toMatchObject({ activeFailedOffPassed: 1, bothPassed: 2 });
-      expect(report.attribution.byMode.lite.byCategory["file-writing"].overall).toMatchObject({ bothFailed: 1, bothPassed: 2 });
-      expect(report.attribution.byMode.full.byCategory["file-writing"].overall).toMatchObject({ activePassedOffFailed: 1, bothPassed: 2 });
+      expect(report.attribution.byMode.lite.byCategory["file-writing"].overall).toMatchObject({ bothFailed: 0, bothPassed: 2 });
+      expect(report.attribution.byMode.full.byCategory["file-writing"].overall).toMatchObject({ activePassedOffFailed: 0, bothPassed: 3 });
       expect(report.rescore.evaluatorCommit).toMatch(/^[0-9a-f]{40}$/);
+      expect(report.rescore.validatorVersion).toBe("schema4-corrected-v3");
       expect(report.rescore.generationTime).toMatch(/^\d{4}-\d{2}-\d{2}T/);
       expect(readFileSync(markdown, "utf8")).toContain("| Rescored | yes |");
       expect(() => readFileSync(marker)).toThrow();

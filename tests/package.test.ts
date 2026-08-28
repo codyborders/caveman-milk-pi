@@ -18,6 +18,7 @@ const packageJson = JSON.parse(
 const readme = fs.readFileSync(path.join(root, "README.md"), "utf8");
 const changelog = fs.readFileSync(path.join(root, "CHANGELOG.md"), "utf8");
 const credits = fs.readFileSync(path.join(root, "CREDITS.md"), "utf8");
+const gitAttributes = fs.readFileSync(path.join(root, ".gitattributes"), "utf8");
 
 describe("fork release metadata", () => {
   it("identifies fork package, GitHub install path, packed recovery script, and release", () => {
@@ -43,5 +44,7 @@ describe("fork release metadata", () => {
     expect(changelog).toContain("## 0.4.0-beta.1 - Unreleased");
     expect(changelog).not.toContain("## Unreleased");
     expect(credits).toContain("@codyborders/caveman-milk-pi");
+    expect(gitAttributes).toContain("evaluation/results/benchmark-regression-v2-rescored.json -text");
+    expect(gitAttributes).toContain("evaluation/results/benchmark-regression-v2-rescored.md -text");
   });
 });

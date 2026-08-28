@@ -1,2 +1,4 @@
 evaluation/results/benchmark-regression-v2.json -text
+evaluation/results/benchmark-regression-v2-rescored.json -text
+evaluation/results/benchmark-regression-v2-rescored.md -text
 evaluation/source-fixtures/benchmark-regression-v2.json -text

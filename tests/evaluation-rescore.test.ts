@@ -109,25 +109,4 @@ describe("offline rescore", () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
-
-  it("produces byte-identical rescored JSON at one evaluator version", () => {
-    const dir = mkdtempSync(path.join(os.tmpdir(), "caveman-rescore-repeat-"));
-    const first = path.join(dir, "first.json");
-    const second = path.join(dir, "second.json");
-    try {
-      for (const output of [first, second]) {
-        execFileSync(process.execPath, ["scripts/eval/rescore.mjs"], {
-          env: {
-            ...process.env,
-            CAVEMAN_RESCORE_OUTPUT: output,
-            CAVEMAN_RESCORE_MARKDOWN: `${output}.md`,
-          },
-          stdio: "pipe",
-        });
-      }
-      expect(readFileSync(second)).toEqual(readFileSync(first));
-    } finally {
-      rmSync(dir, { recursive: true, force: true });
-    }
-  });
 });

@@ -47,7 +47,11 @@ The offline rescore verifies the immutable report and locked source fixture. It 
 npm run rescore:offline
 ```
 
-The command writes `evaluation/results/benchmark-regression-v2-rescored.json` and its Markdown summary. It does not replace the paid report. No new paid call is made.
+The command writes `evaluation/results/benchmark-regression-v2-rescored.json` and its Markdown summary. It does not replace the paid report. No new paid calls were made.
+
+The rescored JSON SHA-256 is `1076526f7836e4219dc014c1a404177c027668aecfafc4e544c2b63dad49434e`. The original and rescored conclusions both fail. Rescored hard behavior passed 41/45 `off` cases, 38/45 `lite` cases, and 41/45 `full` cases.
+
+The rescore retains two clear `lite` negation regressions and two clear `full` confirmation regressions. Commit and PR failures also occur in `off`. Corrected casing removes several clarification failures, but one `lite` paired regression remains.
 
 ## Future Targeted Paid Rerun
 

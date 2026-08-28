@@ -94,4 +94,38 @@ describe("pi runner adapter", () => {
     expect(outcome.elapsedMs).toBeGreaterThan(0);
     fs.rmSync(homeRoot, { recursive: true, force: true });
   });
+
+  it("accepts a tool-only assistant turn when Pi returns no final text", async () => {
+    const homeRoot = fs.mkdtempSync(path.join(os.tmpdir(), "caveman-pi-tool-only-"));
+    const runner = evaluate.createPiRunner({
+      piBin: "/opt/pi/bin/pi",
+      extensionPath: "/repo/index.ts",
+      model: "test-model",
+      spawnImpl: async () => ({
+        code: 0,
+        stdout: JSON.stringify({
+          type: "tool_execution_start",
+          toolName: "write_artifact",
+          args: { content: "Persist this exact content." },
+        }),
+        stderr: "",
+      }),
+      mkdtempImpl: (prefix) => fs.mkdtempSync(path.join(homeRoot, prefix)),
+    });
+
+    try {
+      const outcome = await runner.execute({
+        mode: "off",
+        category: { id: "tool-argument", prompt: "Persist this text." },
+        repetition: 1,
+      });
+      expect(outcome.text).toBe("");
+      expect(outcome.toolCall).toEqual({
+        name: "write_artifact",
+        input: { content: "Persist this exact content." },
+      });
+    } finally {
+      fs.rmSync(homeRoot, { recursive: true, force: true });
+    }
+  });
 });

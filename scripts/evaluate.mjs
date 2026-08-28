@@ -1542,8 +1542,8 @@ export function createPiRunner({
         category.prompt,
       ];
       const session = await runPiSession({ mode, args });
-      if (session.text.length === 0) {
-        throw new Error("pi runner produced no assistant text for the case.");
+      if (session.text.length === 0 && session.toolCall === null) {
+        throw new Error("pi runner produced no assistant text or tool call for the case.");
       }
       return { ...session, attempts: 1, systemPromptSent: null, sessionId: null };
     },

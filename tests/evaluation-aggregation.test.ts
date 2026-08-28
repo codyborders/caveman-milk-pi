@@ -171,6 +171,7 @@ describe("report summary", () => {
       fixtureSet: "fresh-v1",
       fixtureHash: "fresh-hash",
       runId: "schema4-run",
+      passed: false,
       modes: ["off", "full"],
       judge: { enabled: true, model: "judge-model" },
       compression: {
@@ -237,6 +238,7 @@ describe("report summary", () => {
       compressionEligiblePairs: 1,
     });
     expect(markdown).toContain("| Fixture set | `fresh-v1` |");
+    expect(markdown).toContain("| Report passed | no |");
     expect(markdown).toContain("| Mode | Cases | Behavior | Correct | Grounded | Contract | Safety | Quality score | Grounding score | Brevity score | Compression ratio | Eligible pairs |");
     expect(markdown).not.toContain("Judge quality pass");
   });

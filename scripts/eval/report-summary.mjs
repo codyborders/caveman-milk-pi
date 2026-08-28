@@ -192,6 +192,7 @@ export function renderSummaryMarkdown(summary) {
   lines.push(`| Run | \`${summary.runId ?? "unknown"}\` |`);
   lines.push(`| Schema | ${summary.schemaVersion ?? "unknown"} |`);
   if (summary.schemaVersion === 4) {
+    lines.push(`| Report passed | ${summary.passed ? "yes" : "no"} |`);
     lines.push(`| Fixture set | ${summary.fixtureSet === null ? "n/a" : `\`${summary.fixtureSet}\``} |`);
     lines.push(`| Fixture hash | ${summary.fixtureHash === null ? "n/a" : `\`${summary.fixtureHash}\``} |`);
   }

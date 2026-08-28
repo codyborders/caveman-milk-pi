@@ -1625,12 +1625,12 @@ export function openCheckpoint({
     countResults: {},
   };
   const claimPath = `${checkpointPath}.claim`;
+  fs.mkdirSync(path.dirname(checkpointPath), { recursive: true });
   if (owner !== undefined) {
     claimCheckpointOwnership({ checkpointPath, owner, staleAfterMs, isProcessAlive, nowImpl });
   }
   try {
     if (owner !== undefined && !fs.existsSync(checkpointPath)) {
-      fs.mkdirSync(path.dirname(checkpointPath), { recursive: true });
       const initialState = { ...state, owner };
       try {
         fs.writeFileSync(checkpointPath, JSON.stringify(initialState, null, 2) + "\n", {

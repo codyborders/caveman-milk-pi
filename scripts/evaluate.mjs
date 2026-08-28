@@ -527,13 +527,17 @@ function extractResponseText(payload, expectsTool) {
     if (typeof toolBlock?.input?.content !== "string") {
       throw new Error("Provider response did not contain write_artifact content.");
     }
-    return { text: toolBlock.input.content, toolCallCount: 1 };
+    return {
+      text: toolBlock.input.content,
+      toolCall: { name: toolBlock.name, input: toolBlock.input },
+      toolCallCount: 1,
+    };
   }
   const text = payload.content?.find((block) => block.type === "text")?.text;
   if (typeof text !== "string") {
     throw new Error("Provider response did not contain a text block.");
   }
-  return { text, toolCallCount: 0 };
+  return { text, toolCall: null, toolCallCount: 0 };
 }
 
 export function createOfflineReport(fixtures = loadFixtures()) {
@@ -927,6 +931,7 @@ export async function runProviderEvaluation(options) {
       costUsd,
       elapsedMs: executionExtras.elapsedMs,
       attempts: executionExtras.attempts,
+      toolCall: extracted.toolCall,
       toolCallCount,
       systemPromptSent: executionExtras.systemPromptSent,
       sessionId: executionExtras.sessionId,

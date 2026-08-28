@@ -493,13 +493,27 @@ function extractPullRequestArtifact(text) {
 
 function extractDocumentArtifact(text) {
   const value = String(text);
-  const fence = value.search(/^```[^\n]*$/m);
+  const fenced = extractFirstFence(value);
+  if (fenced !== null) return fenced;
+
   const heading = value.search(/^#{1,6}\s+\S+/m);
-  if (fence !== -1 && (heading === -1 || fence < heading)) {
-    return extractFirstFence(value.substring(fence)) ?? value.trim();
+  if (heading !== -1) {
+    return trimTrailingCommentary(value.substring(heading).trim());
   }
-  if (heading !== -1) return value.substring(heading).trim();
   return value.trim();
+}
+
+function trimTrailingCommentary(text) {
+  const blocks = String(text).split(/\n[ \t]*\n+/);
+  while (blocks.length > 1 && isConversationalCommentary(blocks.at(-1))) {
+    blocks.pop();
+  }
+  return blocks.join("\n\n").trim();
+}
+
+function isConversationalCommentary(block) {
+  const value = String(block).trim();
+  return /^(?:let me know|please let me know|feel free to|if you want|if you would like|would you like|hope this helps|i hope this helps|the draft is ready|this draft is ready|i can revise|tell me if)\b[.!?]?/i.test(value);
 }
 
 function stripMarkdownHeadings(text) {

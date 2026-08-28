@@ -24,4 +24,13 @@ describe("paragraph-count validator", () => {
     expect(outcome.passed).toBe(false);
     expect(outcome.checks[0]?.detail).toContain("found 3");
   });
+
+  it("ignores trailing conversational commentary after a headed artifact", () => {
+    const outcome = runValidators(
+      "I checked the request first.\n\n# Installation\n\nInstall the package from the registry.\n\nLet me know if you want changes.",
+      [{ id: "paragraph-count", count: 1, includeHeadings: false }],
+      noTool,
+    );
+    expect(outcome.passed).toBe(true);
+  });
 });

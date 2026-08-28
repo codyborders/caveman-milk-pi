@@ -268,12 +268,13 @@ const VALIDATORS = {
               .join(" | ")}`,
     };
   },
-  "paragraph-count": (text, config, _context) => {
+  "paragraph-count": (text, config, context) => {
     const count = Number(config.count);
     if (!Number.isInteger(count) || count < 1) {
       throw new Error("paragraph-count requires a positive integer 'count' option.");
     }
-    const artifact = extractDocumentArtifact(text);
+    const includeHeadings = config.includeHeadings === true;
+    const artifact = extractDocumentArtifact(text, count, includeHeadings);
     const paragraphs = artifact
       .split(/\n[ \t]*\n+/)
       .map((part) => part.trim())
@@ -342,7 +343,11 @@ const VALIDATORS = {
           : `pull-request artifact is incomplete or fragmented: ${words} words.`,
       };
     }
-    const artifact = extractDocumentArtifact(suppliedArtifact);
+    const artifact = extractDocumentArtifact(
+      suppliedArtifact,
+      context.artifactParagraphCount,
+      context.artifactIncludeHeadings,
+    );
     const minWords = Number(config.minWords ?? 12);
     const minSentenceRatio = Number(config.minSentenceRatio ?? 0.75);
     const minSentenceWords = Number(config.minSentenceWords ?? 5);
@@ -491,21 +496,33 @@ function extractPullRequestArtifact(text) {
   return extractDocumentArtifact(text);
 }
 
-function extractDocumentArtifact(text) {
+function extractDocumentArtifact(text, expectedParagraphs, includeHeadings = false) {
   const value = String(text);
   const fenced = extractFirstFence(value);
   if (fenced !== null) return fenced;
 
   const heading = value.search(/^#{1,6}\s+\S+/m);
-  if (heading !== -1) {
-    return trimTrailingCommentary(value.substring(heading).trim());
-  }
-  return value.trim();
+  if (heading === -1) return value.trim();
+  const artifact = value.substring(heading).trim();
+  if (!Number.isInteger(expectedParagraphs) || expectedParagraphs < 1) return artifact;
+  return trimTrailingCommentary(artifact, expectedParagraphs, includeHeadings);
 }
 
-function trimTrailingCommentary(text) {
-  const blocks = String(text).split(/\n[ \t]*\n+/);
-  while (blocks.length > 1 && isConversationalCommentary(blocks.at(-1))) {
+function trimTrailingCommentary(text, expectedParagraphs, includeHeadings) {
+  const blocks = String(text).split(/\n[ \t]*\n+/).map((part) => part.trim());
+  let counted = 0;
+  let boundary = blocks.length;
+  for (let index = 0; index < blocks.length; index += 1) {
+    const block = blocks[index];
+    if (block.length === 0) continue;
+    const headingOnly = block.split("\n").every((line) => /^#{1,6}\s/.test(line.trim()));
+    if (includeHeadings || !headingOnly) counted += 1;
+    if (counted >= expectedParagraphs) {
+      boundary = index + 1;
+      break;
+    }
+  }
+  while (blocks.length > boundary && isConversationalCommentary(blocks.at(-1))) {
     blocks.pop();
   }
   return blocks.join("\n\n").trim();
@@ -670,10 +687,13 @@ export function runRequirements(text, requirements = [], context = {}) {
         break;
     }
   }
+  const paragraphRequirement = requirements.find((requirement) => requirement.kind === "paragraph-count");
   const validation = runValidators(text, validatorConfigs, {
     ...context,
     toolCall: context.toolCall ?? context.toolCalls?.[0] ?? null,
     requiredTerms,
+    artifactParagraphCount: paragraphRequirement === undefined ? undefined : Number(paragraphRequirement.count),
+    artifactIncludeHeadings: paragraphRequirement?.includeHeadings === true,
   });
   const checks = validation.checks.map((check, index) => ({
     ...check,

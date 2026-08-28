@@ -55,6 +55,18 @@ describe("persisted-prose validator", () => {
     expect(outcome.passed).toBe(true);
   });
 
+  it("keeps valid conversational prose when paragraph count sets the boundary", () => {
+    const outcome = runRequirements(
+      "# Installation\n\nInstall the package from the registry now.\n\nFeel free to install it globally when shared tooling needs one version. This paragraph remains part of the document.\n\nThe draft is ready for review.",
+      [
+        { kind: "paragraph-count", count: 2, includeHeadings: false },
+        { kind: "persisted-prose", artifactType: "readme-paragraph", minWords: 12 },
+      ],
+      { ...noTool, taskClass: "file-output" },
+    );
+    expect(outcome.passed).toBe(true);
+  });
+
   it("counts paragraphs inside the requested fenced artifact only", () => {
     const outcome = runRequirements(
       "```markdown\n## Installation\n\nInstall the extension through Pi, then select a mode from the command menu. The default remains off until you enable it.\n```\n\nThe requested draft is ready.",

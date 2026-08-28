@@ -14,7 +14,7 @@
 | Source run ID | `caveman-eval-d37242b07e700ebd` |
 | Validator version | `schema4-corrected-v3` |
 | Source fixture hash | `da6ff6b621fa512301c954cc94850ca7a1ff3873766302c97ad69ec1cd4d0adb` |
-| Rescore evaluator commit | `8df10874a8b8b5e93508884c652bd51abcc3eedb` |
+| Rescore evaluator commit | `4df7b5dc8cc5aa733914ef363a52fdae7f8a00ae` |
 | Rescore generation time | `2026-08-28T22:25:48.000Z` |
 | External model calls | 0 |
 | Provider | `pi` via `pi` |

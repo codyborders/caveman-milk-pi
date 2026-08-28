@@ -20,6 +20,12 @@ describe("schema 4 fixture contracts", () => {
         expect(requirement.kind, category.id).toEqual(expect.any(String));
         expect(hardGroups.has(requirement.hardGroup), category.id).toBe(true);
         expect(requirement.protected, category.id).toEqual(expect.any(Boolean));
+        if (requirement.kind === "exact-term") {
+          expect(requirement.caseSensitive, `${category.id}:${requirement.id}`).toEqual(expect.any(Boolean));
+        }
+        if (requirement.kind === "persisted-prose") {
+          expect(requirement.artifactType, `${category.id}:${requirement.id}`).toEqual(expect.any(String));
+        }
       }
 
       expect(category.compressionPolicy?.eligible, category.id).toEqual(expect.any(Boolean));

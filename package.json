@@ -43,10 +43,13 @@
     "scripts/evaluation-fixtures-fresh-v1.json",
     "scripts/eval/benchmark-audit.mjs",
     "evaluation/fixture-manifest.json",
+    "evaluation/source-fixtures/benchmark-regression-v2.json",
     "evaluation/results/pilot-v1-benchmark-audit.md",
     "evaluation/results/benchmark-v2-run-plan.md",
     "scripts/sync-skill.sh",
     "scripts/eval/",
+    "evaluation/results/benchmark-regression-v2-rescored.json",
+    "evaluation/results/benchmark-regression-v2-rescored.md",
     "README.md",
     "CREDITS.md",
     "LICENSE"
@@ -58,6 +61,7 @@
     "typecheck": "tsc --noEmit",
     "evaluate": "node scripts/evaluate.mjs",
     "evaluate:offline": "node scripts/evaluate.mjs",
+    "rescore:offline": "node scripts/eval/rescore.mjs",
     "test:package": "node scripts/smoke-packed.mjs"
   },
   "devDependencies": {

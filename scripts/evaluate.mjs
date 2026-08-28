@@ -351,6 +351,64 @@ function pairedDelta(pairs, read) {
   return stats(values);
 }
 
+function behaviorOutcome(activePassed, offPassed) {
+  if (activePassed && offPassed) return "bothPassed";
+  if (activePassed && !offPassed) return "activePassedOffFailed";
+  if (!activePassed && offPassed) return "activeFailedOffPassed";
+  return "bothFailed";
+}
+
+function countBehaviorOutcomes(pairs, read) {
+  const counts = {
+    activeFailedOffPassed: 0,
+    activePassedOffFailed: 0,
+    bothFailed: 0,
+    bothPassed: 0,
+  };
+  for (const pair of pairs) {
+    counts[behaviorOutcome(read(pair.active) === true, read(pair.off) === true)] += 1;
+  }
+  return counts;
+}
+
+export function attributeBehaviorPairs(results = []) {
+  const byMode = {};
+  const offByPair = new Map(
+    results
+      .filter((result) => result?.mode === "off")
+      .map((result) => [`${result.repetition}::${result.category}`, result]),
+  );
+  const activeModes = [...new Set(results.map((result) => result?.mode))].filter((mode) => mode && mode !== "off");
+  const dimensions = [
+    ["correctness", (result) => result?.correctnessPass],
+    ["groundedness", (result) => result?.groundednessPass],
+    ["contract", (result) => result?.contractPass],
+    ["safety", (result) => result?.safetyPass],
+  ];
+  for (const mode of activeModes) {
+    const pairs = results
+      .filter((result) => result?.mode === mode)
+      .map((active) => ({ active, off: offByPair.get(`${active.repetition}::${active.category}`) }))
+      .filter((pair) => pair.off !== undefined);
+    const categories = [...new Set(pairs.map((pair) => pair.active.category))];
+    const byCategory = {};
+    for (const category of categories) {
+      const categoryPairs = pairs.filter((pair) => pair.active.category === category);
+      const categorySummary = countBehaviorOutcomes(categoryPairs, (result) => result?.behavioralPassed);
+      categorySummary.overall = { ...categorySummary };
+      for (const [name, read] of dimensions) {
+        categorySummary[name] = countBehaviorOutcomes(categoryPairs, read);
+      }
+      byCategory[category] = categorySummary;
+    }
+    byMode[mode] = {
+      overall: countBehaviorOutcomes(pairs, (result) => result?.behavioralPassed),
+      byCategory,
+    };
+  }
+  return { byMode };
+}
+
 function aggregatePairs(pairs, pricing, judgeEnabled, schema4) {
   const completePairs = pairs.filter(
     (pair) =>
@@ -407,7 +465,7 @@ function aggregatePairs(pairs, pricing, judgeEnabled, schema4) {
   };
 }
 
-function aggregateResults(results, { pricing, judgeEnabled, schema4 = false }) {
+export function aggregateResults(results, { pricing, judgeEnabled, schema4 = false }) {
   const byMode = {};
   const byModeCategory = {};
   const offResults = new Map(
@@ -1049,6 +1107,8 @@ export async function runProviderEvaluation(options) {
     const validation = isSchema4
       ? runRequirements(extracted.validationText, category.requirements ?? [], {
           taskPrompt: category.prompt,
+          taskClass: category.taskClass,
+          artifactText: extracted.validationText,
           toolCall: extracted.toolCall,
           toolCalls: resultToolCalls,
           expectsTool: category.expectsTool === true,
@@ -1330,7 +1390,10 @@ export async function runProviderEvaluation(options) {
     })),
     results,
     aggregates: aggregateResults(results, { judgeEnabled: judge === true, pricing, schema4: isSchema4 }),
-    ...(isSchema4 ? { compression: { byMode: aggregateCompressionResults(results) } } : {}),
+    ...(isSchema4 ? {
+      attribution: attributeBehaviorPairs(results),
+      compression: { byMode: aggregateCompressionResults(results) },
+    } : {}),
     failures: checkpoint.state.failures,
     judgeFailures,
     // Primary usage completeness gates the whole run: every result, off arms

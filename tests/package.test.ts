@@ -35,6 +35,7 @@ describe("fork release metadata", () => {
     expect(packageJson.files).toContain("scripts/evaluation-fixtures-regression-v2.json");
     expect(packageJson.files).toContain("scripts/evaluation-fixtures-fresh-v1.json");
     expect(packageJson.files).toContain("evaluation/fixture-manifest.json");
+    expect(packageJson.files).toContain("evaluation/source-fixtures/benchmark-regression-v2.json");
     expect(fs.existsSync(path.join(root, "scripts/smoke-packed.mjs"))).toBe(true);
     expect(readme).toContain("pi install git:github.com/codyborders/caveman-milk-pi");
     expect(changelog).toContain("## 0.4.0-beta.1 - Unreleased");

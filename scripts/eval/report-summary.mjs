@@ -35,6 +35,67 @@ function sumCostUsd(values, read) {
   return Number(total.toFixed(8));
 }
 
+function totalReportedTokens(mode) {
+  const fields = [mode.inputTokens, mode.cacheWriteTokens, mode.cacheReadTokens, mode.outputTokens];
+  return fields.every((value) => typeof value === "number" && Number.isFinite(value))
+    ? fields.reduce((sum, value) => sum + value, 0)
+    : null;
+}
+
+function wholeRunUsage(mode, offTotal) {
+  const total = totalReportedTokens(mode);
+  const difference = total === null || offTotal === null ? null : total - offTotal;
+  const percentage = difference === null || offTotal === 0 ? null : difference / offTotal;
+  return {
+    totalReportedTokens: total,
+    totalTokenDifferenceFromOff: difference,
+    totalTokenPercentageDifference: percentage,
+  };
+}
+
+function behaviorCounts(pairs, field) {
+  const counts = { activeFailedOffPassed: 0, activePassedOffFailed: 0, bothFailed: 0, bothPassed: 0 };
+  for (const { active, off } of pairs) {
+    const activePassed = active?.[field] === true;
+    const offPassed = off?.[field] === true;
+    const key = activePassed && offPassed
+      ? "bothPassed"
+      : activePassed
+        ? "activePassedOffFailed"
+        : offPassed
+          ? "activeFailedOffPassed"
+          : "bothFailed";
+    counts[key] += 1;
+  }
+  return counts;
+}
+
+function deriveAttribution(results) {
+  const offByPair = new Map(results.filter((result) => result.mode === "off").map((result) => [`${result.repetition}::${result.category}`, result]));
+  const attribution = {};
+  for (const mode of [...new Set(results.map((result) => result.mode))].filter((mode) => mode !== "off")) {
+    const pairs = results
+      .filter((result) => result.mode === mode)
+      .map((active) => ({ active, off: offByPair.get(`${active.repetition}::${active.category}`) }))
+      .filter(({ off }) => off !== undefined);
+    const byCategory = {};
+    for (const category of [...new Set(pairs.map(({ active }) => active.category))]) {
+      const categoryPairs = pairs.filter(({ active }) => active.category === category);
+      const overall = behaviorCounts(categoryPairs, "behavioralPassed");
+      const categoryResult = { ...overall, overall };
+      for (const field of ["correctnessPass", "groundednessPass", "contractPass", "safetyPass"]) {
+        categoryResult[field.replace(/Pass$/, "")] = behaviorCounts(categoryPairs, field);
+      }
+      byCategory[category] = categoryResult;
+    }
+    attribution[mode] = {
+      overall: behaviorCounts(pairs, "behavioralPassed"),
+      byCategory,
+    };
+  }
+  return { byMode: attribution };
+}
+
 function computeJudgeCostUsd(usage, pricing) {
   if (pricing === null || pricing === undefined) return null;
   if (
@@ -76,6 +137,14 @@ export function summarizeReport(report) {
     ...configuredModes.filter((mode) => observedModes.includes(mode)),
     ...observedModes.filter((mode) => !configuredModes.includes(mode)),
   ];
+  const offResults = results.filter((result) => result.mode === "off");
+  const offModeTotals = {
+    inputTokens: sumField(offResults, (result) => result.usage?.input),
+    cacheWriteTokens: sumField(offResults, (result) => result.usage?.cacheWrite),
+    cacheReadTokens: sumField(offResults, (result) => result.usage?.cacheRead),
+    outputTokens: sumField(offResults, (result) => result.usage?.output),
+  };
+  const offTotal = totalReportedTokens(offModeTotals);
   const modes = modeOrder.map((mode) => {
     const modeResults = results.filter((result) => result.mode === mode);
     const ratio = report.aggregates?.byMode?.[mode]?.outputTokenRatio ?? null;
@@ -95,6 +164,7 @@ export function summarizeReport(report) {
     if (schema4) {
       return {
         ...common,
+        ...wholeRunUsage(common, offTotal),
         behavioralPasses: modeResults.filter((result) => result.behavioralPassed === true).length,
         correctnessPasses: modeResults.filter((result) => result.correctnessPass === true).length,
         groundednessPasses: modeResults.filter((result) => result.groundednessPass === true).length,
@@ -121,6 +191,7 @@ export function summarizeReport(report) {
     ? results.filter((result) => result.judge !== null && result.judge !== undefined)
     : [];
   return {
+    passed: report.passed === true,
     schemaVersion: report.schemaVersion ?? null,
     fixtureSet: report.fixtureSet ?? null,
     fixtureHash: report.fixtureHash ?? null,
@@ -135,6 +206,8 @@ export function summarizeReport(report) {
     piVersion: report.environment?.piVersion ?? null,
     runtimePromptHash: report.runIdentity?.runtimePromptHash ?? null,
     promptContractHash: report.runIdentity?.promptContractHash ?? null,
+    rescore: report.rescore ?? null,
+    attribution: report.attribution ?? (schema4 ? deriveAttribution(results) : null),
     judgeEnabled,
     judgeModel: report.judge?.model ?? null,
     modes,
@@ -171,6 +244,12 @@ function formatRatio(value) {
   return value === null ? "n/a" : value.toFixed(4);
 }
 
+function formatPercentage(value) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "n/a";
+  const percent = value * 100;
+  return `${percent >= 0 ? "+" : ""}${percent.toFixed(1)}%`;
+}
+
 function formatTokens(value) {
   return value === null ? "n/a" : value.toLocaleString("en-US");
 }
@@ -195,6 +274,16 @@ export function renderSummaryMarkdown(summary) {
     lines.push(`| Report passed | ${summary.passed ? "yes" : "no"} |`);
     lines.push(`| Fixture set | ${summary.fixtureSet === null ? "n/a" : `\`${summary.fixtureSet}\``} |`);
     lines.push(`| Fixture hash | ${summary.fixtureHash === null ? "n/a" : `\`${summary.fixtureHash}\``} |`);
+  }
+  if (summary.rescore !== undefined && summary.rescore !== null) {
+    lines.push(`| Rescored | yes |`);
+    lines.push(`| Source report hash | \`${summary.rescore.sourceReportHash}\` |`);
+    lines.push(`| Source run ID | \`${summary.rescore.sourceRunId}\` |`);
+    lines.push(`| Validator version | \`${summary.rescore.validatorVersion}\` |`);
+    lines.push(`| Source fixture hash | \`${summary.rescore.fixtureHash}\` |`);
+    lines.push(`| Rescore evaluator commit | \`${summary.rescore.evaluatorCommit}\` |`);
+    lines.push(`| Rescore generation time | \`${summary.rescore.generationTime}\` |`);
+    lines.push(`| External model calls | ${summary.rescore.externalModelCalls} |`);
   }
   lines.push(
     `| Provider | \`${summary.provider ?? "unknown"}\` via \`${summary.runner ?? "unknown"}\` |`,
@@ -227,6 +316,52 @@ export function renderSummaryMarkdown(summary) {
     for (const mode of summary.modes) {
       lines.push(
         `| \`${mode.mode}\` | ${mode.cases} | ${mode.behavioralPasses} | ${mode.correctnessPasses} | ${mode.groundednessPasses} | ${mode.contractPasses} | ${mode.safetyPasses} | ${formatRatio(mode.qualityScoreMean)} | ${formatRatio(mode.groundingScoreMean)} | ${formatRatio(mode.brevityScoreMean)} | ${formatRatio(mode.compressionRatioMean)} | ${mode.compressionEligiblePairs} |`,
+      );
+    }
+    lines.push(
+      "",
+      "### Whole-run usage",
+      "",
+      "| Mode | Input | Cache write | Cache read | Output | Total reported tokens | Difference from off | Percentage difference | Primary reported cost |",
+      "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+    );
+    for (const mode of summary.modes) {
+      lines.push(
+        `| \`${mode.mode}\` | ${formatTokens(mode.inputTokens)} | ${formatTokens(mode.cacheWriteTokens)} | ${formatTokens(mode.cacheReadTokens)} | ${formatTokens(mode.outputTokens)} | ${formatTokens(mode.totalReportedTokens)} | ${formatTokens(mode.totalTokenDifferenceFromOff)} | ${formatPercentage(mode.totalTokenPercentageDifference)} | ${formatUsd(mode.primaryCostUsd)} |`,
+      );
+    }
+    lines.push(
+      "",
+      "### Paired output and eligible compression",
+      "",
+      "| Mode | Paired output mean | Paired output median | Eligible-pair compression ratio | Eligible pairs |",
+      "| --- | ---: | ---: | ---: | ---: |",
+    );
+    for (const mode of summary.modes) {
+      lines.push(
+        `| \`${mode.mode}\` | ${formatRatio(mode.pairedOutputMean)} | ${formatRatio(mode.pairedOutputMedian)} | ${formatRatio(mode.compressionRatioMean)} | ${mode.compressionEligiblePairs} |`,
+      );
+    }
+    const attribution = summary.attribution?.byMode ?? {};
+    const attributionRows = [];
+    for (const [modeName, modeAttribution] of Object.entries(attribution)) {
+      for (const [category, categoryAttribution] of Object.entries(modeAttribution.byCategory ?? {})) {
+        for (const scope of ["overall", "correctness", "groundedness", "contract", "safety"]) {
+          const counts = scope === "overall" ? categoryAttribution : categoryAttribution[scope];
+          if (counts === undefined) continue;
+          const scopeLabel = scope === "contract" ? "user contract" : scope;
+          attributionRows.push(`| \`${modeName}\` | \`${category}\` | ${scopeLabel} | ${counts.activeFailedOffPassed} | ${counts.activePassedOffFailed} | ${counts.bothFailed} | ${counts.bothPassed} |`);
+        }
+      }
+    }
+    if (attributionRows.length > 0) {
+      lines.push(
+        "",
+        "### Pairwise behavior attribution",
+        "",
+        "| Mode | Category | Scope | Active-failed/off-passed | Active-passed/off-failed | Both-failed | Both-passed |",
+        "| --- | --- | --- | ---: | ---: | ---: | ---: |",
+        ...attributionRows,
       );
     }
   } else {

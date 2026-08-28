@@ -34,19 +34,29 @@ An incremental atomic checkpoint resumes recorded calls. Its identity binds the 
 
 Reports pair raw results with aggregate statistics. Aggregates cover token counts, cache traffic, latency, quality scores, and provider cost when pricing is set. Environment metadata records the Git commit and the Pi version. It also records the stored seed and the run order.
 
+An offline rescore command verifies locked paid inputs before reapplying deterministic validators. It writes separate JSON and Markdown artifacts without starting Pi or a provider.
+
+Schema 4 summaries now include whole-run usage, eligible-pair compression, and pairwise behavioral attribution by category and hard group.
+
 ### Changed
 
 Every configuration validation error now names the exact path being loaded.
 
 Mode and status changes now apply exactly one field-level change per locked update. A zero-field mutator reloads without rewriting the file. Migrated files are normalized to `0600` permissions.
 
-Runtime prompts now use one versioned contract instead of filtered markdown. Active prompts contain 603 to 706 characters.
+Runtime prompts now use one versioned contract instead of filtered markdown. Active prompts contain 665 to 768 characters.
 
 Development now targets Pi `0.84.3`. Vendored rules match caveman commit `17f9f2ec2377b0bfe16b52ee03a462e7f0a02bc8`.
 
 Documentation now separates prompt-size measurements from provider cost claims.
 
 ### Fixed
+
+Schema 4 summaries preserve the strict report status instead of rendering every report as failed. Usage tables now separate whole-run totals from eligible-pair compression.
+
+Exact-term validation now ignores natural-language capitalization unless fixtures require exact casing. Markdown emphasis does not alter the underlying phrase check.
+
+Persisted-content validation now recognizes commit subjects, PR headings, PR lists, and document paragraphs. It validates requested artifacts without letting surrounding commentary determine the result.
 
 Git commit discovery now imports `execFileSync` at module scope, so the default discovery works in plain ESM node processes without `CAVEMAN_EVAL_COMMIT`.
 

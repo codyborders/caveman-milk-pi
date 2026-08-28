@@ -1,5 +1,6 @@
 // Injection tests cover the vendored artifact and deterministic compact prompt generation.
 
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { validateMode } from "../src/config.js";
 import { computeInjection, loadSkillContent } from "../src/injection.js";
@@ -35,8 +36,11 @@ describe("computeInjection determinism", () => {
 });
 
 describe("computeInjection compact rules", () => {
-  it("uses exact concise language contract text", () => {
-    expect(promptContract.commonRules).toMatch(/^Answer concisely in the user's language\. /);
+  it("keeps explicit constraints, exact phrases, negation, and confirmation rules", () => {
+    expect(promptContract.commonRules).toContain("Explicit output constraints outrank brevity.");
+    expect(promptContract.commonRules).toContain("Requested exact phrases stay verbatim; negation stays intact.");
+    expect(promptContract.commonRules).toContain("Irreversible actions require a direct confirmation question, then wait for approval.");
+    expect(promptContract.commonRules).toContain("prefer replacement over repetition");
   });
 
   it("off mode produces empty text", () => {
@@ -73,15 +77,15 @@ describe("computeInjection compact rules", () => {
       const text = computeInjection(mode).text;
       expect(text, `mode=${mode}`).toContain("For Chinese input");
       expect(text, `mode=${mode}`).toContain("For non-Chinese input, preserve original language");
-      expect(text, `mode=${mode}`).toContain("Keep style in assistant chat responses until disabled");
+      expect(text, `mode=${mode}`).toContain("Explicit output constraints outrank brevity");
     }
   });
 
   it("keeps document and persisted-content rules in every active mode", () => {
     for (const mode of VALID_MODES.filter((item) => item !== "off")) {
       const text = computeInjection(mode).text;
-      expect(text, `mode=${mode}`).toContain("Normal prose for files");
-      expect(text, `mode=${mode}`).toContain("full prose for explicitly requested documents");
+      expect(text, `mode=${mode}`).toContain("Protect file bodies, requested artifacts");
+      expect(text, `mode=${mode}`).toContain("Use complete prose for security warnings");
     }
   });
 
@@ -89,6 +93,24 @@ describe("computeInjection compact rules", () => {
     expect(computeInjection("wenyan").text).toContain(
       "CAVEMAN MODE ACTIVE — level: wenyan-full",
     );
+  });
+
+  it("keeps README prompt lengths synchronized with generated injections", () => {
+    const readme = readFileSync("README.md", "utf8");
+    const currentLengths = new Map<string, { characters: number; estimatedTokens: number }>();
+    for (const match of readme.matchAll(/^\| `([^`]+)` \| [\d,]+ \| ([\d,]+) \| [\d,]+ \| ([\d,]+) \|$/gm)) {
+      currentLengths.set(String(match[1]), {
+        characters: Number(String(match[2]).replaceAll(",", "")),
+        estimatedTokens: Number(String(match[3]).replaceAll(",", "")),
+      });
+    }
+    for (const mode of VALID_MODES.filter((item) => item !== "off")) {
+      const characters = computeInjection(mode).text.length;
+      expect(currentLengths.get(mode), `mode=${mode}`).toEqual({
+        characters,
+        estimatedTokens: Math.round(characters / 4),
+      });
+    }
   });
 });
 

@@ -33,10 +33,28 @@ The run used all 225 counted attempts. Primary reported cost was `$0.000000`. Ju
 
 The report contains 135 results with complete usage. Hard behavior passed 39/45 `off` cases, 37/45 `lite` cases, and 40/45 `full` cases.
 
-The command executed as approved.
+The command executed as approved. Its immutable SHA-256 is `0e4a254968b0448b2df9e707d04c6bbc7c760c1b3b4a9dfb3ea07cfe6409feeb`.
 
 ```bash
 CAVEMAN_EVAL_PROVIDER=pi CAVEMAN_EVAL_ALLOW_PAID=1 CAVEMAN_EVAL_MODEL=z-ai/glm-5.3 CAVEMAN_EVAL_JUDGE=1 CAVEMAN_EVAL_JUDGE_MODEL=openai-codex/gpt-5.6-sol CAVEMAN_EVAL_MAX_PAID_CALLS=225 CAVEMAN_EVAL_REPETITIONS=3 CAVEMAN_EVAL_SEED=0xc0ffee03 CAVEMAN_EVAL_FIXTURE_SET=benchmark-regression-v2 CAVEMAN_EVAL_MODES=off,lite,full CAVEMAN_EVAL_CATEGORIES=technical-explanation,comparison,negation,ordered-migration,security-warning,irreversible-confirmation,code-generation,file-writing,commit-pr,tool-argument,tutorial,one-line,clarification,wenyan-chinese,wenyan-english CAVEMAN_EVAL_COUNT_TOKENS=0 CAVEMAN_EVAL_TIMEOUT_MS=300000 CAVEMAN_EVAL_CHECKPOINT=evaluation/checkpoints/benchmark-regression-v2.json CAVEMAN_EVAL_OUTPUT=evaluation/results/benchmark-regression-v2.json npm run evaluate
+```
+
+## Offline Rescore
+
+The offline rescore verifies the immutable report and locked source fixture. It reuses stored model output, usage, tool calls, and judge results. It applies corrected validators and pair attribution without starting Pi or a provider.
+
+```bash
+npm run rescore:offline
+```
+
+The command writes `evaluation/results/benchmark-regression-v2-rescored.json` and its Markdown summary. It does not replace the paid report. No new paid call is made.
+
+## Future Targeted Paid Rerun
+
+This rerun covers only the four changed behavioral areas. It needs separate approval before execution. The cap allows 36 primary processes and 24 judge processes.
+
+```bash
+CAVEMAN_EVAL_PROVIDER=pi CAVEMAN_EVAL_ALLOW_PAID=1 CAVEMAN_EVAL_MODEL=z-ai/glm-5.3 CAVEMAN_EVAL_JUDGE=1 CAVEMAN_EVAL_JUDGE_MODEL=openai-codex/gpt-5.6-sol CAVEMAN_EVAL_MAX_PAID_CALLS=60 CAVEMAN_EVAL_REPETITIONS=3 CAVEMAN_EVAL_SEED=0xc0ffee05 CAVEMAN_EVAL_FIXTURE_SET=benchmark-regression-v2 CAVEMAN_EVAL_MODES=off,lite,full CAVEMAN_EVAL_CATEGORIES=negation,irreversible-confirmation,commit-pr,clarification CAVEMAN_EVAL_COUNT_TOKENS=0 CAVEMAN_EVAL_TIMEOUT_MS=300000 CAVEMAN_EVAL_CHECKPOINT=evaluation/checkpoints/benchmark-targeted-v2.json CAVEMAN_EVAL_OUTPUT=evaluation/results/benchmark-targeted-v2.json npm run evaluate
 ```
 
 ## fresh-v1

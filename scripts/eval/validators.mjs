@@ -103,7 +103,19 @@ const VALIDATORS = {
   },
   terms: (text, config, context) => {
     const required = config.requiredTerms ?? context.requiredTerms ?? [];
-    const missing = required.filter((term) => !text.includes(term));
+    const markdownFreeText = String(text)
+      .replace(/(\*\*|~~|`)([\s\S]*?)\1/g, "$2")
+      .replace(/__([\s\S]*?)__/g, "$1")
+      .replace(/\*([^*\n]+)\*/g, "$1")
+      .replace(/(?<!\w)_([^_\n]+)_(?!\w)/g, "$1");
+    const missing = required.filter((term) => {
+      const expected = String(term);
+      const caseSensitive = config.caseSensitive === true ||
+        (config.caseSensitive !== false && /[_$]|[a-z][A-Z]|[()[\]{}]/.test(expected));
+      return caseSensitive
+        ? !markdownFreeText.includes(expected)
+        : !markdownFreeText.toLowerCase().includes(expected.toLowerCase());
+    });
     return {
       id: "terms",
       passed: missing.length === 0,
@@ -275,15 +287,70 @@ const VALIDATORS = {
         : `expected ${count} paragraphs, found ${paragraphs.length}.`,
     };
   },
-  "persisted-prose": (text, config, _context) => {
+  "persisted-prose": (text, config, context) => {
+    const taskClass = String(config.taskClass ?? context.taskClass ?? "");
+    const artifactType = String(config.artifactType ?? taskClass);
+    const suppliedArtifact = typeof context.artifactText === "string" ? context.artifactText : text;
+    if (artifactType === "commit-pr") {
+      const { subject, description } = extractCommitPrArtifacts(suppliedArtifact);
+      const subjectValid = isValidCommitSubject(subject);
+      const descriptionValid = isValidPullRequestDescription(
+        description,
+        Number(config.minWords ?? 12),
+      );
+      return {
+        id: "persisted-prose",
+        passed: subjectValid && descriptionValid,
+        detail: subjectValid && descriptionValid
+          ? "commit subject and pull-request summary are valid artifacts."
+          : "commit-pr artifact requires a substantive short subject and grammatical summary.",
+      };
+    }
+    if (artifactType === "commit-message") {
+      const { subject, body } = extractCommitMessageArtifacts(suppliedArtifact);
+      const subjectValid = isValidCommitSubject(subject);
+      const bodyValid = isValidPullRequestDescription(body, Number(config.minWords ?? 10));
+      return {
+        id: "persisted-prose",
+        passed: subjectValid && bodyValid,
+        detail: subjectValid && bodyValid
+          ? "commit message has a short subject and grammatical body."
+          : "commit message requires a substantive short subject and grammatical body.",
+      };
+    }
+    if (["commit", "commit-subject"].includes(artifactType)) {
+      const { subject } = extractCommitPrArtifacts(suppliedArtifact);
+      const passed = isValidCommitSubject(subject);
+      return {
+        id: "persisted-prose",
+        passed,
+        detail: passed
+          ? "commit subject is a substantive imperative without terminal punctuation."
+          : "commit subject must be a substantive short imperative without terminal punctuation.",
+      };
+    }
+    if (["pr", "pull-request", "pull-request-description", "pr-description"].includes(artifactType)) {
+      const description = extractPullRequestArtifact(suppliedArtifact);
+      const words = countWords(stripMarkdownStructure(description));
+      const passed = isValidPullRequestDescription(description, Number(config.minWords ?? 12));
+      return {
+        id: "persisted-prose",
+        passed,
+        detail: passed
+          ? "pull-request description contains grammatical prose."
+          : `pull-request artifact is incomplete or fragmented: ${words} words.`,
+      };
+    }
+    const artifact = extractDocumentArtifact(suppliedArtifact);
     const minWords = Number(config.minWords ?? 12);
     const minSentenceRatio = Number(config.minSentenceRatio ?? 0.75);
     const minSentenceWords = Number(config.minSentenceWords ?? 5);
-    const sentences = text
+    const prose = stripMarkdownHeadings(artifact);
+    const sentences = prose
       .split(/(?<=[.!?。！？])\s+/)
       .map((sentence) => sentence.trim())
       .filter((sentence) => sentence.length > 0);
-    const totalWords = countWords(text);
+    const totalWords = countWords(prose);
     if (sentences.length === 0 || totalWords < minWords) {
       return {
         id: "persisted-prose",
@@ -361,6 +428,105 @@ const VALIDATORS = {
     };
   },
 };
+
+function extractFirstFence(text) {
+  const match = String(text).match(/```[^\n]*\n([\s\S]*?)```/);
+  return match === null ? null : String(match[1] ?? "").trim();
+}
+
+function contentAfterLabel(text, labelPattern) {
+  const match = labelPattern.exec(text);
+  if (match === null) return null;
+  return text.substring(match.index + match[0].length).trim();
+}
+
+function extractCommitPrArtifacts(text) {
+  const value = String(text);
+  const subjectTail = contentAfterLabel(
+    value,
+    /(?:\*\*)?commit subject:?(?:\*\*)?\s*/i,
+  );
+  let subject = "";
+  if (subjectTail !== null) {
+    subject = extractFirstFence(subjectTail) ?? subjectTail.split(/\r?\n/)[0]?.trim() ?? "";
+  } else {
+    subject = value.split(/\r?\n/).map((line) => line.trim()).find(Boolean) ?? "";
+  }
+  const descriptionTail = contentAfterLabel(
+    value,
+    /(?:\*\*)?(?:pr|pull request) description:?(?:\*\*)?\s*/i,
+  );
+  let description = "";
+  if (descriptionTail !== null) {
+    description = extractFirstFence(descriptionTail) ?? descriptionTail;
+  } else {
+    const subjectIndex = value.indexOf(subject);
+    description = subjectIndex === -1 ? "" : value.substring(subjectIndex + subject.length).trim();
+  }
+  return { subject: subject.trim(), description: description.trim() };
+}
+
+function extractCommitMessageArtifacts(text) {
+  const value = String(text);
+  const subjectTail = contentAfterLabel(value, /subject:\s*/i);
+  const bodyTail = contentAfterLabel(value, /body:\s*/i);
+  const subject = subjectTail === null
+    ? value.split(/\r?\n/).map((line) => line.trim()).find(Boolean) ?? ""
+    : subjectTail.split(/\r?\n/)[0]?.trim() ?? "";
+  return { subject, body: bodyTail ?? "" };
+}
+
+function extractPullRequestArtifact(text) {
+  const labeled = contentAfterLabel(
+    String(text),
+    /(?:\*\*)?(?:pr|pull request) description:?(?:\*\*)?\s*/i,
+  );
+  if (labeled !== null) return extractFirstFence(labeled) ?? labeled;
+  return extractDocumentArtifact(text);
+}
+
+function extractDocumentArtifact(text) {
+  const value = String(text);
+  const heading = value.search(/^#{1,6}\s+\S+/m);
+  if (heading !== -1) return value.substring(heading).trim();
+  return extractFirstFence(value) ?? value.trim();
+}
+
+function stripMarkdownHeadings(text) {
+  return String(text)
+    .split(/\r?\n/)
+    .filter((line) => !/^\s{0,3}#{1,6}\s+/.test(line))
+    .join("\n")
+    .trim();
+}
+
+function stripMarkdownStructure(text) {
+  return String(text)
+    .split(/\r?\n/)
+    .map((line) => line.replace(/^\s{0,3}(?:#{1,6}\s+|[-*+]\s+)/, "").trim())
+    .filter((line) => line.length > 0 && !/^```/.test(line))
+    .join(" ");
+}
+
+function isPlaceholder(text) {
+  return /^(?:need context|todo|tbd|placeholder|n\/?a|\.\.\.)$/i.test(String(text).trim());
+}
+
+function isValidCommitSubject(subject) {
+  const value = String(subject).trim();
+  const words = countWords(value);
+  return value.length <= 120 && words >= 2 && !isPlaceholder(value) && !/[.!?。！？]$/.test(value);
+}
+
+function isValidPullRequestDescription(description, minWords) {
+  const value = stripMarkdownStructure(description);
+  if (value.length === 0 || isPlaceholder(value) || countWords(value) < minWords) return false;
+  const proseLines = String(description)
+    .split(/\r?\n/)
+    .map((line) => line.replace(/^\s{0,3}(?:#{1,6}\s+|[-*+]\s+)/, "").trim())
+    .filter((line) => line.length > 0 && !/^```/.test(line));
+  return proseLines.some((line) => countWords(line) >= 4 && /[.!?。！？]$/.test(line));
+}
 
 function extractBalancedFunction(text, functionName) {
   const start = text.indexOf(`function ${functionName}`);

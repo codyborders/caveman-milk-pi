@@ -22,12 +22,12 @@ The compact generator replaces the former filtered-markdown injector. Measuremen
 
 | Mode | Former characters | Current characters | Former estimated tokens | Current estimated tokens |
 | --- | ---: | ---: | ---: | ---: |
-| `lite` | 4,276 | 603 | 1,069 | 151 |
-| `full` | 4,216 | 610 | 1,054 | 153 |
-| `ultra` | 4,213 | 647 | 1,054 | 162 |
-| `wenyan-lite` | 4,103 | 672 | 1,026 | 168 |
-| `wenyan` | 4,262 | 696 | 1,066 | 174 |
-| `wenyan-ultra` | 4,158 | 706 | 1,040 | 177 |
+| `lite` | 4,276 | 665 | 1,069 | 166 |
+| `full` | 4,216 | 672 | 1,054 | 168 |
+| `ultra` | 4,213 | 709 | 1,054 | 177 |
+| `wenyan-lite` | 4,103 | 734 | 1,026 | 184 |
+| `wenyan` | 4,262 | 758 | 1,066 | 190 |
+| `wenyan-ultra` | 4,158 | 768 | 1,040 | 192 |
 
 All active prompts remain below the 800-character limit. Exact token counts remain unreported until a provider count endpoint returns them.
 
@@ -138,6 +138,12 @@ Offline validation checks fixture structure, task-aware compression policy, matr
 
 ```bash
 npm run evaluate:offline
+```
+
+The offline rescore command verifies locked paid-report and source-fixture hashes. It reuses stored responses, usage, tools, and judge results. It does not load a provider or Pi process. It writes separate JSON and Markdown files.
+
+```bash
+npm run rescore:offline
 ```
 
 Provider execution is disabled by default. It requires a key, a model name, and explicit paid-run authorization. Supported providers are `offline`, `anthropic`, and `pi`. Other names exit before any request.

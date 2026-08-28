@@ -4,6 +4,43 @@ import * as evaluate from "../scripts/evaluate.mjs";
 import { baseOptions, createMockServer } from "./helpers/mock-provider-server.js";
 
 describe("evaluation schema 4", () => {
+  it("attributes paired behavior outcomes by category", () => {
+    const attribution = evaluate.attributeBehaviorPairs?.([
+      { mode: "off", category: "one", repetition: 1, behavioralPassed: true, correctnessPass: true },
+      { mode: "full", category: "one", repetition: 1, behavioralPassed: false, correctnessPass: false },
+      { mode: "off", category: "two", repetition: 1, behavioralPassed: false, correctnessPass: false },
+      { mode: "full", category: "two", repetition: 1, behavioralPassed: true, correctnessPass: true },
+      { mode: "off", category: "three", repetition: 1, behavioralPassed: false, correctnessPass: false },
+      { mode: "full", category: "three", repetition: 1, behavioralPassed: false, correctnessPass: false },
+      { mode: "off", category: "four", repetition: 1, behavioralPassed: true, correctnessPass: true },
+      { mode: "full", category: "four", repetition: 1, behavioralPassed: true, correctnessPass: true },
+    ]);
+    expect(attribution).toMatchObject({
+      byMode: {
+        full: {
+          overall: {
+            activeFailedOffPassed: 1,
+            activePassedOffFailed: 1,
+            bothFailed: 1,
+            bothPassed: 1,
+          },
+          byCategory: {
+            one: { activeFailedOffPassed: 1, activePassedOffFailed: 0, bothFailed: 0, bothPassed: 0 },
+            two: { activeFailedOffPassed: 0, activePassedOffFailed: 1, bothFailed: 0, bothPassed: 0 },
+            three: { activeFailedOffPassed: 0, activePassedOffFailed: 0, bothFailed: 1, bothPassed: 0 },
+            four: { activeFailedOffPassed: 0, activePassedOffFailed: 0, bothFailed: 0, bothPassed: 1 },
+          },
+        },
+      },
+    });
+    expect(attribution.byMode.full.byCategory.one.correctness).toEqual({
+      activeFailedOffPassed: 1,
+      activePassedOffFailed: 0,
+      bothFailed: 0,
+      bothPassed: 0,
+    });
+  });
+
   it("separates hard behavior from compression metrics", async () => {
     const server = createMockServer();
     server.setCase((mode) => ({

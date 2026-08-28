@@ -1,6 +1,7 @@
 // Paired aggregation: deltas for input, cache write, cache read, output,
 // latency, quality, and cost appear only when pricing is supplied.
 
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as evaluate from "../scripts/evaluate.mjs";
 import { baseOptions, createMockServer } from "./helpers/mock-provider-server.js";
@@ -42,6 +43,53 @@ describe("paired aggregation", () => {
 });
 
 describe("report summary", () => {
+  it("derives corrected attribution from committed report results", async () => {
+    const reportModule = await import("../scripts/eval/report-summary.mjs");
+    const report = JSON.parse(readFileSync("evaluation/results/benchmark-regression-v2.json", "utf8"));
+    const attribution = reportModule.summarizeReport(report).attribution;
+    expect(attribution.byMode.lite.byCategory.negation.overall).toEqual({
+      activeFailedOffPassed: 2,
+      activePassedOffFailed: 0,
+      bothFailed: 1,
+      bothPassed: 0,
+    });
+    expect(attribution.byMode.full.byCategory["irreversible-confirmation"].overall).toEqual({
+      activeFailedOffPassed: 2,
+      activePassedOffFailed: 0,
+      bothFailed: 0,
+      bothPassed: 1,
+    });
+    expect(attribution.byMode.lite.byCategory["commit-pr"].overall.bothFailed).toBe(3);
+    expect(attribution.byMode.full.byCategory["commit-pr"].overall.bothFailed).toBe(2);
+    expect(attribution.byMode.lite.byCategory.clarification.overall.activePassedOffFailed).toBe(1);
+    expect(attribution.byMode.lite.byCategory.clarification.overall.activeFailedOffPassed).toBe(1);
+  });
+
+  it("renders committed regression status and whole-run usage correctly", async () => {
+    const reportModule = await import("../scripts/eval/report-summary.mjs");
+    const report = JSON.parse(readFileSync("evaluation/results/benchmark-regression-v2.json", "utf8"));
+    const summary = reportModule.summarizeReport(report);
+    const byMode = Object.fromEntries(summary.modes.map((mode) => [mode.mode, mode]));
+    expect(summary.passed).toBe(false);
+    const markdown = reportModule.renderSummaryMarkdown(summary);
+    expect(markdown).toContain("| Report passed | no |");
+    expect(markdown).toContain("| user contract |");
+    expect(byMode.off).toMatchObject({ inputTokens: 18422, cacheWriteTokens: 0, cacheReadTokens: 4160, outputTokens: 16809, totalReportedTokens: 39391, primaryCostUsd: 0 });
+    expect(byMode.lite).toMatchObject({ inputTokens: 4733, cacheWriteTokens: 0, cacheReadTokens: 23488, outputTokens: 10314, totalReportedTokens: 38535, totalTokenDifferenceFromOff: -856, primaryCostUsd: 0 });
+    expect(byMode.full).toMatchObject({ inputTokens: 4957, cacheWriteTokens: 0, cacheReadTokens: 23360, outputTokens: 12264, totalReportedTokens: 40581, totalTokenDifferenceFromOff: 1190, primaryCostUsd: 0 });
+    expect(byMode.lite.totalTokenPercentageDifference).toBeCloseTo(-0.02173, 5);
+    expect(byMode.full.totalTokenPercentageDifference).toBeCloseTo(0.03021, 5);
+  });
+
+  it("renders schema 4 report status yes only for strict true", async () => {
+    const reportModule = await import("../scripts/eval/report-summary.mjs");
+    const base = { schemaVersion: 4, modes: ["off"], results: [] };
+    expect(reportModule.renderSummaryMarkdown(reportModule.summarizeReport({ ...base, passed: true }))).toContain("| Report passed | yes |");
+    expect(reportModule.renderSummaryMarkdown(reportModule.summarizeReport({ ...base, passed: false }))).toContain("| Report passed | no |");
+    expect(reportModule.renderSummaryMarkdown(reportModule.summarizeReport({ ...base }))).toContain("| Report passed | no |");
+    expect(reportModule.renderSummaryMarkdown(reportModule.summarizeReport({ ...base, passed: "true" }))).toContain("| Report passed | no |");
+  });
+
   it("summarizes pass counts, tokens, costs, attempts, and turns per mode", () => {
     // Optional-call keeps the red phase an assertion mismatch, not a crash:
     // with no summarizeReport export the summary is null and every expect
@@ -118,6 +166,7 @@ describe("report summary", () => {
 
     expect(summary).not.toBeNull();
     expect(summary.schemaVersion).toBe(3);
+    expect(summary.passed).toBe(false);
     expect(summary.runId).toBe("caveman-eval-test");
     expect(summary.judgeEnabled).toBe(true);
 
@@ -164,6 +213,39 @@ describe("report summary", () => {
     expect(summary.totals.paidCallCap).toBe(225);
   });
 
+  it("formats whole-run percentage differences as percentages", async () => {
+    const reportModule = await import("../scripts/eval/report-summary.mjs");
+    const summary = reportModule.summarizeReport({
+      schemaVersion: 4,
+      modes: ["off", "lite", "full"],
+      results: [
+        { mode: "off", usage: { input: 100, cacheWrite: 0, cacheRead: 0, output: 0 } },
+        { mode: "lite", usage: { input: 97, cacheWrite: 0, cacheRead: 0, output: 0 } },
+        { mode: "full", usage: { input: 103, cacheWrite: 0, cacheRead: 0, output: 0 } },
+      ],
+    });
+    expect(summary.modes.find((mode) => mode.mode === "lite").totalTokenPercentageDifference).toBe(-0.03);
+    expect(reportModule.renderSummaryMarkdown(summary)).toContain("| `lite` | 97 | 0 | 0 | 0 | 97 | -3 | -3.0% |");
+    expect(reportModule.renderSummaryMarkdown(summary)).toContain("| `full` | 103 | 0 | 0 | 0 | 103 | 3 | +3.0% |");
+  });
+
+  it("keeps missing usage nullable, sums multi-turn rows, and preserves zero cost", async () => {
+    const reportModule = await import("../scripts/eval/report-summary.mjs");
+    const summary = reportModule.summarizeReport({
+      schemaVersion: 4,
+      modes: ["off", "lite"],
+      results: [
+        { mode: "off", usage: { input: 10, cacheWrite: 0, cacheRead: 2, output: 8 }, costUsd: 0 },
+        { mode: "off", usage: { input: 12, cacheWrite: 0, cacheRead: 3, output: 7 }, costUsd: 0 },
+        { mode: "lite", usage: { input: 5, cacheRead: 1, output: 4 }, costUsd: 0 },
+      ],
+    });
+    const off = summary.modes.find((mode) => mode.mode === "off");
+    const lite = summary.modes.find((mode) => mode.mode === "lite");
+    expect(off).toMatchObject({ inputTokens: 22, cacheReadTokens: 5, outputTokens: 15, totalReportedTokens: 42, primaryCostUsd: 0 });
+    expect(lite).toMatchObject({ cacheWriteTokens: null, totalReportedTokens: null, totalTokenDifferenceFromOff: null, totalTokenPercentageDifference: null });
+  });
+
   it("summarizes schema 4 hard groups and graded metrics without legacy gates", async () => {
     const reportModule = await import("../scripts/eval/report-summary.mjs");
     const summary = reportModule.summarizeReport({
@@ -174,6 +256,22 @@ describe("report summary", () => {
       passed: false,
       modes: ["off", "full"],
       judge: { enabled: true, model: "judge-model" },
+      attribution: {
+        byMode: {
+          full: {
+            overall: { activeFailedOffPassed: 1, activePassedOffFailed: 0, bothFailed: 0, bothPassed: 0 },
+            byCategory: {
+              negation: {
+                activeFailedOffPassed: 1,
+                activePassedOffFailed: 0,
+                bothFailed: 0,
+                bothPassed: 0,
+                correctness: { activeFailedOffPassed: 1, activePassedOffFailed: 0, bothFailed: 0, bothPassed: 0 },
+              },
+            },
+          },
+        },
+      },
       compression: {
         byMode: {
           full: {
@@ -225,6 +323,7 @@ describe("report summary", () => {
 
     expect(summary.fixtureSet).toBe("fresh-v1");
     expect(summary.fixtureHash).toBe("fresh-hash");
+    expect(summary.attribution.byMode.full.overall.activeFailedOffPassed).toBe(1);
     expect(full).toMatchObject({
       behavioralPasses: 1,
       correctnessPasses: 1,
@@ -239,6 +338,9 @@ describe("report summary", () => {
     });
     expect(markdown).toContain("| Fixture set | `fresh-v1` |");
     expect(markdown).toContain("| Report passed | no |");
+    expect(markdown).toContain("Active-failed/off-passed");
+    expect(markdown).toContain("### Whole-run usage");
+    expect(markdown).toContain("### Paired output and eligible compression");
     expect(markdown).toContain("| Mode | Cases | Behavior | Correct | Grounded | Contract | Safety | Quality score | Grounding score | Brevity score | Compression ratio | Eligible pairs |");
     expect(markdown).not.toContain("Judge quality pass");
   });

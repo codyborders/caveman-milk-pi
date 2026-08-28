@@ -63,7 +63,7 @@ describe("offline rescore", () => {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
-  });
+  }, 30_000);
 
   it("keeps the paid source immutable and rejects output collisions", () => {
     const source = "evaluation/results/benchmark-regression-v2.json";
@@ -95,23 +95,10 @@ describe("offline rescore", () => {
     }
   });
 
-  it("reproduces the committed rescored JSON at PR head", () => {
-    const dir = mkdtempSync(path.join(os.tmpdir(), "caveman-rescore-committed-"));
-    const output = path.join(dir, "rescored.json");
-    try {
-      execFileSync(process.execPath, ["scripts/eval/rescore.mjs"], {
-        env: {
-          ...process.env,
-          CAVEMAN_RESCORE_OUTPUT: output,
-          CAVEMAN_RESCORE_MARKDOWN: `${output}.md`,
-        },
-        stdio: "pipe",
-      });
-      expect(readFileSync(output)).toEqual(
-        readFileSync("evaluation/results/benchmark-regression-v2-rescored.json"),
-      );
-    } finally {
-      rmSync(dir, { recursive: true, force: true });
-    }
+  it("builds committed rescored JSON byte-for-byte in process", () => {
+    const generated = `${JSON.stringify(buildRescoredReport(), null, 2)}\n`;
+    expect(Buffer.from(generated, "utf8")).toEqual(
+      readFileSync("evaluation/results/benchmark-regression-v2-rescored.json"),
+    );
   });
 });

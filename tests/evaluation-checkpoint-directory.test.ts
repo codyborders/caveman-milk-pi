@@ -24,6 +24,10 @@ describe("checkpoint directory creation", () => {
     const store = evaluate.openCheckpoint({ path: checkpointPath, runId: "run-x" });
     store.recordCall("k1", { ok: true });
     expect(fs.existsSync(checkpointPath)).toBe(true);
-    expect(fs.statSync(checkpointPath).mode & 0o777).toBe(0o600);
+    // Mode bits are a POSIX concept. Windows ACLs grant different defaults,
+    // so the 0600 check only runs where mode bits are supported.
+    if (process.platform !== "win32") {
+      expect(fs.statSync(checkpointPath).mode & 0o777).toBe(0o600);
+    }
   });
 });

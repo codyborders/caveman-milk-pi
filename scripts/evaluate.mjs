@@ -721,7 +721,7 @@ export async function runProviderEvaluation(options) {
   const piRunner =
     runnerKind === "pi"
       ? createPiRunner({
-          piBin: piBinOption ?? path.resolve(here, "..", "node_modules", ".bin", "pi"),
+          ...(piBinOption === undefined ? {} : { piBin: piBinOption }),
           extensionPath: path.resolve(here, "..", "index.ts"),
           model,
           spawnImpl: spawnImpl ?? defaultSpawn,
@@ -1406,7 +1406,16 @@ function createMemoryCheckpoint(runId) {
 // Production use passes a real spawn; tests inject a fake so no provider
 // call happens.
 export function createPiRunner({
-  piBin,
+  piBin = path.resolve(
+    here,
+    "..",
+    "node_modules",
+    "@earendil-works",
+    "pi-coding-agent",
+    "dist",
+    "bundle",
+    "cli.js",
+  ),
   extensionPath,
   toolExtensionPath = path.resolve(here, "eval", "pi-eval-tool.ts"),
   model,
@@ -1519,7 +1528,13 @@ export function createPiRunner({
 function defaultSpawn(args, options) {
   return new Promise((resolve, reject) => {
     const [command, ...commandArgs] = args;
-    const child = nodeSpawn(command, commandArgs, options);
+    // JavaScript entry points cannot be executed directly on Windows, and
+    // shell shims in .bin are not portable either. Route them through the
+    // current node executable so the same piBin value works everywhere.
+    const isJavaScriptEntryPoint = /\.(js|mjs|cjs)$/.test(command);
+    const child = isJavaScriptEntryPoint
+      ? nodeSpawn(process.execPath, [command, ...commandArgs], options)
+      : nodeSpawn(command, commandArgs, options);
     let stdout = "";
     let stderr = "";
     child.stdout?.on("data", (chunk) => {

@@ -48,6 +48,8 @@ Documentation now separates prompt-size measurements from provider cost claims.
 
 Git commit discovery now imports `execFileSync` at module scope, so the default discovery works in plain ESM node processes without `CAVEMAN_EVAL_COMMIT`.
 
+The default Pi executable now targets the `@earendil-works/pi-coding-agent` CLI JavaScript entry instead of a `.bin` shim. The default spawn runs JavaScript entry points through the current node executable, so `CAVEMAN_EVAL_PI_BIN` accepts `.js`, `.mjs`, and `.cjs` values on every platform. Checkpoint permission assertions now run only where POSIX mode bits are supported.
+
 Token accounting validity is now strict. Missing usage stays `null`. Output ratios require positive integer output usage in both arms. A pair with missing or invalid output usage is reported as incomplete, fails brevity fail-closed, and stays out of paired deltas. Reports carry complete and incomplete pair counts and preserve raw provider usage verbatim.
 
 The evaluation fixture no longer duplicates prompt rules. Runtime prompts load from the production `src/prompt-contract.json`. Direct requests carry the production text for every mode. Reports carry the runtime prompt hash, and a contract change invalidates checkpoint reuse.

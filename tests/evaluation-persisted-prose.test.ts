@@ -55,6 +55,15 @@ describe("persisted-prose validator", () => {
     expect(outcome.passed).toBe(true);
   });
 
+  it("counts paragraphs inside the requested fenced artifact only", () => {
+    const outcome = runRequirements(
+      "```markdown\n## Installation\n\nInstall the extension through Pi, then select a mode from the command menu. The default remains off until you enable it.\n```\n\nThe requested draft is ready.",
+      [{ kind: "paragraph-count", count: 1, includeHeadings: false }],
+      noTool,
+    );
+    expect(outcome.passed).toBe(true);
+  });
+
   it("requires full prose in a README paragraph", () => {
     const valid = runRequirements(
       "I prepared the requested text.\n\n## Installation\n\nInstall the extension through Pi, then select a mode from the command menu. The default remains off until you enable it.",

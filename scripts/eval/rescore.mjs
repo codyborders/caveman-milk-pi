@@ -71,15 +71,31 @@ function correctedTaskClass(category) {
   return category.taskClass;
 }
 
-function rescoreResult(result, category) {
-  const requirements = Array.isArray(category.requirements) ? category.requirements : [];
-  const validation = runRequirements(result.response, requirements, {
+function correctedRequirements(category) {
+  const requirements = Array.isArray(category.requirements) ? [...category.requirements] : [];
+  if (category.id === "file-writing" && !requirements.some((item) => item.kind === "paragraph-count")) {
+    requirements.push({
+      id: "paragraphs",
+      kind: "paragraph-count",
+      count: 1,
+      includeHeadings: false,
+      hardGroup: "contract",
+      protected: true,
+    });
+  }
+  return requirements;
+}
+
+export function rescoreStoredResult(result, category) {
+  const requirements = correctedRequirements(category);
+  const validationText = typeof result.validationText === "string" ? result.validationText : result.response;
+  const validation = runRequirements(validationText, requirements, {
     toolCalls: result.toolCalls ?? [],
     expectsTool: category.expectsTool === true,
     requiredToolName: category.requiredToolName,
     requiredTerms: category.requiredTerms ?? [],
     taskClass: correctedTaskClass(category),
-    artifactText: result.response,
+    artifactText: validationText,
   });
   const groups = {
     correctness: validation.groups.correctnessPass,
@@ -123,7 +139,7 @@ export function buildRescoredReport() {
   const results = source.results.map((result) => {
     const category = categories.get(result.category);
     if (category === undefined) throw new Error(`Unknown source category: ${result.category}`);
-    return rescoreResult(result, category);
+    return rescoreStoredResult(result, category);
   });
   const expectedResultCount = source.modes.length * source.repetitions * categories.size;
   const runIntegrityPassed = source.primaryUsageComplete === true &&

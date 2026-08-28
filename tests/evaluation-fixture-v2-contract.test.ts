@@ -38,6 +38,18 @@ describe("schema 4 fixture contracts", () => {
     }
   });
 
+  it("requires exactly one prose paragraph for the README file-writing case", () => {
+    const category = evaluate.loadFixtures("benchmark-regression-v2").categories.find(
+      (item) => item.id === "file-writing",
+    );
+    expect(category?.requirements).toContainEqual(expect.objectContaining({
+      kind: "paragraph-count",
+      count: 1,
+      includeHeadings: false,
+      hardGroup: "contract",
+    }));
+  });
+
   it("covers every required fresh benchmark stratum", () => {
     const classes = new Set(evaluate.loadFixtures("fresh-v1").categories.map((category) => category.taskClass));
     expect(classes).toEqual(

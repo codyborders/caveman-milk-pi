@@ -273,7 +273,8 @@ const VALIDATORS = {
     if (!Number.isInteger(count) || count < 1) {
       throw new Error("paragraph-count requires a positive integer 'count' option.");
     }
-    const paragraphs = text
+    const artifact = extractDocumentArtifact(text);
+    const paragraphs = artifact
       .split(/\n[ \t]*\n+/)
       .map((part) => part.trim())
       .filter((part) => part.length > 0)
@@ -492,9 +493,13 @@ function extractPullRequestArtifact(text) {
 
 function extractDocumentArtifact(text) {
   const value = String(text);
+  const fence = value.search(/^```[^\n]*$/m);
   const heading = value.search(/^#{1,6}\s+\S+/m);
+  if (fence !== -1 && (heading === -1 || fence < heading)) {
+    return extractFirstFence(value.substring(fence)) ?? value.trim();
+  }
   if (heading !== -1) return value.substring(heading).trim();
-  return extractFirstFence(value) ?? value.trim();
+  return value.trim();
 }
 
 function stripMarkdownHeadings(text) {

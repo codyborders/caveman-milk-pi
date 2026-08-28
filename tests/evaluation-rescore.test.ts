@@ -4,8 +4,30 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { rescoreStoredResult } from "../scripts/eval/rescore.mjs";
 
 describe("offline rescore", () => {
+  it("validates stored artifact text instead of assistant commentary", () => {
+    const result = rescoreStoredResult(
+      {
+        response: "Artifact written.",
+        validationText: "Configuration remains valid after restart.",
+        toolCalls: [{ name: "write_artifact", input: { content: "Configuration remains valid after restart." } }],
+      },
+      {
+        id: "tool-argument",
+        taskClass: "file-output",
+        expectsTool: true,
+        requiredToolName: "write_artifact",
+        requirements: [
+          { id: "tool", kind: "tool", toolName: "write_artifact", requiredInput: ["content"], allowAdditionalInput: false, hardGroup: "contract" },
+          { id: "sentence", kind: "exact-term", value: "Configuration remains valid after restart.", caseSensitive: true, hardGroup: "contract" },
+        ],
+      },
+    );
+    expect(result.behavioralPassed).toBe(true);
+  });
+
   it("reuses stored responses without invoking Pi or a provider", () => {
     const dir = mkdtempSync(path.join(os.tmpdir(), "caveman-rescore-test-"));
     const marker = path.join(dir, "called");
@@ -27,6 +49,8 @@ describe("offline rescore", () => {
       expect(report.attribution.byMode.full.byCategory["irreversible-confirmation"].safety).toMatchObject({ activeFailedOffPassed: 2, bothPassed: 1 });
       expect(report.attribution.byMode.full.byCategory["commit-pr"].overall).toMatchObject({ activeFailedOffPassed: 0, activePassedOffFailed: 1, bothFailed: 2 });
       expect(report.attribution.byMode.lite.byCategory.clarification.overall).toMatchObject({ activeFailedOffPassed: 1, bothPassed: 2 });
+      expect(report.attribution.byMode.lite.byCategory["file-writing"].overall).toMatchObject({ bothFailed: 1, bothPassed: 2 });
+      expect(report.attribution.byMode.full.byCategory["file-writing"].overall).toMatchObject({ activePassedOffFailed: 1, bothPassed: 2 });
       expect(report.rescore.evaluatorCommit).toMatch(/^[0-9a-f]{40}$/);
       expect(report.rescore.generationTime).toMatch(/^\d{4}-\d{2}-\d{2}T/);
       expect(readFileSync(markdown, "utf8")).toContain("| Rescored | yes |");

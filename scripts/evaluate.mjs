@@ -1468,6 +1468,7 @@ export function createPiRunner({
       let usage = { input: null, output: null, cacheWrite: null, cacheRead: null };
       let rawUsage = null;
       let costUsd = null;
+      let providerError = null;
       for (const line of (result.stdout ?? "").split("\n")) {
         const trimmed = line.trim();
         if (trimmed.length === 0) continue;
@@ -1489,6 +1490,14 @@ export function createPiRunner({
             .filter((block) => block.type === "text")
             .map((block) => block.text)
             .join("");
+          // An errored assistant turn carries the provider explanation in
+          // errorMessage (for example an OAuth refresh failure). Keep the
+          // latest assistant turn's status so the error check below reports
+          // the provider cause instead of an empty-text symptom.
+          providerError =
+            message.stopReason === "error" && typeof message.errorMessage === "string"
+              ? message.errorMessage
+              : null;
           if (message.usage !== undefined && message.usage !== null) {
             usage = normalizeUsage(message.usage);
             rawUsage = message.usage;
@@ -1497,6 +1506,11 @@ export function createPiRunner({
             }
           }
         }
+      }
+      if (providerError !== null) {
+        // Bounded passthrough of the provider-reported cause only: the
+        // message comes from Pi's own error field, never from credentials.
+        throw new Error(`Pi provider error: ${providerError.substring(0, 500)}`);
       }
       return { text, toolCall, toolCallCount, usage, rawUsage, costUsd, elapsedMs };
     } finally {

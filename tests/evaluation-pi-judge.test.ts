@@ -71,6 +71,11 @@ describe("pi blinded judge", () => {
     for (const result of judged) {
       expect(result.judge).not.toBeNull();
       expect(result.judge.failed).toBe(false);
+      expect(result.judge.assistantTurns).toBe(1);
+      expect(result.judge.rawUsageTurns).toEqual([
+        { input: 44, output: 12, cacheRead: 2, cacheWrite: 1, cost: { total: 0.002 } },
+      ]);
+      expect(result.judge.costUsd).toBe(0.002);
       expect(result.qualityPassed).toBe(true);
     }
     expect(spawns.filter((spawn) => spawn.isJudge).length).toBe(3);

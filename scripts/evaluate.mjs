@@ -47,6 +47,8 @@ function createRuntimePrompts(modes, contract) {
 
 export const SUPPORTED_PROVIDERS = ["offline", "anthropic", "pi"];
 
+export { summarizeReport } from "./eval/report-summary.mjs";
+
 export function validateProviderName(provider) {
   if (!SUPPORTED_PROVIDERS.includes(provider)) {
     throw new Error(
@@ -523,21 +525,28 @@ function createRequestBody({ model, systemBlocks, messages, category, metadata }
 
 function extractResponseText(payload, expectsTool) {
   if (expectsTool) {
-    const toolBlock = payload.content?.find((block) => block.type === "tool_use");
+    const toolBlocks = (payload.content ?? []).filter((block) => block.type === "tool_use");
+    const toolBlock =
+      toolBlocks.find((block) => block.name === "write_artifact") ?? toolBlocks[0];
     if (typeof toolBlock?.input?.content !== "string") {
       throw new Error("Provider response did not contain write_artifact content.");
     }
+    const text = (payload.content ?? [])
+      .filter((block) => block.type === "text")
+      .map((block) => block.text)
+      .join("");
     return {
-      text: toolBlock.input.content,
+      text,
+      validationText: toolBlock.input.content,
       toolCall: { name: toolBlock.name, input: toolBlock.input },
-      toolCallCount: 1,
+      toolCallCount: toolBlocks.length,
     };
   }
   const text = payload.content?.find((block) => block.type === "text")?.text;
   if (typeof text !== "string") {
     throw new Error("Provider response did not contain a text block.");
   }
-  return { text, toolCall: null, toolCallCount: 0 };
+  return { text, validationText: text, toolCall: null, toolCallCount: 0 };
 }
 
 export function createOfflineReport(fixtures = loadFixtures()) {
@@ -824,16 +833,14 @@ export async function runProviderEvaluation(options) {
       }
       const piOutcome = await piRunner.execute({ mode: call.mode, category, repetition: call.repetition });
       payload = {
-        content:
-          piOutcome.toolCall === null
-            ? [{ type: "text", text: piOutcome.text }]
-            : [
-                {
-                  type: "tool_use",
-                  name: piOutcome.toolCall.name,
-                  input: piOutcome.toolCall.input,
-                },
-              ],
+        content: [
+          ...piOutcome.toolCalls.map((call) => ({
+            type: "tool_use",
+            name: call.name,
+            input: call.input,
+          })),
+          { type: "text", text: piOutcome.text },
+        ],
         usage: piOutcome.usage,
       };
       executionExtras = {
@@ -844,6 +851,9 @@ export async function runProviderEvaluation(options) {
         sessionId: null,
         toolCallCount: piOutcome.toolCallCount,
         rawUsage: piOutcome.rawUsage ?? null,
+        assistantTurns: piOutcome.assistantTurns,
+        rawUsageTurns: piOutcome.rawUsageTurns,
+        toolCalls: piOutcome.toolCalls,
       };
     } else {
       const systemBlocks = buildSystemBlocks(baseSystemPrompt, cavemanText);
@@ -893,6 +903,9 @@ export async function runProviderEvaluation(options) {
         systemPromptSent: systemBlocks.map((block) => block.text).join(""),
         sessionId: null,
         toolCallCount: null,
+        assistantTurns: 1,
+        rawUsageTurns: [outcome.json.usage ?? null],
+        toolCalls: null,
       };
     }
     const extracted = extractResponseText(payload, category.expectsTool === true);
@@ -906,7 +919,7 @@ export async function runProviderEvaluation(options) {
       ...(category.validators ?? []),
       ...((category.requiredTerms ?? []).length > 0 ? [{ id: "terms" }] : []),
     ];
-    const validation = runValidators(extracted.text, validatorConfigs, {
+    const validation = runValidators(extracted.validationText, validatorConfigs, {
       toolCall: extracted.toolCall,
       expectsTool: category.expectsTool === true,
       requiredTerms: category.requiredTerms ?? [],
@@ -923,11 +936,17 @@ export async function runProviderEvaluation(options) {
       mode: call.mode,
       armPosition: call.armPosition,
       response: extracted.text,
-      wordCount: countWords(extracted.text),
-      requiredTermRatio: scoreRequiredTerms(extracted.text, category.requiredTerms ?? []),
+      validationText: extracted.validationText,
+      wordCount: countWords(extracted.validationText),
+      requiredTermRatio: scoreRequiredTerms(extracted.validationText, category.requiredTerms ?? []),
       validation,
       usage,
       rawUsage: executionExtras.rawUsage ?? payload.usage ?? null,
+      rawUsageTurns:
+        executionExtras.rawUsageTurns ?? [payload.usage ?? null],
+      assistantTurns: executionExtras.assistantTurns ?? 1,
+      toolCalls:
+        executionExtras.toolCalls ?? (extracted.toolCall === null ? [] : [extracted.toolCall]),
       costUsd,
       elapsedMs: executionExtras.elapsedMs,
       attempts: executionExtras.attempts,
@@ -984,13 +1003,20 @@ export async function runProviderEvaluation(options) {
         nowImpl,
       });
       const text = outcome.json.content?.find((block) => block.type === "text")?.text ?? "";
+      const usage = normalizeUsage(outcome.json.usage);
       return {
         text,
-        usage: normalizeUsage(outcome.json.usage),
+        usage,
         rawUsage: outcome.json.usage ?? null,
+        rawUsageTurns: [outcome.json.usage ?? null],
+        assistantTurns: 1,
+        costUsd: computeCostUsd(usage, pricing),
       };
     };
     const { promptText, rubricText } = loadJudgeMaterials();
+    const { buildJudgeUserContent, renderJudgeResponse } = await import("./eval/judge-render.mjs");
+    const renderArm = (result) =>
+      renderJudgeResponse({ text: result.response, toolCalls: result.toolCalls ?? null });
     for (const result of results) {
       if (result.mode === "off") continue;
       const off = offByPair.get(`${result.repetition}::${result.category}`);
@@ -1002,11 +1028,11 @@ export async function runProviderEvaluation(options) {
       }
       checkpoint.touchHeartbeat();
       const offIsA = mulberry32(derivePairSeed(seed, result.repetition, `judge:${result.category}:${result.mode}`))() < 0.5;
-      const user = [
-        `Task prompt:\n${categories.find((item) => item.id === result.category).prompt}`,
-        `Response A:\n${offIsA ? off.response : result.response}`,
-        `Response B:\n${offIsA ? result.response : off.response}`,
-      ].join("\n\n---\n\n");
+      const user = buildJudgeUserContent({
+        taskPrompt: categories.find((item) => item.id === result.category).prompt,
+        responseA: offIsA ? renderArm(off) : renderArm(result),
+        responseB: offIsA ? renderArm(result) : renderArm(off),
+      });
       let judgeResult;
       try {
         const outcome = await judgeClient({ system: `${promptText}\n\n${rubricText}`, user });
@@ -1022,6 +1048,9 @@ export async function runProviderEvaluation(options) {
           notes: verdict.notes,
           usage: outcome.usage,
           rawUsage: outcome.rawUsage ?? null,
+          rawUsageTurns: outcome.rawUsageTurns ?? [outcome.rawUsage ?? null],
+          assistantTurns: outcome.assistantTurns ?? 1,
+          costUsd: outcome.costUsd ?? computeCostUsd(outcome.usage, pricing),
         };
       } catch (error) {
         if (error instanceof PaidCallBudgetExceededError) {
@@ -1082,7 +1111,7 @@ export async function runProviderEvaluation(options) {
   }
 
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     fixtureVersion: fixtures.version,
     provider,
     runner: runnerKind,
@@ -1303,10 +1332,109 @@ export function createArmOrder(arms, seed) {
   return order;
 }
 
+// Sidecar claim file guarding checkpoint takeover. Installing a claim is
+// an atomic hard-link of a fully written staged file, so exactly one
+// process can hold the claim at a time. Stealing a stale claim uses an
+// atomic rename: only one racer can move the old claim away, and losers
+// re-evaluate the fresh holder on the next loop round.
+function readClaimOwner(claimPath) {
+  try {
+    return JSON.parse(fs.readFileSync(claimPath, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+function claimStillOurs(claimPath, owner) {
+  if (owner === undefined) return true;
+  const holder = readClaimOwner(claimPath);
+  return holder !== null && holder.hostname === owner.hostname && holder.pid === owner.pid;
+}
+
+function latestClaimOwner(claimPath, checkpointPath) {
+  const holder = readClaimOwner(claimPath);
+  if (holder === null) return null;
+  try {
+    const checkpointOwner = JSON.parse(fs.readFileSync(checkpointPath, "utf8")).owner;
+    if (
+      checkpointOwner?.hostname === holder.hostname &&
+      checkpointOwner?.pid === holder.pid &&
+      typeof checkpointOwner.heartbeatAtMs === "number"
+    ) {
+      return checkpointOwner;
+    }
+  } catch {
+    // A missing or incomplete checkpoint cannot refresh the sidecar claim.
+  }
+  return holder;
+}
+
+function releaseClaimIfOurs(claimPath, owner) {
+  if (claimStillOurs(claimPath, owner)) {
+    try {
+      fs.unlinkSync(claimPath);
+    } catch {
+      // Already gone: nothing this process owns remains behind.
+    }
+  }
+}
+
+function claimCheckpointOwnership({ checkpointPath, owner, staleAfterMs, isProcessAlive, nowImpl }) {
+  const claimPath = `${checkpointPath}.claim`;
+  for (let round = 0; round < 100; round += 1) {
+    const staged = `${claimPath}.new-${process.pid}-${crypto.randomBytes(6).toString("hex")}`;
+    fs.writeFileSync(staged, JSON.stringify(owner), { mode: 0o600 });
+    try {
+      fs.linkSync(staged, claimPath);
+      // linkSync keeps the staged hard link; remove its name so only the
+      // claim path remains after acquisition.
+      try {
+        fs.unlinkSync(staged);
+      } catch {
+        // Best effort: a surviving staged twin is harmless residue.
+      }
+      return;
+    } catch (error) {
+      try {
+        fs.unlinkSync(staged);
+      } catch {
+        // The staged file is disposable; failure to remove it is harmless.
+      }
+      if (error?.code !== "EEXIST") throw error;
+    }
+    const holder = latestClaimOwner(claimPath, checkpointPath);
+    if (holder !== null) {
+      if (holder.hostname === owner.hostname && holder.pid === owner.pid) return;
+      if (holder.hostname === owner.hostname) {
+        if (isProcessAlive(holder.pid)) {
+          throw new Error(
+            `checkpoint at ${checkpointPath} is owned by live process ${holder.pid}; refusing concurrent resume.`,
+          );
+        }
+      } else if (nowImpl() - holder.heartbeatAtMs < staleAfterMs) {
+        throw new Error(
+          `checkpoint at ${checkpointPath} is owned by a live remote run on '${holder.hostname}' ` +
+            "with a fresh heartbeat; refusing concurrent resume.",
+        );
+      }
+    }
+    const junk = `${claimPath}.stale-${process.pid}-${crypto.randomBytes(6).toString("hex")}`;
+    try {
+      fs.renameSync(claimPath, junk);
+      fs.rmSync(junk, { force: true });
+    } catch {
+      // Another racer removed the stale claim first; loop and re-read.
+    }
+  }
+  throw new Error(`checkpoint claim at ${claimPath} did not settle after repeated contention.`);
+}
+
 // Incremental checkpoint store. Each completed paid call is persisted with an
 // atomic temp-file rename so an interrupted run resumes without repeating it.
 // Attempt reservations persist the same way, immediately before every paid
-// attempt, so the cumulative cap survives process restarts.
+// attempt, so the cumulative cap survives process restarts; each reservation
+// also refreshes the owner heartbeat in that same persisted write. Takeover
+// is guarded by the sidecar claim so two processes can never both resume.
 export function openCheckpoint({
   path: checkpointPath,
   runId,
@@ -1330,100 +1458,135 @@ export function openCheckpoint({
     attemptReservations: { provider: 0, judge: 0, countEndpoint: 0 },
     countResults: {},
   };
-  if (owner !== undefined && !fs.existsSync(checkpointPath)) {
-    fs.mkdirSync(path.dirname(checkpointPath), { recursive: true });
-    const initialState = { ...state, owner };
-    try {
-      fs.writeFileSync(checkpointPath, JSON.stringify(initialState, null, 2) + "\n", {
-        encoding: "utf8",
-        flag: "wx",
-        mode: 0o600,
-      });
-    } catch (error) {
-      if (error?.code !== "EEXIST") throw error;
-    }
+  const claimPath = `${checkpointPath}.claim`;
+  if (owner !== undefined) {
+    claimCheckpointOwnership({ checkpointPath, owner, staleAfterMs, isProcessAlive, nowImpl });
   }
-  if (fs.existsSync(checkpointPath)) {
-    let parsed;
-    try {
-      parsed = JSON.parse(fs.readFileSync(checkpointPath, "utf8"));
-    } catch (error) {
-      throw new Error(
-        `checkpoint at ${checkpointPath} is corrupt and cannot be parsed ` +
-          `(${error instanceof Error ? error.message : String(error)}). ` +
-          "Move it aside or delete it, then rerun to rebuild progress.",
-      );
+  try {
+    if (owner !== undefined && !fs.existsSync(checkpointPath)) {
+      fs.mkdirSync(path.dirname(checkpointPath), { recursive: true });
+      const initialState = { ...state, owner };
+      try {
+        fs.writeFileSync(checkpointPath, JSON.stringify(initialState, null, 2) + "\n", {
+          encoding: "utf8",
+          flag: "wx",
+          mode: 0o600,
+        });
+      } catch (error) {
+        if (error?.code !== "EEXIST") throw error;
+      }
     }
-    if (
-      typeof parsed !== "object" ||
-      parsed === null ||
-      typeof parsed.runId !== "string" ||
-      typeof parsed.completedCalls !== "object" ||
-      parsed.completedCalls === null
-    ) {
-      throw new Error(
-        `checkpoint at ${checkpointPath} is corrupt (missing runId or completedCalls). ` +
-          "Move it aside or delete it, then rerun to rebuild progress.",
-      );
-    }
-    if (parsed.runId !== runId) {
-      throw new Error(
-        `checkpoint at ${checkpointPath} belongs to run '${parsed.runId}', refusing to overwrite for run '${runId}'.`,
-      );
-    }
-    const recordedOwner = parsed.owner;
-    if (
-      owner !== undefined &&
-      recordedOwner !== undefined &&
-      recordedOwner.pid !== owner.pid &&
-      recordedOwner.hostname === owner.hostname &&
-      nowImpl() - recordedOwner.heartbeatAtMs < staleAfterMs &&
-      isProcessAlive(recordedOwner.pid)
-    ) {
-      throw new Error(
-        `checkpoint at ${checkpointPath} is owned by live process ${recordedOwner.pid}; refusing concurrent resume.`,
-      );
-    }
-    state = parsed;
-    // A non-empty legacy checkpoint has no trustworthy attempt total because
-    // retries were not recorded. Refuse resume instead of guessing below the
-    // real spend. An empty checkpoint can safely start with zero reservations.
-    if (state.attemptReservations === undefined) {
-      const hasCompletedCalls = Object.keys(state.completedCalls).length > 0;
-      const hasFailures = Array.isArray(state.failures) && state.failures.length > 0;
-      if (hasCompletedCalls || hasFailures) {
+    if (fs.existsSync(checkpointPath)) {
+      let parsed;
+      try {
+        parsed = JSON.parse(fs.readFileSync(checkpointPath, "utf8"));
+      } catch (error) {
         throw new Error(
-          `checkpoint at ${checkpointPath} predates cumulative attempt accounting and contains paid work. ` +
-            "Keep it for review, then start a new checkpoint for a safely capped run.",
+          `checkpoint at ${checkpointPath} is corrupt and cannot be parsed ` +
+            `(${error instanceof Error ? error.message : String(error)}). ` +
+            "Move it aside or delete it, then rerun to rebuild progress.",
         );
       }
-      state.attemptReservations = { provider: 0, judge: 0, countEndpoint: 0 };
-    } else if (!isValidAttemptReservations(state.attemptReservations)) {
-      throw new Error(
-        `checkpoint at ${checkpointPath} is corrupt (attemptReservations must contain non-negative integers). ` +
-          "Move it aside or delete it, then rerun to rebuild progress.",
-      );
+      if (
+        typeof parsed !== "object" ||
+        parsed === null ||
+        typeof parsed.runId !== "string" ||
+        typeof parsed.completedCalls !== "object" ||
+        parsed.completedCalls === null
+      ) {
+        throw new Error(
+          `checkpoint at ${checkpointPath} is corrupt (missing runId or completedCalls). ` +
+            "Move it aside or delete it, then rerun to rebuild progress.",
+        );
+      }
+      if (parsed.runId !== runId) {
+        throw new Error(
+          `checkpoint at ${checkpointPath} belongs to run '${parsed.runId}', refusing to overwrite for run '${runId}'.`,
+        );
+      }
+      // Ownership rules before taking over the checkpoint: on the same host a
+      // live recorded pid blocks regardless of heartbeat age, because only
+      // process death proves the runner is gone. Across hosts liveness cannot
+      // be probed, so a fresh heartbeat blocks and only an expired one yields.
+      // The sidecar claim enforces the same rules atomically; these checks
+      // defend legacy checkpoints that predate claim files.
+      const recordedOwner = parsed.owner;
+      if (owner !== undefined && recordedOwner !== undefined && recordedOwner.pid !== owner.pid) {
+        if (recordedOwner.hostname === owner.hostname) {
+          if (isProcessAlive(recordedOwner.pid)) {
+            throw new Error(
+              `checkpoint at ${checkpointPath} is owned by live process ${recordedOwner.pid}; refusing concurrent resume.`,
+            );
+          }
+        } else if (nowImpl() - recordedOwner.heartbeatAtMs < staleAfterMs) {
+          throw new Error(
+            `checkpoint at ${checkpointPath} is owned by a live remote run on '${recordedOwner.hostname}' ` +
+              "with a fresh heartbeat; refusing concurrent resume.",
+          );
+        }
+      }
+      state = parsed;
+      // A non-empty legacy checkpoint has no trustworthy attempt total because
+      // retries were not recorded. Refuse resume instead of guessing below the
+      // real spend. An empty checkpoint can safely start with zero reservations.
+      if (state.attemptReservations === undefined) {
+        const hasCompletedCalls = Object.keys(state.completedCalls).length > 0;
+        const hasFailures = Array.isArray(state.failures) && state.failures.length > 0;
+        if (hasCompletedCalls || hasFailures) {
+          throw new Error(
+            `checkpoint at ${checkpointPath} predates cumulative attempt accounting and contains paid work. ` +
+              "Keep it for review, then start a new checkpoint for a safely capped run.",
+          );
+        }
+        state.attemptReservations = { provider: 0, judge: 0, countEndpoint: 0 };
+      } else if (!isValidAttemptReservations(state.attemptReservations)) {
+        throw new Error(
+          `checkpoint at ${checkpointPath} is corrupt (attemptReservations must contain non-negative integers). ` +
+            "Move it aside or delete it, then rerun to rebuild progress.",
+        );
+      }
+      if (state.countResults === undefined) {
+        state.countResults = {};
+      } else if (
+        state.countResults === null ||
+        typeof state.countResults !== "object" ||
+        Array.isArray(state.countResults)
+      ) {
+        throw new Error(
+          `checkpoint at ${checkpointPath} is corrupt (countResults must be an object). ` +
+            "Move it aside or delete it, then rerun to rebuild progress.",
+        );
+      }
     }
-    if (state.countResults === undefined) {
-      state.countResults = {};
-    } else if (
-      state.countResults === null ||
-      typeof state.countResults !== "object" ||
-      Array.isArray(state.countResults)
-    ) {
-      throw new Error(
-        `checkpoint at ${checkpointPath} is corrupt (countResults must be an object). ` +
-          "Move it aside or delete it, then rerun to rebuild progress.",
-      );
-    }
+  } catch (error) {
+    // A refused open must not leave this process's claim behind to block
+    // the legitimate owner or the next takeover attempt.
+    if (owner !== undefined) releaseClaimIfOurs(claimPath, owner);
+    throw error;
   }
   if (owner !== undefined) {
     state.owner = owner;
   }
+  let writeCounter = 0;
   function persist() {
+    if (owner !== undefined && !claimStillOurs(claimPath, owner)) {
+      throw new Error(
+        `checkpoint at ${checkpointPath} was taken over by another run; ` +
+          "refusing to persist from a dispossessed owner.",
+      );
+    }
     const directory = path.dirname(checkpointPath);
     fs.mkdirSync(directory, { recursive: true });
-    const tempPath = path.join(directory, `.${path.basename(checkpointPath)}.${runId}.tmp`);
+    // Every persisted write stages into a unique temp path: pid separates
+    // processes, the counter and random suffix separate writes within one
+    // process, so concurrent writers can never clobber each other's staging.
+    writeCounter += 1;
+    const tempPath = path.join(
+      directory,
+      `.${path.basename(checkpointPath)}.${runId}.${process.pid}-${writeCounter}-${crypto
+        .randomBytes(4)
+        .toString("hex")}.tmp`,
+    );
     fs.writeFileSync(tempPath, JSON.stringify(state, null, 2) + "\n", { mode: 0o600 });
     fs.renameSync(tempPath, checkpointPath);
   }
@@ -1441,6 +1604,11 @@ export function openCheckpoint({
     },
     recordAttempt(kind) {
       state.attemptReservations[kind] += 1;
+      // The heartbeat rides the reservation's own persisted write, so a run
+      // that is still spending always advertises a fresh heartbeat.
+      if (state.owner !== undefined) {
+        state.owner.heartbeatAtMs = nowImpl();
+      }
       persist();
     },
     completedCount(mode) {
@@ -1572,9 +1740,15 @@ export function createPiRunner({
       }
       let text = "";
       let toolCall = null;
+      let toolCalls = [];
       let toolCallCount = 0;
+      let assistantTurns = 0;
+      let sawUsage = false;
+      const usageTotals = { input: 0, output: 0, cacheWrite: 0, cacheRead: 0 };
+      const usageComplete = { input: true, output: true, cacheWrite: true, cacheRead: true };
       let usage = { input: null, output: null, cacheWrite: null, cacheRead: null };
       let rawUsage = null;
+      let rawUsageTurns = [];
       let costUsd = null;
       let providerError = null;
       for (const line of (result.stdout ?? "").split("\n")) {
@@ -1588,39 +1762,79 @@ export function createPiRunner({
         }
         if (event.type === "tool_execution_start") {
           toolCallCount += 1;
-          if (event.toolName === "write_artifact") {
+          toolCalls.push({ name: event.toolName, input: event.args });
+          if (event.toolName === "write_artifact" && toolCall === null) {
             toolCall = { name: event.toolName, input: event.args };
           }
         }
         if (event.type === "message_end" && event.message?.role === "assistant") {
           const message = event.message;
+          assistantTurns += 1;
           text = (message.content ?? [])
             .filter((block) => block.type === "text")
             .map((block) => block.text)
             .join("");
           // An errored assistant turn carries the provider explanation in
-          // errorMessage (for example an OAuth refresh failure). Keep the
-          // latest assistant turn's status so the error check below reports
-          // the provider cause instead of an empty-text symptom.
-          providerError =
-            message.stopReason === "error" && typeof message.errorMessage === "string"
-              ? message.errorMessage
-              : null;
+          // errorMessage (for example an OAuth refresh failure). The error
+          // is sticky: a later successful turn must not mask an earlier
+          // provider failure, so it is only ever set, never cleared.
+          if (
+            providerError === null &&
+            message.stopReason === "error" &&
+            typeof message.errorMessage === "string"
+          ) {
+            providerError = message.errorMessage;
+          }
           if (message.usage !== undefined && message.usage !== null) {
-            usage = normalizeUsage(message.usage);
+            sawUsage = true;
             rawUsage = message.usage;
+            rawUsageTurns.push(message.usage);
+            const turnUsage = normalizeUsage(message.usage);
+            for (const field of ["input", "output", "cacheWrite", "cacheRead"]) {
+              if (typeof turnUsage[field] === "number") {
+                usageTotals[field] += turnUsage[field];
+              } else {
+                usageComplete[field] = false;
+              }
+            }
             if (message.usage.cost && typeof message.usage.cost.total === "number") {
-              costUsd = message.usage.cost.total;
+              costUsd = (costUsd ?? 0) + message.usage.cost.total;
+            }
+          } else {
+            // Turn alignment matters more than density: a missing usage
+            // stays a null entry in the ordered per-turn record.
+            rawUsageTurns.push(null);
+            for (const field of ["input", "output", "cacheWrite", "cacheRead"]) {
+              usageComplete[field] = false;
             }
           }
         }
+      }
+      if (sawUsage) {
+        usage = Object.fromEntries(
+          Object.entries(usageTotals).map(([field, total]) => [
+            field,
+            usageComplete[field] ? total : null,
+          ]),
+        );
       }
       if (providerError !== null) {
         // Bounded passthrough of the provider-reported cause only: the
         // message comes from Pi's own error field, never from credentials.
         throw new Error(`Pi provider error: ${providerError.substring(0, 500)}`);
       }
-      return { text, toolCall, toolCallCount, usage, rawUsage, costUsd, elapsedMs };
+      return {
+        text,
+        toolCall,
+        toolCalls,
+        toolCallCount,
+        assistantTurns,
+        usage,
+        rawUsage,
+        rawUsageTurns,
+        costUsd,
+        elapsedMs,
+      };
     } finally {
       // Best-effort cleanup: a locked file must not fail the finished call.
       try {
@@ -1681,7 +1895,14 @@ export function createPiRunner({
       if (session.text.length === 0) {
         throw new Error("pi runner produced no assistant text for the judge.");
       }
-      return { text: session.text, usage: session.usage, rawUsage: session.rawUsage };
+      return {
+        text: session.text,
+        usage: session.usage,
+        rawUsage: session.rawUsage,
+        rawUsageTurns: session.rawUsageTurns,
+        assistantTurns: session.assistantTurns,
+        costUsd: session.costUsd,
+      };
     },
   };
 }

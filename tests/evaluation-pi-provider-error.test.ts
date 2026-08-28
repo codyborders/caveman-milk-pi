@@ -56,4 +56,50 @@ describe("pi runner provider error reporting", () => {
     ).rejects.toThrow(/OAuth refresh failed for provider anthropic/);
     fs.rmSync(homeRoot, { recursive: true, force: true });
   });
+
+  it("keeps the provider error sticky when a later assistant turn succeeds", async () => {
+    // Initial failure: the pre-fix runner returned the later turn's text and
+    // masked the earlier provider error entirely.
+    const homeRoot = fs.mkdtempSync(path.join(os.tmpdir(), "caveman-pi-err-sticky-"));
+    const runner = evaluate.createPiRunner({
+      piBin: "/opt/pi/bin/pi",
+      extensionPath: "/repo/index.ts",
+      model: "test-model",
+      spawnImpl: async () => ({
+        code: 0,
+        stdout: [
+          JSON.stringify({
+            type: "message_end",
+            message: {
+              role: "assistant",
+              content: [],
+              stopReason: "error",
+              errorMessage: "upstream 503 during tool loop",
+              usage: { input: 5, output: 1 },
+            },
+          }),
+          JSON.stringify({
+            type: "message_end",
+            message: {
+              role: "assistant",
+              content: [{ type: "text", text: "Recovered text must not mask the error." }],
+              usage: { input: 15, output: 6 },
+            },
+          }),
+        ].join("\n"),
+        stderr: "",
+      }),
+      mkdtempImpl: (prefix) => fs.mkdtempSync(path.join(homeRoot, prefix)),
+    });
+
+    // A successful later turn must never hide an earlier provider failure.
+    await expect(
+      runner.execute({
+        mode: "off",
+        category: { id: "negation", prompt: "Explain this backup policy." },
+        repetition: 1,
+      }),
+    ).rejects.toThrow(/Pi provider error: upstream 503 during tool loop/);
+    fs.rmSync(homeRoot, { recursive: true, force: true });
+  });
 });

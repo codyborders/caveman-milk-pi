@@ -18,6 +18,12 @@ function sumField(values, read) {
   return total;
 }
 
+function meanField(values, read) {
+  const fields = values.map(read).filter((value) => typeof value === "number" && Number.isFinite(value));
+  if (fields.length === 0) return null;
+  return Number((fields.reduce((sum, value) => sum + value, 0) / fields.length).toFixed(6));
+}
+
 function sumCostUsd(values, read) {
   if (values.length === 0) return null;
   let total = 0;
@@ -60,6 +66,7 @@ export function summarizeReport(report) {
   const results = Array.isArray(report.results) ? report.results : [];
   const judgeEnabled = report.judge?.enabled === true;
   const pricing = report.pricing ?? null;
+  const schema4 = report.schemaVersion === 4;
   const observedModes = [];
   for (const result of results) {
     if (!observedModes.includes(result.mode)) observedModes.push(result.mode);
@@ -72,16 +79,11 @@ export function summarizeReport(report) {
   const modes = modeOrder.map((mode) => {
     const modeResults = results.filter((result) => result.mode === mode);
     const ratio = report.aggregates?.byMode?.[mode]?.outputTokenRatio ?? null;
-    return {
+    const compression = report.compression?.byMode?.[mode] ?? null;
+    const common = {
       mode,
       cases: modeResults.length,
       passedCases: modeResults.filter((result) => result.passed === true).length,
-      validatorPasses: modeResults.filter((result) => result.validationPassed === true).length,
-      brevityPasses: modeResults.filter((result) => result.brevityPassed === true).length,
-      judgeQualityPasses:
-        judgeEnabled && mode !== "off"
-          ? modeResults.filter((result) => result.qualityPassed === true).length
-          : null,
       inputTokens: sumField(modeResults, (result) => result.usage?.input),
       cacheWriteTokens: sumField(modeResults, (result) => result.usage?.cacheWrite),
       cacheReadTokens: sumField(modeResults, (result) => result.usage?.cacheRead),
@@ -90,12 +92,38 @@ export function summarizeReport(report) {
       pairedOutputMean: typeof ratio?.mean === "number" ? ratio.mean : null,
       pairedOutputMedian: typeof ratio?.median === "number" ? ratio.median : null,
     };
+    if (schema4) {
+      return {
+        ...common,
+        behavioralPasses: modeResults.filter((result) => result.behavioralPassed === true).length,
+        correctnessPasses: modeResults.filter((result) => result.correctnessPass === true).length,
+        groundednessPasses: modeResults.filter((result) => result.groundednessPass === true).length,
+        contractPasses: modeResults.filter((result) => result.contractPass === true).length,
+        safetyPasses: modeResults.filter((result) => result.safetyPass === true).length,
+        qualityScoreMean: meanField(modeResults, (result) => result.qualityScore),
+        groundingScoreMean: meanField(modeResults, (result) => result.groundingScore),
+        brevityScoreMean: compression?.brevityScore?.mean ?? null,
+        compressionRatioMean: compression?.compressionRatio?.mean ?? null,
+        compressionEligiblePairs: compression?.eligiblePairCount ?? 0,
+      };
+    }
+    return {
+      ...common,
+      validatorPasses: modeResults.filter((result) => result.validationPassed === true).length,
+      brevityPasses: modeResults.filter((result) => result.brevityPassed === true).length,
+      judgeQualityPasses:
+        judgeEnabled && mode !== "off"
+          ? modeResults.filter((result) => result.qualityPassed === true).length
+          : null,
+    };
   });
   const judgeRecords = judgeEnabled
     ? results.filter((result) => result.judge !== null && result.judge !== undefined)
     : [];
   return {
     schemaVersion: report.schemaVersion ?? null,
+    fixtureSet: report.fixtureSet ?? null,
+    fixtureHash: report.fixtureHash ?? null,
     runId: report.runId ?? null,
     provider: report.provider ?? null,
     runner: report.runner ?? null,
@@ -163,6 +191,10 @@ export function renderSummaryMarkdown(summary) {
   lines.push("| Field | Value |", "| --- | --- |");
   lines.push(`| Run | \`${summary.runId ?? "unknown"}\` |`);
   lines.push(`| Schema | ${summary.schemaVersion ?? "unknown"} |`);
+  if (summary.schemaVersion === 4) {
+    lines.push(`| Fixture set | ${summary.fixtureSet === null ? "n/a" : `\`${summary.fixtureSet}\``} |`);
+    lines.push(`| Fixture hash | ${summary.fixtureHash === null ? "n/a" : `\`${summary.fixtureHash}\``} |`);
+  }
   lines.push(
     `| Provider | \`${summary.provider ?? "unknown"}\` via \`${summary.runner ?? "unknown"}\` |`,
   );
@@ -184,16 +216,30 @@ export function renderSummaryMarkdown(summary) {
     `| Judge | ${summary.judgeEnabled ? `enabled with \`${summary.judgeModel ?? "unknown"}\`` : "disabled"} |`,
   );
   lines.push("", "## Per-mode results", "");
-  lines.push(
-    "| Mode | Cases | Passed | Validator | Brevity | Judge quality | Input tok | Cache write | Cache read | Output tok | Primary cost | Paired output mean | Paired output median |",
-  );
-  lines.push(
-    "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
-  );
-  for (const mode of summary.modes) {
+  if (summary.schemaVersion === 4) {
     lines.push(
-      `| \`${mode.mode}\` | ${mode.cases} | ${mode.passedCases} | ${mode.validatorPasses} | ${mode.brevityPasses} | ${mode.judgeQualityPasses ?? "n/a"} | ${formatTokens(mode.inputTokens)} | ${formatTokens(mode.cacheWriteTokens)} | ${formatTokens(mode.cacheReadTokens)} | ${formatTokens(mode.outputTokens)} | ${formatUsd(mode.primaryCostUsd)} | ${formatRatio(mode.pairedOutputMean)} | ${formatRatio(mode.pairedOutputMedian)} |`,
+      "| Mode | Cases | Behavior | Correct | Grounded | Contract | Safety | Quality score | Grounding score | Brevity score | Compression ratio | Eligible pairs |",
     );
+    lines.push(
+      "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+    );
+    for (const mode of summary.modes) {
+      lines.push(
+        `| \`${mode.mode}\` | ${mode.cases} | ${mode.behavioralPasses} | ${mode.correctnessPasses} | ${mode.groundednessPasses} | ${mode.contractPasses} | ${mode.safetyPasses} | ${formatRatio(mode.qualityScoreMean)} | ${formatRatio(mode.groundingScoreMean)} | ${formatRatio(mode.brevityScoreMean)} | ${formatRatio(mode.compressionRatioMean)} | ${mode.compressionEligiblePairs} |`,
+      );
+    }
+  } else {
+    lines.push(
+      "| Mode | Cases | Passed | Validator | Brevity | Judge quality | Input tok | Cache write | Cache read | Output tok | Primary cost | Paired output mean | Paired output median |",
+    );
+    lines.push(
+      "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+    );
+    for (const mode of summary.modes) {
+      lines.push(
+        `| \`${mode.mode}\` | ${mode.cases} | ${mode.passedCases} | ${mode.validatorPasses} | ${mode.brevityPasses} | ${mode.judgeQualityPasses ?? "n/a"} | ${formatTokens(mode.inputTokens)} | ${formatTokens(mode.cacheWriteTokens)} | ${formatTokens(mode.cacheReadTokens)} | ${formatTokens(mode.outputTokens)} | ${formatUsd(mode.primaryCostUsd)} | ${formatRatio(mode.pairedOutputMean)} | ${formatRatio(mode.pairedOutputMedian)} |`,
+      );
+    }
   }
   const totals = summary.totals ?? {};
   lines.push("", "## Totals", "", "| Field | Value |", "| --- | ---: |");

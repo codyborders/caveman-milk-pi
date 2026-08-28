@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fixturePath = path.join(here, "evaluation-fixtures.json");
+const fixtureManifestPath = path.join(here, "..", "evaluation", "fixture-manifest.json");
 const contractPath = path.join(here, "..", "src", "prompt-contract.json");
 
 function loadPromptContract() {
@@ -81,14 +82,29 @@ export function validateRunConfiguration({ modes, repetitions, plannedCalls, max
   return true;
 }
 
-export function loadFixtures() {
-  const fixtures = JSON.parse(fs.readFileSync(fixturePath, "utf8"));
+export function loadFixtures(fixtureSetOption) {
+  const manifest = JSON.parse(fs.readFileSync(fixtureManifestPath, "utf8"));
+  const requestedSet = fixtureSetOption ?? "pilot-v1";
+  const entry = manifest.fixtureSets?.[requestedSet];
+  if (typeof entry?.path !== "string" || typeof entry.sha256 !== "string") {
+    throw new Error(`Fixture manifest has no verified entry for '${requestedSet}'.`);
+  }
+  const selectedPath = path.resolve(here, "..", entry.path);
+  const fixtureBytes = fs.readFileSync(selectedPath, "utf8");
+  const fixtureHash = crypto.createHash("sha256").update(fixtureBytes).digest("hex");
+  if (fixtureHash !== entry.sha256) {
+    throw new Error(`Fixture set '${requestedSet}' hash mismatch: expected ${entry.sha256}, got ${fixtureHash}.`);
+  }
+  const fixtures = JSON.parse(fixtureBytes);
+  const fixtureSet = fixtures.fixtureSet ?? requestedSet;
   if (!Array.isArray(fixtures.modes) || !Array.isArray(fixtures.categories)) {
     throw new Error("Evaluation fixture must define modes and categories.");
   }
   const promptContract = loadPromptContract();
   return {
     ...fixtures,
+    fixtureSet,
+    fixtureHash,
     promptContract,
     runtimePrompts: createRuntimePrompts(fixtures.modes, promptContract),
   };
@@ -113,6 +129,81 @@ function scoreRequiredTerms(text, requiredTerms) {
   if (requiredTerms.length === 0) return 1;
   const retained = requiredTerms.filter((term) => text.includes(term)).length;
   return retained / requiredTerms.length;
+}
+
+function compressionStat(values) {
+  if (values.length === 0) return { mean: null, median: null, count: 0 };
+  const ordered = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(ordered.length / 2);
+  const median = ordered.length % 2 === 0
+    ? (ordered[middle - 1] + ordered[middle]) / 2
+    : ordered[middle];
+  return {
+    mean: values.reduce((sum, value) => sum + value, 0) / values.length,
+    median,
+    count: values.length,
+  };
+}
+
+export function scoreCompressionPair({ off, active }) {
+  if (off?.behavioralPassed === false || active?.behavioralPassed === false) {
+    return { eligible: false, compressionRatio: null, brevityScore: null, exclusionReason: "hard-behavior-failure" };
+  }
+  if (off?.compressionPolicy?.eligible === false || active?.compressionPolicy?.eligible === false) {
+    return { eligible: false, compressionRatio: null, brevityScore: null, exclusionReason: "task-policy-exempt" };
+  }
+  const offOutput = off?.usage?.output;
+  const activeOutput = active?.usage?.output;
+  if (!Number.isFinite(offOutput) || !Number.isFinite(activeOutput) || offOutput <= 0 || activeOutput <= 0) {
+    return { eligible: false, compressionRatio: null, brevityScore: null, exclusionReason: "invalid-output-usage" };
+  }
+  const compressionRatio = activeOutput / offOutput;
+  const targetRatio = active?.compressionPolicy?.targetRatio ?? off?.compressionPolicy?.targetRatio;
+  const normalizedTarget = Number.isFinite(targetRatio) && targetRatio > 0 ? targetRatio : 1;
+  const brevityScore = Math.max(0, Math.min(1, normalizedTarget / compressionRatio));
+  return { eligible: true, compressionRatio, brevityScore, exclusionReason: null };
+}
+
+export function aggregateCompressionResults(results = []) {
+  const byMode = new Map();
+  const pairs = new Map();
+  for (const result of results) {
+    if (result?.mode === "off") continue;
+    const key = `${result.mode}::${result.category}::${result.repetition}`;
+    const pair = pairs.get(key) ?? { active: result, off: null };
+    pair.active = result;
+    pairs.set(key, pair);
+  }
+  for (const result of results) {
+    if (result?.mode !== "off") continue;
+    for (const pair of pairs.values()) {
+      if (pair.active?.category === result.category && pair.active?.repetition === result.repetition) pair.off = result;
+    }
+  }
+  for (const pair of pairs.values()) {
+    if (pair.off === null) continue;
+    const mode = pair.active.mode;
+    const current = byMode.get(mode) ?? { pairCount: 0, eligiblePairCount: 0, excludedHardFailureCount: 0, excludedPolicyCount: 0, excludedInvalidUsageCount: 0, ratios: [], scores: [] };
+    current.pairCount += 1;
+    const scored = scoreCompressionPair(pair);
+    if (scored.eligible) {
+      current.eligiblePairCount += 1;
+      current.ratios.push(scored.compressionRatio);
+      current.scores.push(scored.brevityScore);
+    } else if (scored.exclusionReason === "hard-behavior-failure") current.excludedHardFailureCount += 1;
+    else if (scored.exclusionReason === "task-policy-exempt") current.excludedPolicyCount += 1;
+    else if (scored.exclusionReason === "invalid-output-usage") current.excludedInvalidUsageCount += 1;
+    byMode.set(mode, current);
+  }
+  return Object.fromEntries([...byMode.entries()].map(([mode, value]) => [mode, {
+    pairCount: value.pairCount,
+    eligiblePairCount: value.eligiblePairCount,
+    excludedHardFailureCount: value.excludedHardFailureCount,
+    excludedPolicyCount: value.excludedPolicyCount,
+    excludedInvalidUsageCount: value.excludedInvalidUsageCount,
+    compressionRatio: compressionStat(value.ratios),
+    brevityScore: compressionStat(value.scores),
+  }]));
 }
 
 function parseSeed(seedOption) {
@@ -255,7 +346,7 @@ function pairedDelta(pairs, read) {
   return stats(values);
 }
 
-function aggregatePairs(pairs, pricing, judgeEnabled) {
+function aggregatePairs(pairs, pricing, judgeEnabled, schema4) {
   const completePairs = pairs.filter(
     (pair) =>
       isPositiveIntegerOutput(pair.off.usage.output) &&
@@ -266,7 +357,7 @@ function aggregatePairs(pairs, pricing, judgeEnabled) {
   );
   const judgeOk =
     judgeEnabled && pairs.every((pair) => pair.active.judge !== null && pair.active.judge.failed !== true);
-  return {
+  const summary = {
     pairCount: pairs.length,
     completePairCount: completePairs.length,
     incompletePairCount: pairs.length - completePairs.length,
@@ -289,6 +380,15 @@ function aggregatePairs(pairs, pricing, judgeEnabled) {
           )
         : null,
     },
+  };
+  if (schema4) {
+    return {
+      ...summary,
+      behavioralPassed: pairs.every((pair) => pair.active.behavioralPassed),
+    };
+  }
+  return {
+    ...summary,
     validationPassed: pairs.every((pair) => pair.active.validation.passed),
     brevityPassed: pairs.every((pair) => pair.active.brevityPassed),
     qualityPassed: judgeEnabled
@@ -302,7 +402,7 @@ function aggregatePairs(pairs, pricing, judgeEnabled) {
   };
 }
 
-function aggregateResults(results, { pricing, judgeEnabled }) {
+function aggregateResults(results, { pricing, judgeEnabled, schema4 = false }) {
   const byMode = {};
   const byModeCategory = {};
   const offResults = new Map(
@@ -318,12 +418,13 @@ function aggregateResults(results, { pricing, judgeEnabled }) {
         return off === undefined ? null : { off, active: result };
       })
       .filter((pair) => pair !== null);
-    byMode[activeMode] = aggregatePairs(pairs, pricing, judgeEnabled);
+    byMode[activeMode] = aggregatePairs(pairs, pricing, judgeEnabled, schema4);
     for (const category of [...new Set(pairs.map((pair) => pair.active.category))]) {
       byModeCategory[`${activeMode}::${category}`] = aggregatePairs(
         pairs.filter((pair) => pair.active.category === category),
         pricing,
         judgeEnabled,
+        schema4,
       );
     }
   }
@@ -349,17 +450,27 @@ export function parseJudgeVerdict(text) {
         const score = (arm) => {
           const completeness = parsed.completeness?.[arm];
           const correctness = parsed.correctness?.[arm];
+          const groundedness = parsed.groundedness?.[arm];
           if (
             typeof completeness !== "number" ||
             typeof correctness !== "number" ||
+            typeof groundedness !== "number" ||
             completeness < 0 ||
             completeness > 4 ||
             correctness < 0 ||
-            correctness > 4
+            correctness > 4 ||
+            groundedness < 0 ||
+            groundedness > 4
           ) {
             throw new Error(`judge scores for arm ${arm} are missing or out of range.`);
           }
-          return { completeness, correctness, total: completeness + correctness };
+          return {
+            completeness,
+            correctness,
+            groundedness,
+            total: completeness + correctness,
+            groundednessTotal: groundedness,
+          };
         };
         return {
           A: score("A"),
@@ -558,6 +669,8 @@ export function createOfflineReport(fixtures = loadFixtures()) {
   );
   return {
     fixtureVersion: fixtures.version,
+    fixtureSet: fixtures.fixtureSet,
+    fixtureHash: fixtures.fixtureHash,
     provider: "offline",
     tokenAccounting: fixtures.promptContract?.tokenAccounting ?? {
       method: "provider-count-endpoint",
@@ -640,6 +753,7 @@ export async function runProviderEvaluation(options) {
   const modes = selectNamedItems(fixtures.modes, modeSelection);
   const categories = selectNamedItems(fixtures.categories, categorySelection);
   const activeModes = modes.filter((mode) => mode !== "off");
+  const isSchema4 = fixtures.fixtureSet !== undefined && fixtures.fixtureSet !== "pilot-v1";
   if (activeModes.length > 0 && !modes.includes("off")) {
     throw new Error(
       `Comparative scoring requires the off baseline arm; selected modes: ${modes.join(", ")}. ` +
@@ -682,6 +796,8 @@ export async function runProviderEvaluation(options) {
     judge: judge === true,
     judgeModel: judge === true ? (judgeModel ?? model) : null,
     fixtureVersion: fixtures.version,
+    fixtureSet: fixtures.fixtureSet,
+    fixtureHash: fixtures.fixtureHash,
     commit: environment.commit,
     modes,
     categories: categories.map((category) => category.id),
@@ -914,20 +1030,29 @@ export async function runProviderEvaluation(options) {
       executionExtras.costUsd !== null && executionExtras.costUsd !== undefined
         ? executionExtras.costUsd
         : computeCostUsd(usage, pricing);
-    const { runValidators } = await import("./eval/validators.mjs");
-    const validatorConfigs = [
-      ...(category.validators ?? []),
-      ...((category.requiredTerms ?? []).length > 0 ? [{ id: "terms" }] : []),
-    ];
-    const validation = runValidators(extracted.validationText, validatorConfigs, {
-      toolCall: extracted.toolCall,
-      expectsTool: category.expectsTool === true,
-      requiredTerms: category.requiredTerms ?? [],
-    });
+    const resultToolCalls =
+      executionExtras.toolCalls ?? (extracted.toolCall === null ? [] : [extracted.toolCall]);
     const toolCallCount =
       executionExtras.toolCallCount !== null && executionExtras.toolCallCount !== undefined
         ? executionExtras.toolCallCount
         : extracted.toolCallCount;
+    const { runRequirements, runValidators } = await import("./eval/validators.mjs");
+    const validatorConfigs = [
+      ...(category.validators ?? []),
+      ...((category.requiredTerms ?? []).length > 0 ? [{ id: "terms" }] : []),
+    ];
+    const validation = isSchema4
+      ? runRequirements(extracted.validationText, category.requirements ?? [], {
+          taskPrompt: category.prompt,
+          toolCall: extracted.toolCall,
+          toolCalls: resultToolCalls,
+          expectsTool: category.expectsTool === true,
+        })
+      : runValidators(extracted.validationText, validatorConfigs, {
+          toolCall: extracted.toolCall,
+          expectsTool: category.expectsTool === true,
+          requiredTerms: category.requiredTerms ?? [],
+        });
     results.push({
       seq: (seq += 1),
       key: call.key,
@@ -945,8 +1070,8 @@ export async function runProviderEvaluation(options) {
       rawUsageTurns:
         executionExtras.rawUsageTurns ?? [payload.usage ?? null],
       assistantTurns: executionExtras.assistantTurns ?? 1,
-      toolCalls:
-        executionExtras.toolCalls ?? (extracted.toolCall === null ? [] : [extracted.toolCall]),
+      toolCalls: resultToolCalls,
+      compressionPolicy: isSchema4 ? category.compressionPolicy : undefined,
       costUsd,
       elapsedMs: executionExtras.elapsedMs,
       attempts: executionExtras.attempts,
@@ -1045,6 +1170,8 @@ export async function runProviderEvaluation(options) {
           verdict,
           offQualityTotal: offScore.total,
           activeQualityTotal: activeScore.total,
+          offGroundingTotal: offScore.groundednessTotal,
+          activeGroundingTotal: activeScore.groundednessTotal,
           notes: verdict.notes,
           usage: outcome.usage,
           rawUsage: outcome.rawUsage ?? null,
@@ -1078,8 +1205,31 @@ export async function runProviderEvaluation(options) {
 
   const tolerance = 0;
   for (const result of results) {
-    result.requiredTermsPassed = result.requiredTermRatio === 1;
     const off = offByPair.get(`${result.repetition}::${result.category}`);
+    const judgeResult = result.mode === "off" ? null : judgeResultsByKey.get(result.key) ?? null;
+    result.judge = judgeResult;
+    result.validationPassed = result.validation.passed;
+    if (isSchema4) {
+      const groups = result.validation.groups;
+      result.correctnessPass = groups.correctnessPass;
+      result.groundednessPass = groups.groundednessPass;
+      result.contractPass = groups.contractPass;
+      result.safetyPass = groups.safetyPass;
+      result.behavioralPassed = result.validation.passed;
+      result.passed = result.behavioralPassed;
+      result.qualityScore = judgeResult === null || judgeResult.failed === true
+        ? null
+        : judgeResult.activeQualityTotal / 8;
+      result.groundingScore = judgeResult === null || judgeResult.failed === true
+        ? null
+        : judgeResult.activeGroundingTotal / 4;
+      result.requiredTermsPassed = null;
+      delete result.brevityPassed;
+      delete result.qualityPassed;
+      continue;
+    }
+
+    result.requiredTermsPassed = result.requiredTermRatio === 1;
     if (result.mode !== "off" && off !== undefined) {
       // An output ratio requires positive integer output usage in both arms.
       // Missing or invalid output usage fails brevity fail-closed instead of
@@ -1098,21 +1248,31 @@ export async function runProviderEvaluation(options) {
           ? true
           : result.tokenRatioToOff !== null && result.tokenRatioToOff <= ratioLimit;
     }
-    const judgeResult = result.mode === "off" ? null : judgeResultsByKey.get(result.key) ?? null;
-    result.judge = judgeResult;
     if (judge === true && result.mode !== "off") {
       result.qualityPassed =
         judgeResult !== null &&
         judgeResult.failed !== true &&
         judgeResult.activeQualityTotal >= judgeResult.offQualityTotal - tolerance;
     }
-    result.validationPassed = result.validation.passed;
     result.passed = result.validationPassed && result.brevityPassed && result.qualityPassed;
   }
 
+  if (isSchema4) {
+    for (const result of results) {
+      const off = offByPair.get(`${result.repetition}::${result.category}`);
+      const scored = result.mode === "off" || off === undefined
+        ? { compressionRatio: null, brevityScore: null }
+        : scoreCompressionPair({ off, active: result });
+      result.compressionRatio = scored.compressionRatio;
+      result.brevityScore = scored.brevityScore;
+    }
+  }
+
   return {
-    schemaVersion: 3,
+    schemaVersion: isSchema4 ? 4 : 3,
     fixtureVersion: fixtures.version,
+    fixtureSet: fixtures.fixtureSet,
+    fixtureHash: fixtures.fixtureHash,
     provider,
     runner: runnerKind,
     model,
@@ -1164,7 +1324,8 @@ export async function runProviderEvaluation(options) {
       resumed: result.resumed === true,
     })),
     results,
-    aggregates: aggregateResults(results, { judgeEnabled: judge === true, pricing }),
+    aggregates: aggregateResults(results, { judgeEnabled: judge === true, pricing, schema4: isSchema4 }),
+    ...(isSchema4 ? { compression: { byMode: aggregateCompressionResults(results) } } : {}),
     failures: checkpoint.state.failures,
     judgeFailures,
     // Primary usage completeness gates the whole run: every result, off arms
@@ -1953,7 +2114,7 @@ function defaultSpawn(args, options) {
 }
 
 async function main() {
-  const fixtures = loadFixtures();
+  const fixtures = loadFixtures(process.env.CAVEMAN_EVAL_FIXTURE_SET);
   const provider = process.env.CAVEMAN_EVAL_PROVIDER ?? "offline";
   validateProviderName(provider);
   const allowPaid = process.env.CAVEMAN_EVAL_ALLOW_PAID === "1";

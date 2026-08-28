@@ -60,9 +60,8 @@ const VALIDATORS = {
     if (!Number.isInteger(count) || count < 1) {
       throw new Error("numbered-order requires a positive integer 'count' option.");
     }
-    const items = [...text.matchAll(/^\s{0,3}(\d+)[.)]\s+/gm)].map((match) =>
-      Number.parseInt(match[1] ?? "0", 10),
-    );
+    const itemMatches = [...text.matchAll(/^\s{0,3}(\d+)[.)]\s+([^\n]*)/gm)];
+    const items = itemMatches.map((match) => Number.parseInt(match[1] ?? "0", 10));
     if (items.length !== count) {
       return {
         id: "numbered-order",
@@ -71,16 +70,39 @@ const VALIDATORS = {
       };
     }
     const inOrder = items.every((value, index) => value === index + 1);
+    const orderedTerms = Array.isArray(config.orderedTerms) ? config.orderedTerms.map(String) : [];
+    const termsInOrder = orderedTerms.length === 0 || (
+      orderedTerms.length === count &&
+      orderedTerms.every((term, index) =>
+        String(itemMatches[index]?.[2] ?? "").toLowerCase().includes(term.toLowerCase()),
+      )
+    );
     return {
       id: "numbered-order",
-      passed: inOrder,
-      detail: inOrder
-        ? `found ${count} steps numbered 1..${count} in ascending order.`
-        : `numbered steps must read 1..${count} ascending; found ${items.join(", ")}.`,
+      passed: inOrder && termsInOrder,
+      detail: !inOrder
+        ? `numbered steps must read 1..${count} ascending; found ${items.join(", ")}.`
+        : !termsInOrder
+          ? `numbered steps must retain this term order: ${orderedTerms.join(", ")}.`
+          : `found ${count} steps numbered 1..${count} in ascending order.`,
     };
   },
-  terms: (text, _config, context) => {
-    const required = context.requiredTerms ?? [];
+  "exact-value": (text, config, _context) => {
+    const expected = String(config.value ?? "");
+    if (expected.length === 0) {
+      throw new Error("exact-value requires a non-empty 'value' option.");
+    }
+    const actual = String(text).trim();
+    return {
+      id: "exact-value",
+      passed: actual === expected,
+      detail: actual === expected
+        ? `response exactly matches ${JSON.stringify(expected)}.`
+        : `response must exactly match ${JSON.stringify(expected)}.`,
+    };
+  },
+  terms: (text, config, context) => {
+    const required = config.requiredTerms ?? context.requiredTerms ?? [];
     const missing = required.filter((term) => !text.includes(term));
     return {
       id: "terms",
@@ -89,6 +111,32 @@ const VALIDATORS = {
         missing.length === 0
           ? `all ${required.length} required terms retained`
           : `missing required terms: ${missing.map((term) => JSON.stringify(term)).join(", ")}`,
+    };
+  },
+  "groundedness": (text, config, context) => {
+    const expected = String(config.expected ?? "clarification");
+    if (expected !== "clarification") {
+      throw new Error("groundedness requires expected='clarification'.");
+    }
+    const normalized = String(text).toLowerCase();
+    const asksForContext = /\b(need|provide|share|supply|missing|cannot|can't|unable|insufficient|not enough|unavailable|clarif)/i.test(normalized);
+    const hasUnsupportedSpecificity =
+      /\b(option\s+[ab]).{0,80}\b(?:is|costs|takes|faster|slower|better|worse)\b.{0,50}\d+(?:%|\s*(?:ms|seconds?|gb|mb))?/i.test(text) ||
+      /\boption\s+[ab]\s+(?:is|seems|performs)\b.{0,40}\b(?:better|worse|faster|slower|cheaper|safer|reliable)\b/i.test(text) ||
+      /\b(?:latency|price|cost|throughput|accuracy)\s*(?:is|=|:)??\s*\d/i.test(text);
+    const taskPrompt = String(context.taskPrompt ?? "").toLowerCase();
+    const underSpecified = config.underSpecified === true || /(?:no|without|missing).*(?:fact|detail|value|context|data)/i.test(taskPrompt);
+    const passed = underSpecified && asksForContext && !hasUnsupportedSpecificity;
+    return {
+      id: "groundedness",
+      passed,
+      detail: !underSpecified
+        ? "groundedness clarification check requires an under-specified task."
+        : hasUnsupportedSpecificity
+          ? "response contains unsupported concrete specificity."
+          : asksForContext
+            ? "response requests missing context without inventing facts."
+            : "response should request missing context instead of asserting unsupported facts.",
     };
   },
   "warning-prose": (text, config, _context) => {
@@ -134,6 +182,18 @@ const VALIDATORS = {
         detail: `warning sentence too short: ${words} words, need ${minWords}.`,
       };
     }
+    const requiredTerms = Array.isArray(config.requiredTerms)
+      ? config.requiredTerms.map((term) => String(term).toLowerCase())
+      : [];
+    const normalizedText = String(text).toLowerCase();
+    const missingTerms = requiredTerms.filter((term) => !normalizedText.includes(term));
+    if (missingTerms.length > 0) {
+      return {
+        id: "warning-prose",
+        passed: false,
+        detail: `warning response is missing required safety content: ${missingTerms.join(", ")}.`,
+      };
+    }
     return {
       id: "warning-prose",
       passed: true,
@@ -147,7 +207,7 @@ const VALIDATORS = {
     }
     const asksConfirmation =
       text.includes(phrase) &&
-      text.includes("?") &&
+      (text.includes("?") || /\b(confirm|approve|approval)\b[^.!?]*(?:before|proceed|delete|remove|act)/i.test(text)) &&
       /\b(confirm|approve|approval|proceed|permission|yes)\b/i.test(text);
     return {
       id: "confirmation-language",
@@ -205,7 +265,7 @@ const VALIDATORS = {
       .split(/\n[ \t]*\n+/)
       .map((part) => part.trim())
       .filter((part) => part.length > 0)
-      .filter((part) => !part.split("\n").every((line) => /^#{1,6}\s/.test(line.trim())));
+      .filter((part) => config.includeHeadings === true || !part.split("\n").every((line) => /^#{1,6}\s/.test(line.trim())));
     const matches = paragraphs.length === count;
     return {
       id: "paragraph-count",
@@ -343,6 +403,112 @@ function syntaxDiagnostics(code, language) {
 function countWords(text) {
   const segmenter = new Intl.Segmenter(undefined, { granularity: "word" });
   return [...segmenter.segment(text)].filter((segment) => segment.isWordLike).length;
+}
+
+/**
+ * Run structured hard requirements. Requirements own both validation and
+ * protected-content metadata, preventing schema fields from drifting apart.
+ *
+ * @param {string} text
+ * @param {Array<Record<string, unknown>>} requirements
+ * @returns {Record<string, unknown>}
+ */
+function protectedValuesForRequirement(requirement) {
+  const values = [
+    requirement.value,
+    requirement.marker,
+    ...(Array.isArray(requirement.requiredTerms) ? requirement.requiredTerms : []),
+    requirement.phrase,
+    requirement.sentence,
+    requirement.functionName,
+    requirement.count,
+    requirement.toolName,
+    ...(Array.isArray(requirement.orderedTerms) ? requirement.orderedTerms : []),
+  ];
+  return values
+    .filter((value) => value !== undefined && value !== null)
+    .map((value) => String(value));
+}
+
+export function runRequirements(text, requirements = [], context = {}) {
+  const validatorConfigs = [];
+  const requiredTerms = [];
+  for (const requirement of requirements) {
+    const common = { ...requirement };
+    switch (requirement.kind) {
+      case "exact-term":
+        requiredTerms.push(String(requirement.value ?? ""));
+        validatorConfigs.push({ ...common, id: "terms", requiredTerms: [String(requirement.value ?? "")] });
+        break;
+      case "exact-value":
+        validatorConfigs.push({ ...common, id: "exact-value", value: requirement.value });
+        break;
+      case "safety-warning":
+        validatorConfigs.push({ ...common, id: "warning-prose", marker: requirement.marker ?? "SECURITY WARNING" });
+        break;
+      case "confirmation":
+        validatorConfigs.push({ ...common, id: "confirmation-language", phrase: requirement.phrase });
+        break;
+      case "numbered":
+        validatorConfigs.push({ ...common, id: "numbered-order", count: requirement.count });
+        break;
+      case "exact-negation":
+        validatorConfigs.push({ ...common, id: "exact-negation", sentence: requirement.sentence, core: requirement.core });
+        break;
+      case "code":
+        validatorConfigs.push({ ...common, id: "code-syntax", language: requirement.language, functionName: requirement.functionName });
+        break;
+      case "persisted-prose":
+        validatorConfigs.push({ ...common, id: "persisted-prose", minWords: requirement.minWords });
+        break;
+      case "paragraph-count":
+        validatorConfigs.push({
+          ...common,
+          id: "paragraph-count",
+          count: requirement.count,
+          includeHeadings: requirement.includeHeadings ?? true,
+        });
+        break;
+      case "tool":
+        validatorConfigs.push({ ...common, id: "tool-structure", toolName: requirement.toolName, requiredInput: requirement.requiredInput, allowAdditionalInput: requirement.allowAdditionalInput });
+        break;
+      case "groundedness":
+        validatorConfigs.push({ ...common, id: "groundedness", expected: requirement.expected, underSpecified: requirement.underSpecified });
+        break;
+      default:
+        validatorConfigs.push({ ...common, id: "unknown-requirement" });
+        break;
+    }
+  }
+  const validation = runValidators(text, validatorConfigs, {
+    ...context,
+    toolCall: context.toolCall ?? context.toolCalls?.[0] ?? null,
+    requiredTerms,
+  });
+  const checks = validation.checks.map((check, index) => ({
+    ...check,
+    id: String(requirements[index]?.id ?? requirements[index]?.kind ?? check.id),
+    hardGroup: String(requirements[index]?.hardGroup ?? "correctness"),
+    ...(requirements[index]?.kind === "exact-term" && check.passed
+      ? { detail: "all required terms present" }
+      : {}),
+  }));
+  const groupPassed = (group) => checks.filter((check) => check.hardGroup === group).every((check) => check.passed);
+  return {
+    passed: checks.every((check) => check.passed),
+    groups: {
+      correctnessPass: groupPassed("correctness"),
+      groundednessPass: groupPassed("groundedness"),
+      contractPass: groupPassed("contract"),
+      safetyPass: groupPassed("safety"),
+    },
+    protectedContent: [...new Set(
+      requirements
+        .filter((requirement) => requirement?.protected === true)
+        .flatMap(protectedValuesForRequirement),
+    )],
+    checks,
+  };
 }
 
 /**

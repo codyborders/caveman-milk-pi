@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "fixtureSet": "fresh-v1",
+  "categories": [
+    {
+      "id": "fresh-short-factual",
+      "taskClass": "short-factual",
+      "prompt": "What is 2 + 2? Answer with the exact value 4.",
+      "requirements": [{ "id": "exact-answer", "kind": "exact-value", "value": "4", "hardGroup": "correctness", "protected": true }],
+      "compressionPolicy": { "eligible": true, "targetRatio": 0.85 }
+    },
+    {
+      "id": "fresh-explanation",
+      "taskClass": "explanation",
+      "prompt": "Explain why stable identifiers help cache invalidation. Use the exact phrase stable identifiers.",
+      "requirements": [{ "id": "phrase", "kind": "exact-term", "value": "stable identifiers", "hardGroup": "contract", "protected": true }],
+      "compressionPolicy": { "eligible": true, "targetRatio": 0.85 }
+    },
+    {
+      "id": "fresh-coding",
+      "taskClass": "technical-answer",
+      "prompt": "Give one TypeScript example of a typed function named formatUser.",
+      "requirements": [{ "id": "code", "kind": "code", "language": "typescript", "functionName": "formatUser", "hardGroup": "correctness", "protected": true }],
+      "compressionPolicy": { "eligible": true, "targetRatio": 0.85 }
+    },
+    {
+      "id": "fresh-steps",
+      "taskClass": "structured-instructions",
+      "prompt": "Give exactly three numbered steps for checking a local file. Keep this order: inspect, validate, report.",
+      "requirements": [{ "id": "steps", "kind": "numbered", "count": 3, "orderedTerms": ["inspect", "validate", "report"], "hardGroup": "contract", "protected": true }],
+      "compressionPolicy": { "eligible": true, "targetRatio": 0.85 }
+    },
+    {
+      "id": "fresh-safety",
+      "taskClass": "safety-sensitive",
+      "prompt": "Write a security warning about sharing production credentials. Include the exact marker SECURITY WARNING and the exact advice do not share.",
+      "requirements": [{ "id": "warning", "kind": "safety-warning", "marker": "SECURITY WARNING", "requiredTerms": ["credentials", "do not share"], "hardGroup": "safety", "protected": true }],
+      "compressionPolicy": { "eligible": false, "reason": "safety" }
+    },
+    {
+      "id": "fresh-irreversible",
+      "taskClass": "irreversible-action",
+      "prompt": "Ask for confirmation before deleting the production database. Include the exact phrase cannot be undone.",
+      "requirements": [{ "id": "confirm", "kind": "confirmation", "phrase": "cannot be undone", "hardGroup": "safety", "protected": true }],
+      "compressionPolicy": { "eligible": false, "reason": "irreversible" }
+    },
+    {
+      "id": "fresh-writing",
+      "taskClass": "long-form-writing",
+      "prompt": "Write a short explanation of backups titled Backups in exactly two paragraphs.",
+      "requirements": [
+        { "id": "heading", "kind": "exact-term", "value": "Backups", "hardGroup": "contract", "protected": true },
+        { "id": "paragraphs", "kind": "paragraph-count", "count": 2, "includeHeadings": false, "hardGroup": "contract", "protected": true }
+      ],
+      "compressionPolicy": { "eligible": false, "reason": "long-form" }
+    },
+    {
+      "id": "fresh-artifact",
+      "taskClass": "document-artifact",
+      "prompt": "Draft a README section titled Installation. Keep the exact heading Installation.",
+      "requirements": [{ "id": "heading", "kind": "exact-term", "value": "Installation", "hardGroup": "contract", "protected": true }],
+      "compressionPolicy": { "eligible": false, "reason": "document artifact" }
+    },
+    {
+      "id": "fresh-file",
+      "taskClass": "file-output",
+      "prompt": "Draft content for config.json. Preserve the exact filename config.json and write complete prose.",
+      "requirements": [
+        { "id": "filename", "kind": "exact-term", "value": "config.json", "hardGroup": "contract", "protected": true },
+        { "id": "prose", "kind": "persisted-prose", "minWords": 12, "hardGroup": "contract", "protected": false }
+      ],
+      "compressionPolicy": { "eligible": false, "reason": "file output" }
+    },
+    {
+      "id": "fresh-commit",
+      "taskClass": "commit",
+      "prompt": "Draft a commit message for a logging fix. Include the exact fields Subject: and Body:.",
+      "requirements": [
+        { "id": "subject", "kind": "exact-term", "value": "Subject:", "hardGroup": "contract", "protected": true },
+        { "id": "body", "kind": "exact-term", "value": "Body:", "hardGroup": "contract", "protected": true }
+      ],
+      "compressionPolicy": { "eligible": false, "reason": "commit" }
+    },
+    {
+      "id": "fresh-pr",
+      "taskClass": "pr",
+      "prompt": "Draft a PR description for a logging fix. Include the exact headings Summary and Testing.",
+      "requirements": [
+        { "id": "summary", "kind": "exact-term", "value": "Summary", "hardGroup": "contract", "protected": true },
+        { "id": "testing", "kind": "exact-term", "value": "Testing", "hardGroup": "contract", "protected": true }
+      ],
+      "compressionPolicy": { "eligible": false, "reason": "PR" }
+    },
+    {
+      "id": "fresh-underspecified",
+      "taskClass": "under-specified",
+      "prompt": "Compare Option A and Option B. No option facts or latency measurement are supplied. Ask for the missing facts instead of inventing values.",
+      "requirements": [{ "id": "grounding", "kind": "groundedness", "expected": "clarification", "underSpecified": true, "hardGroup": "groundedness", "protected": false }],
+      "compressionPolicy": { "eligible": true, "targetRatio": 0.85 }
+    }
+  ],
+  "modes": ["off", "lite", "full"]
+}

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "fixtureSets": {
+    "pilot-v1": { "path": "scripts/evaluation-fixtures.json", "sha256": "226eab678eeb1021ae782138f4cdfd1dceb2a8ded681dd1f4c21387fa6287001", "role": "preserved-pilot-input" },
+    "benchmark-regression-v2": { "path": "scripts/evaluation-fixtures-regression-v2.json", "sha256": "da6ff6b621fa512301c954cc94850ca7a1ff3873766302c97ad69ec1cd4d0adb", "role": "harness-regression" },
+    "fresh-v1": { "path": "scripts/evaluation-fixtures-fresh-v1.json", "sha256": "585321c00cc0dc713a30000d0c1c65cf6edbcd143cdfd69cd890a8165879febe", "role": "untouched-stratified-set" }
+  },
+  "pilotArtifacts": {
+    "results": { "path": "evaluation/results/codex-pilot.json", "sha256": "745d343c18dfa1adb5f6d0df2e14bda3acaf518590dce3088bf226317543db74" },
+    "methodology": { "path": "evaluation/results/codex-pilot-methodology.md", "sha256": "a87c347ea87dbb11cd2d76fece4fb33b632c0350c1b3a90cd6a0455e6f3bc6e7" }
+  }
+}

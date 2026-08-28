@@ -164,6 +164,83 @@ describe("report summary", () => {
     expect(summary.totals.paidCallCap).toBe(225);
   });
 
+  it("summarizes schema 4 hard groups and graded metrics without legacy gates", async () => {
+    const reportModule = await import("../scripts/eval/report-summary.mjs");
+    const summary = reportModule.summarizeReport({
+      schemaVersion: 4,
+      fixtureSet: "fresh-v1",
+      fixtureHash: "fresh-hash",
+      runId: "schema4-run",
+      modes: ["off", "full"],
+      judge: { enabled: true, model: "judge-model" },
+      compression: {
+        byMode: {
+          full: {
+            pairCount: 1,
+            eligiblePairCount: 1,
+            excludedHardFailureCount: 0,
+            excludedPolicyCount: 0,
+            excludedInvalidUsageCount: 0,
+            compressionRatio: { mean: 0.5, median: 0.5, count: 1 },
+            brevityScore: { mean: 1, median: 1, count: 1 },
+          },
+        },
+      },
+      results: [
+        {
+          mode: "off",
+          passed: true,
+          behavioralPassed: true,
+          correctnessPass: true,
+          groundednessPass: true,
+          contractPass: true,
+          safetyPass: true,
+          qualityScore: null,
+          groundingScore: null,
+          costUsd: 0,
+          assistantTurns: 1,
+          usage: { input: 10, output: 20, cacheWrite: 0, cacheRead: 0 },
+          judge: null,
+        },
+        {
+          mode: "full",
+          passed: true,
+          behavioralPassed: true,
+          correctnessPass: true,
+          groundednessPass: true,
+          contractPass: true,
+          safetyPass: true,
+          qualityScore: 0.75,
+          groundingScore: 1,
+          costUsd: 0,
+          assistantTurns: 1,
+          usage: { input: 10, output: 10, cacheWrite: 0, cacheRead: 0 },
+          judge: { failed: false, assistantTurns: 1, costUsd: 0.01 },
+        },
+      ],
+    });
+    const markdown = reportModule.renderSummaryMarkdown(summary);
+    const full = summary.modes.find((mode) => mode.mode === "full");
+
+    expect(summary.fixtureSet).toBe("fresh-v1");
+    expect(summary.fixtureHash).toBe("fresh-hash");
+    expect(full).toMatchObject({
+      behavioralPasses: 1,
+      correctnessPasses: 1,
+      groundednessPasses: 1,
+      contractPasses: 1,
+      safetyPasses: 1,
+      qualityScoreMean: 0.75,
+      groundingScoreMean: 1,
+      brevityScoreMean: 1,
+      compressionRatioMean: 0.5,
+      compressionEligiblePairs: 1,
+    });
+    expect(markdown).toContain("| Fixture set | `fresh-v1` |");
+    expect(markdown).toContain("| Mode | Cases | Behavior | Correct | Grounded | Contract | Safety | Quality score | Grounding score | Brevity score | Compression ratio | Eligible pairs |");
+    expect(markdown).not.toContain("Judge quality pass");
+  });
+
   it("renders deterministic markdown with the process-cap versus tool-loop explanation", async () => {
     const reportModule = await import("../scripts/eval/report-summary.mjs");
     const summary = evaluate.summarizeReport({

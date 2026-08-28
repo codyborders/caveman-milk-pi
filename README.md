@@ -130,11 +130,11 @@ Repeated calls within one mode return identical text. A mode change intentionall
 
 ## Evaluation
 
-The repository includes 15 deterministic fixtures across seven modes. The matrix contains 105 matched cases.
+The repository includes preserved pilot-v1 inputs plus named benchmark-regression-v2 and fresh-v1 fixture sets. New sets use schema 4 structured `requirements[]` as the single source for hard checks and protected content.
 
-Fixtures cover technical explanations, comparisons, critical negation, ordered migrations, warnings, and irreversible-action confirmations. They also cover persisted content, tutorials, clarification requests, and Wenyan language behavior.
+Fixtures cover factual answers, explanations, code, ordered steps, safety warnings, irreversible confirmations, document artifacts, file output, commit fields, PR fields, and under-specified clarification.
 
-Offline validation checks fixture structure, matrix size, prompt parity, and prompt length.
+Offline validation checks fixture structure, task-aware compression policy, matrix size, prompt parity, and prompt length. Select a set with `CAVEMAN_EVAL_FIXTURE_SET=pilot-v1`, `benchmark-regression-v2`, or `fresh-v1`. Reports record the verified fixture hash.
 
 ```bash
 npm run evaluate:offline
@@ -171,11 +171,11 @@ The `pi` provider runs each case through the real Pi CLI in JSON mode. It loads 
 
 Arm order is randomized per repetition and category from a stored seed. The seed appears in the report, so any run can be reproduced.
 
-Brevity gates use provider-reported output tokens as the primary metric. An output ratio requires positive integer output usage in both arms. A pair with missing or invalid output usage is reported as incomplete, fails brevity fail-closed, and stays out of paired deltas. Word counts remain in the report as a readability diagnostic only. Raw provider usage objects are preserved verbatim on every result.
+Schema 4 hard behavior groups are correctness, groundedness, contract, and safety. `behavioralPassed` and report pass status depend on those groups plus run integrity. Compression is a graded, task-aware metric. It aggregates only pairs where both arms pass hard behavior and policy allows compression. Safety, irreversible, tutorial, long-form, document artifact, file output, commit, and PR tasks are exempt. Brevity scores are nullable. Compression ratios remain numeric when eligible. Raw provider usage objects remain preserved on every result.
 
 Deterministic validators check exact negation, numbered step order, warning prose, confirmation language, TypeScript code syntax, requested paragraph count, tool-call structure, term retention, and persisted prose. A validator failure fails the case and the overall report.
 
-Set `CAVEMAN_EVAL_JUDGE=1` to enable the blinded quality judge. The judge uses the committed prompt and rubric under `scripts/eval/`. It never learns which arm is which. A judge score below the baseline fails the overall report even when output is shorter.
+Set `CAVEMAN_EVAL_JUDGE=1` to enable the blinded quality judge. The judge uses the committed prompt and rubric under `scripts/eval/`. It never learns which arm is which. Judge quality scores use completeness plus correctness. Groundedness is scored separately from 0 through 4, then normalized to 0 through 1. Judge scores are graded signals only. They never override hard behavior or report pass status.
 
 With `CAVEMAN_EVAL_PROVIDER=pi`, the judge also runs through Pi. Each judge call spawns a fresh Pi process using `CAVEMAN_EVAL_JUDGE_MODEL` or the case model. The committed judge prompt and rubric become the Pi system prompt, and the blinded task plus both responses are the only user content. Judge processes run with mode `off` in an isolated temporary `CAVEMAN_MILK_CONFIG_DIR` and require no Anthropic key. Each judge process reserves one shared-cap attempt reported under judge. A Pi process is counted once while internal retries remain unobservable.
 

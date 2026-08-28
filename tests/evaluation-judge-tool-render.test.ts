@@ -45,6 +45,7 @@ const toolLoopJsonl = [
 const verdictText = JSON.stringify({
   completeness: { A: 4, B: 4 },
   correctness: { A: 4, B: 4 },
+  groundedness: { A: 4, B: 4 },
   notes: "both equal",
 });
 

@@ -434,6 +434,11 @@ function extractFirstFence(text) {
   return match === null ? null : String(match[1] ?? "").trim();
 }
 
+function extractLeadingFence(text) {
+  const match = String(text).match(/^```[^\n]*\n([\s\S]*?)```/);
+  return match === null ? null : String(match[1] ?? "").trim();
+}
+
 function contentAfterLabel(text, labelPattern) {
   const match = labelPattern.exec(text);
   if (match === null) return null;
@@ -448,7 +453,7 @@ function extractCommitPrArtifacts(text) {
   );
   let subject = "";
   if (subjectTail !== null) {
-    subject = extractFirstFence(subjectTail) ?? subjectTail.split(/\r?\n/)[0]?.trim() ?? "";
+    subject = extractLeadingFence(subjectTail) ?? subjectTail.split(/\r?\n/)[0]?.trim() ?? "";
   } else {
     subject = value.split(/\r?\n/).map((line) => line.trim()).find(Boolean) ?? "";
   }

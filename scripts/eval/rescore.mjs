@@ -1,4 +1,3 @@
-import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -15,6 +14,7 @@ import { runRequirements } from "./validators.mjs";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const SOURCE_REPORT = path.join(ROOT, "evaluation/results/benchmark-regression-v2.json");
 const SOURCE_FIXTURE = path.join(ROOT, "evaluation/source-fixtures/benchmark-regression-v2.json");
+const RESCORE_MANIFEST = path.join(ROOT, "evaluation/rescore-manifest.json");
 const SOURCE_REPORT_HASH = "0e4a254968b0448b2df9e707d04c6bbc7c760c1b3b4a9dfb3ea07cfe6409feeb";
 const SOURCE_FIXTURE_HASH = "da6ff6b621fa512301c954cc94850ca7a1ff3873766302c97ad69ec1cd4d0adb";
 const VALIDATOR_VERSION = "schema4-corrected-v2";
@@ -101,16 +101,21 @@ function rescoreResult(result, category) {
   };
 }
 
-function evaluatorIdentity() {
-  const commit = execFileSync("git", ["rev-parse", "HEAD"], { cwd: ROOT, encoding: "utf8" }).trim();
-  const commitDate = execFileSync("git", ["show", "-s", "--format=%cI", commit], {
-    cwd: ROOT,
-    encoding: "utf8",
-  }).trim();
-  if (!/^[0-9a-f]{40}$/.test(commit)) throw new Error("Evaluator commit is not a full Git identifier.");
-  const generationTime = new Date(commitDate).toISOString();
-  if (generationTime === "Invalid Date") throw new Error("Evaluator commit time is invalid.");
-  return { commit, generationTime };
+function readRescoreManifest() {
+  const manifest = JSON.parse(readFileSync(RESCORE_MANIFEST, "utf8"));
+  if (manifest.schemaVersion !== 1 || manifest.validatorVersion !== VALIDATOR_VERSION) {
+    throw new Error("Rescore manifest version does not match the validator.");
+  }
+  if (manifest.sourceReportHash !== SOURCE_REPORT_HASH || manifest.sourceFixtureHash !== SOURCE_FIXTURE_HASH) {
+    throw new Error("Rescore manifest input hashes do not match locked inputs.");
+  }
+  if (!/^[0-9a-f]{40}$/.test(manifest.evaluatorCommit)) {
+    throw new Error("Rescore manifest evaluator commit is invalid.");
+  }
+  if (Number.isNaN(Date.parse(manifest.generationTime))) {
+    throw new Error("Rescore manifest generation time is invalid.");
+  }
+  return manifest;
 }
 
 export function buildRescoredReport() {
@@ -125,7 +130,7 @@ export function buildRescoredReport() {
     source.judgeFailures === 0 &&
     results.length === expectedResultCount;
   const passed = runIntegrityPassed && results.every((result) => result.behavioralPassed);
-  const { commit, generationTime } = evaluatorIdentity();
+  const manifest = readRescoreManifest();
   return {
     ...source,
     passed,
@@ -140,10 +145,10 @@ export function buildRescoredReport() {
     rescore: {
       sourceReportHash: reportHash,
       sourceRunId: source.runId,
-      validatorVersion: VALIDATOR_VERSION,
+      validatorVersion: manifest.validatorVersion,
       fixtureHash,
-      evaluatorCommit: commit,
-      generationTime,
+      evaluatorCommit: manifest.evaluatorCommit,
+      generationTime: manifest.generationTime,
       originalPaidConclusion: source.passed === true,
       rescoredConclusion: passed,
       externalModelCalls: 0,

@@ -15,7 +15,7 @@ describe("offline rescore", () => {
     const markdown = path.join(dir, "rescore.md");
     try {
       execFileSync(process.execPath, ["scripts/eval/rescore.mjs"], {
-        env: { ...process.env, CAVEMAN_RESCORE_OUTPUT: output, CAVEMAN_RESCORE_MARKDOWN: markdown, CAVEMAN_EVAL_PI_BIN: stub },
+        env: { ...process.env, PATH: dir, CAVEMAN_RESCORE_OUTPUT: output, CAVEMAN_RESCORE_MARKDOWN: markdown, CAVEMAN_EVAL_PI_BIN: stub },
         stdio: "pipe",
       });
       const report = JSON.parse(readFileSync(output, "utf8"));
@@ -66,7 +66,27 @@ describe("offline rescore", () => {
     }
   });
 
-  it("produces byte-identical rescored JSON at one evaluator commit", () => {
+  it("reproduces the committed rescored JSON at PR head", () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), "caveman-rescore-committed-"));
+    const output = path.join(dir, "rescored.json");
+    try {
+      execFileSync(process.execPath, ["scripts/eval/rescore.mjs"], {
+        env: {
+          ...process.env,
+          CAVEMAN_RESCORE_OUTPUT: output,
+          CAVEMAN_RESCORE_MARKDOWN: `${output}.md`,
+        },
+        stdio: "pipe",
+      });
+      expect(readFileSync(output)).toEqual(
+        readFileSync("evaluation/results/benchmark-regression-v2-rescored.json"),
+      );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("produces byte-identical rescored JSON at one evaluator version", () => {
     const dir = mkdtempSync(path.join(os.tmpdir(), "caveman-rescore-repeat-"));
     const first = path.join(dir, "first.json");
     const second = path.join(dir, "second.json");

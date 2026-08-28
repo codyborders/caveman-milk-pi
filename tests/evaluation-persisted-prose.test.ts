@@ -37,6 +37,15 @@ describe("persisted-prose validator", () => {
     expect(outcome.passed).toBe(true);
   });
 
+  it("accepts an inline commit subject before a fenced PR description", () => {
+    const outcome = runRequirements(
+      "Commit subject: Add config migration for legacy settings\n\nPR description:\n```markdown\n## Summary\n- Preserve existing settings during migration.\n- Reject malformed files before any write occurs.\n```",
+      [{ kind: "persisted-prose", artifactType: "commit-pr", minWords: 10 }],
+      { ...noTool, taskClass: "commit-pr" },
+    );
+    expect(outcome.passed).toBe(true);
+  });
+
   it("accepts a PR description with headings and grammatical bullets", () => {
     const outcome = runRequirements(
       "## Summary\n- Preserve existing settings during migration.\n- Reject malformed files before any write occurs.",

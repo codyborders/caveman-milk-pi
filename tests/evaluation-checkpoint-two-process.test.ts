@@ -11,10 +11,8 @@ import { spawn } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 
-const here = path.dirname(fileURLToPath(import.meta.url));
 const tempDirs = [];
 afterEach(() => {
   while (tempDirs.length > 0) {
@@ -24,12 +22,12 @@ afterEach(() => {
   }
 });
 
-const evaluatePath = path.resolve(here, "..", "scripts", "evaluate.mjs");
+const evaluateUrl = new URL("../scripts/evaluate.mjs", import.meta.url).href;
 
 const childSource = `
 import * as fs from "node:fs";
 import * as os from "node:os";
-import * as evaluate from ${JSON.stringify(evaluatePath)};
+import * as evaluate from ${JSON.stringify(evaluateUrl)};
 
 const [, checkpointPath, runId, resultPath, holdMs] = process.argv;
 const block = (ms) => {

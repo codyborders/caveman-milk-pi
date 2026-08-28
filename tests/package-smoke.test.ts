@@ -13,5 +13,6 @@ describe("packed package smoke test", () => {
       encoding: "utf8",
     });
     expect(result.status, `${result.stdout}\n${result.stderr}`).toBe(0);
+    expect(result.stdout).toContain("active modes: lite, full, ultra, wenyan-lite, wenyan, wenyan-ultra");
   }, 180_000);
 });

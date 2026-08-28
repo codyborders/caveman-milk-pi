@@ -102,17 +102,24 @@ try {
     "Packed extension injected prompt before activation.",
   );
 
-  await command("lite", { ui });
-  const active = await beforeAgentStart({ systemPrompt: "base" });
-  assert(active?.systemPrompt.includes("CAVEMAN MODE ACTIVE"), "Packed extension did not activate.");
+  const activeModes = ["lite", "full", "ultra", "wenyan-lite", "wenyan", "wenyan-ultra"];
+  for (const mode of activeModes) {
+    await command(mode, { ui });
+    const active = await beforeAgentStart({ systemPrompt: "base" });
+    const label = mode === "wenyan" ? "wenyan-full" : mode;
+    assert(
+      active?.systemPrompt.includes(`CAVEMAN MODE ACTIVE — level: ${label}`),
+      `Packed extension did not inject prompt for ${mode}.`,
+    );
+  }
 
   await command("off", { ui });
   assert(
     (await beforeAgentStart({ systemPrompt: "base" })) === undefined,
     "Packed extension did not disable.",
   );
-  assert(notifications.length >= 2, "Packed extension command produced no activation diagnostics.");
-  console.log("Packed tarball loaded through Pi extension loader; activation and disable passed.");
+  assert(notifications.length >= activeModes.length + 1, "Packed extension command produced no diagnostics.");
+  console.log(`Packed tarball loaded through Pi extension loader; active modes: ${activeModes.join(", ")}; off inert.`);
 } finally {
   try {
     fs.rmSync(temporaryDirectory, {

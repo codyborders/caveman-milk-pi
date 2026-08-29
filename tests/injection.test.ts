@@ -46,7 +46,7 @@ describe("computeInjection compact rules", () => {
       "Keep code, commands, tool arguments, files, persisted artifacts, commits, PRs, and docs usable and complete.",
     );
     expect(promptContract.commonRules).toContain(
-      "Artifacts: requested fields from supplied facts. No other text. Mark unknowns.",
+      "Artifacts: requested fields from supplied facts. No other text. Mark gaps.",
     );
     expect(promptContract.commonRules).toContain(
       "For confirmation requests, ask \"Do you approve [action] [exact target]?\" Then wait.",
@@ -72,15 +72,15 @@ describe("computeInjection compact rules", () => {
       .update(JSON.stringify(promptContract))
       .digest("hex");
     expect(canonicalContractHash).toBe(
-      "d29ec347edbba3a102e7fed1e28d5b90b7fce63758bb04892a933ede06a9f01c",
+      "3611fa174ef844d6323a1e1f28428c78d00316588607d6f0b68df62e58734d49",
     );
     const expected = {
-      lite: { length: 457, hash: "c652776308987512" },
-      full: { length: 441, hash: "c8d28a3fe45b4bba" },
-      ultra: { length: 476, hash: "c2f2b0a7397a07b8" },
-      "wenyan-lite": { length: 507, hash: "903c00668e8aa16d" },
-      wenyan: { length: 501, hash: "eda7c92dd8898e12" },
-      "wenyan-ultra": { length: 511, hash: "2d83c34535b311b9" },
+      lite: { length: 453, hash: "8a9105956e558a0c" },
+      full: { length: 437, hash: "d253acd59b8fd64b" },
+      ultra: { length: 472, hash: "186940604cbe772f" },
+      "wenyan-lite": { length: 503, hash: "51f4c64da67f3abc" },
+      wenyan: { length: 497, hash: "daa4d48ca633d6a1" },
+      "wenyan-ultra": { length: 507, hash: "dbf8ed1f3087426d" },
     } as const;
     for (const mode of VALID_MODES.filter((item) => item !== "off")) {
       const injection = computeInjection(mode);

@@ -22,14 +22,14 @@ The compact generator replaces the former filtered-markdown injector. Measuremen
 
 | Mode | Former characters | Current characters | Former estimated tokens | Current estimated tokens |
 | --- | ---: | ---: | ---: | ---: |
-| `lite` | 4,276 | 457 | 1,069 | 114 |
-| `full` | 4,216 | 441 | 1,054 | 110 |
-| `ultra` | 4,213 | 476 | 1,054 | 119 |
-| `wenyan-lite` | 4,103 | 507 | 1,026 | 127 |
-| `wenyan` | 4,262 | 501 | 1,066 | 125 |
-| `wenyan-ultra` | 4,158 | 511 | 1,040 | 128 |
+| `lite` | 4,276 | 453 | 1,069 | 113 |
+| `full` | 4,216 | 437 | 1,054 | 109 |
+| `ultra` | 4,213 | 472 | 1,054 | 118 |
+| `wenyan-lite` | 4,103 | 503 | 1,026 | 126 |
+| `wenyan` | 4,262 | 497 | 1,066 | 124 |
+| `wenyan-ultra` | 4,158 | 507 | 1,040 | 127 |
 
-Prompt contract v9 has SHA-256 `d29ec347edbba3a102e7fed1e28d5b90b7fce63758bb04892a933ede06a9f01c`. Mode `off` remains empty.
+Prompt contract v9 has SHA-256 `3611fa174ef844d6323a1e1f28428c78d00316588607d6f0b68df62e58734d49`. Mode `off` remains empty.
 
 `src/prompt-contract.json` records the exact common text and its trailing ASCII space.
 

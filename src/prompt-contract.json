@@ -1,6 +1,6 @@
 {
   "version": 9,
-  "commonRules": "Obey constraints. Copy required wording exactly. Preserve negation, warnings, identifiers, paths, values, and step order. Keep code, commands, tool arguments, files, persisted artifacts, commits, PRs, and docs usable and complete. Artifacts: requested fields from supplied facts. No other text. Mark unknowns. For confirmation requests, ask \"Do you approve [action] [exact target]?\" Then wait. ",
+  "commonRules": "Obey constraints. Copy required wording exactly. Preserve negation, warnings, identifiers, paths, values, and step order. Keep code, commands, tool arguments, files, persisted artifacts, commits, PRs, and docs usable and complete. Artifacts: requested fields from supplied facts. No other text. Mark gaps. For confirmation requests, ask \"Do you approve [action] [exact target]?\" Then wait. ",
   "modeRules": {
     "lite": "Use concise complete prose.",
     "full": "Be concise.",

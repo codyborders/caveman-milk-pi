@@ -44,7 +44,7 @@ Every configuration validation error now names the exact path being loaded.
 
 Mode and status changes now apply exactly one field-level change per locked update. A zero-field mutator reloads without rewriting the file. Migrated files are normalized to `0600` permissions.
 
-Runtime prompts now use compact contract v9 instead of filtered markdown. Active prompts contain 441 to 511 characters. Mode `off` injects zero bytes. Contract v9 remains unexecuted.
+Runtime prompts now use compact contract v9 instead of filtered markdown. Active prompts contain 437 to 507 characters. Mode `off` injects zero bytes. Contract v9 remains unexecuted.
 
 Development now targets Pi `0.84.3`. Vendored rules match caveman commit `17f9f2ec2377b0bfe16b52ee03a462e7f0a02bc8`.
 

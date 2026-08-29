@@ -38,18 +38,18 @@ describe("computeInjection determinism", () => {
 
 describe("computeInjection compact rules", () => {
   it("keeps constraint, protection, fact, and approval rules", () => {
-    expect(promptContract.commonRules).toContain("Be concise. Obey output constraints.");
+    expect(promptContract.commonRules).toContain("Answer now, not with a plan. Obey output constraints.");
     expect(promptContract.commonRules).toContain(
-      "Preserve exact phrases, negation, warnings, identifiers, paths, values, ordered steps, and commands.",
+      "Preserve exact phrases, negation, warnings, identifiers, paths, values, ordered steps, code, commands, and tool arguments.",
     );
     expect(promptContract.commonRules).toContain(
-      "Keep code, tool arguments, files, persisted artifacts, commits, PRs, and docs complete and usable.",
+      "Keep files, persisted artifacts, commits, PRs, and docs complete and usable.",
     );
     expect(promptContract.commonRules).toContain(
-      "Use supplied facts only. State unknowns without invention.",
+      "Use only supplied facts. Omit unsupported notes. Mark needed unknowns.",
     );
     expect(promptContract.commonRules).toContain(
-      "When confirmation is requested, ask approval for the named target now and wait.",
+      "Approval question must name the exact target. Ask it now and wait.",
     );
   });
 
@@ -65,22 +65,22 @@ describe("computeInjection compact rules", () => {
     }
   });
 
-  it("uses exact v5 injection lengths and hashes with off at zero", () => {
-    expect(promptContract.version).toBe(5);
+  it("uses exact v6 injection lengths and hashes with off at zero", () => {
+    expect(promptContract.version).toBe(6);
     expect(computeInjection("off")).toEqual({ mode: "off", text: "", sourceHash: "" });
     const canonicalContractHash = createHash("sha256")
       .update(JSON.stringify(promptContract))
       .digest("hex");
     expect(canonicalContractHash).toBe(
-      "54db1906a6ad94028edac682fa0324d28d426d98aa92de41703cd14495d7fd1e",
+      "1e7bb43691c1d46b76a89209aca010ef413abf93ba48c66c9e647558ccf59b3c",
     );
     const expected = {
-      lite: { length: 441, hash: "29ca8ad1c72d5db3" },
-      full: { length: 451, hash: "eff29d3e1f23669d" },
-      ultra: { length: 458, hash: "13ec41c83400d356" },
-      "wenyan-lite": { length: 489, hash: "d36951b3864a2b6d" },
-      wenyan: { length: 483, hash: "e51882702bcf8991" },
-      "wenyan-ultra": { length: 493, hash: "bce37c1068f2b7b8" },
+      lite: { length: 453, hash: "573ee9953f97f38d" },
+      full: { length: 463, hash: "a8167347e47c0f77" },
+      ultra: { length: 474, hash: "d2eb1a06a399bf3b" },
+      "wenyan-lite": { length: 505, hash: "374fef17abc1766d" },
+      wenyan: { length: 499, hash: "ebbb5ea8850644f1" },
+      "wenyan-ultra": { length: 509, hash: "ca8640e672d92fc1" },
     } as const;
     for (const mode of VALID_MODES.filter((item) => item !== "off")) {
       const injection = computeInjection(mode);
@@ -101,9 +101,9 @@ describe("computeInjection compact rules", () => {
     expect(result.text).not.toContain("| **full** |");
   });
 
-  it("uses the exact v5 mode rules", () => {
-    expect(promptContract.modeRules.lite).toBe("Use short complete sentences.");
-    expect(promptContract.modeRules.full).toBe("Use short sentences or clear fragments.");
+  it("uses the exact v6 mode rules", () => {
+    expect(promptContract.modeRules.lite).toBe("Use short complete prose.");
+    expect(promptContract.modeRules.full).toBe("Use short prose or clear fragments.");
     expect(promptContract.modeRules.ultra).toBe("Use fewest clear words. State each fact once.");
     expect(promptContract.modeRules["wenyan-lite"]).toBe(
       "Chinese: light literary style. Other languages: concise and unchanged.",
@@ -128,7 +128,7 @@ describe("computeInjection compact rules", () => {
   it("keeps document and persisted-content rules in every active mode", () => {
     for (const mode of VALID_MODES.filter((item) => item !== "off")) {
       const text = computeInjection(mode).text;
-      expect(text, `mode=${mode}`).toContain("Keep code, tool arguments, files, persisted artifacts");
+      expect(text, `mode=${mode}`).toContain("Keep files, persisted artifacts, commits, PRs, and docs complete");
       expect(text, `mode=${mode}`).toContain("complete and usable");
     }
   });

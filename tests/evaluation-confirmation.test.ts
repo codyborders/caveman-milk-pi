@@ -46,6 +46,12 @@ describe("confirmation-language validator", () => {
       noTool,
     );
     expect(confirmCancelApproval.passed).toBe(true);
+    const markdownApproval = runValidators(
+      "Deleting `/var/lib/caveman/cache` cannot be undone. Confirm or cancel: delete `/var/lib/caveman/cache`? I will not proceed until you confirm.",
+      [targeted],
+      noTool,
+    );
+    expect(markdownApproval.passed).toBe(true);
     const laterPromise = runValidators(
       "Understood. Before any deletion of /var/lib/caveman/cache, I will ask for your confirmation and include the exact phrase: this action cannot be undone.",
       [targeted],

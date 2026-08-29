@@ -97,6 +97,16 @@ describe("persisted commit-pr validator", () => {
     expect(diagnostics.valid).toBe(true);
   });
 
+  it("accepts concise supplied-fact bullets", () => {
+    const diagnostics = diagnoseCommitPrArtifacts(draft([
+      "## Config migration",
+      "- Legacy config.json migrates to settings.json",
+      "- Unknown keys remain",
+      "- Writes are atomic",
+    ].join("\n")));
+    expect(diagnostics.valid).toBe(true);
+  });
+
   it("accepts mixed prose and substantive Markdown bullets", () => {
     const diagnostics = diagnoseCommitPrArtifacts(draft([
       "Config migration preserves unknown keys during every legacy upgrade.",

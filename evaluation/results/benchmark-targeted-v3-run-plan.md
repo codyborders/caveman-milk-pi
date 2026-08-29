@@ -1,6 +1,6 @@
 # Targeted Regression v3 Run Plan
 
-This document records the corrected targeted-v3 method before execution. The maintainer authorized this run in the current PR task. No targeted-v3, holdout, provider, or judge process has started for this contract yet.
+This document records the targeted-v3 method executed at commit `88a5fb0945fbf4fe2f82c60c9b8ac54a79176aca`. The run completed 120 primary processes plus 80 blinded judge processes. Fresh-v1 did not run.
 
 ## Purpose
 
@@ -35,7 +35,7 @@ The commit and PR category supplies three facts. Legacy `config.json` migrates t
 
 ## Command
 
-This command remains unexecuted. The current PR task authorizes this exact capped run.
+This exact capped command completed successfully at the process level. The behavioral gate failed. See `benchmark-targeted-v3-audit.md`.
 
 ```bash
 CAVEMAN_EVAL_PROVIDER=pi \
@@ -67,4 +67,4 @@ Integrity follows. Every primary result must report complete raw usage and elaps
 
 ## Holdout status
 
-The `fresh-v1` holdout remains `NOT RUN` and blocked. Its five-repetition run needs 180 primary processes plus 120 judge processes. It stays blocked until targeted-v3 passes.
+The `fresh-v1` holdout remains `NOT RUN` and blocked. Targeted-v3 failed active-only hard behavior, so no broader holdout process started.

@@ -22,24 +22,18 @@ The compact generator replaces the former filtered-markdown injector. Measuremen
 
 | Mode | Former characters | Current characters | Former estimated tokens | Current estimated tokens |
 | --- | ---: | ---: | ---: | ---: |
-| `lite` | 4,276 | 441 | 1,069 | 110 |
-| `full` | 4,216 | 451 | 1,054 | 113 |
-| `ultra` | 4,213 | 458 | 1,054 | 115 |
-| `wenyan-lite` | 4,103 | 489 | 1,026 | 122 |
-| `wenyan` | 4,262 | 483 | 1,066 | 121 |
-| `wenyan-ultra` | 4,158 | 493 | 1,040 | 123 |
+| `lite` | 4,276 | 453 | 1,069 | 113 |
+| `full` | 4,216 | 463 | 1,054 | 116 |
+| `ultra` | 4,213 | 474 | 1,054 | 119 |
+| `wenyan-lite` | 4,103 | 505 | 1,026 | 126 |
+| `wenyan` | 4,262 | 499 | 1,066 | 125 |
+| `wenyan-ultra` | 4,158 | 509 | 1,040 | 127 |
 
-Prompt contract v5 has SHA-256 `54db1906a6ad94028edac682fa0324d28d426d98aa92de41703cd14495d7fd1e`. Mode `off` remains empty.
+Prompt contract v6 has SHA-256 `1e7bb43691c1d46b76a89209aca010ef413abf93ba48c66c9e647558ccf59b3c`. Mode `off` remains empty.
 
-Exact common text:
+`src/prompt-contract.json` records the exact common text and its trailing ASCII space.
 
-```text
-Be concise. Obey output constraints. Preserve exact phrases, negation, warnings, identifiers, paths, values, ordered steps, and commands. Keep code, tool arguments, files, persisted artifacts, commits, PRs, and docs complete and usable. Use supplied facts only. State unknowns without invention. When confirmation is requested, ask approval for the named target now and wait.
-```
-
-The runtime common string adds one trailing ASCII space before each mode rule.
-
-All active prompts remain below the 800-character limit. Provider-measured prompt overhead remains pending until targeted-v3 runs.
+All active prompts remain below the 800-character limit. Targeted-v3 measured 94 incremental primary input-plus-cache-read tokens for `lite` and 96 for `full`. Contract v6 remains unexecuted.
 
 ## Install
 
@@ -219,7 +213,7 @@ Prompt contract v4 has no paid result. The prepared targeted-v3 60-process plan 
 
 The prepared fresh-v1 180-call holdout also remains unexecuted. It stays blocked until targeted-v3 passes every behavior, quality, cost, usage, and integrity gate.
 
-Mode `off` remains the default. Reported total tokens are usage, not cost. Provider-priced cost is calculated only when pricing values are known.
+Mode `off` remains the default. Reported total tokens measure usage. Provider-priced cost appears only when pricing values are known.
 
 ## Development
 

@@ -162,7 +162,7 @@ const VALIDATORS = {
       allowedFacts.flatMap((fact) => fact.match(/\b[\w-]+\.[a-z0-9]+\b/gi) ?? []),
     );
     const missingInformation =
-      /(?:\b(?:not|no)\b.{0,100}\b(?:supplied|provided|specified|stated|given|available|known|identified|included|described|reported)\b|\b(?:was|were|is|are)\s+not\s+(?:supplied|provided|specified|stated|given|available|known|identified|included|described|reported)\b)/i;
+      /(?:\b(?:not|no)\b.{0,100}\b(?:supplied|provided|specified|stated|given|available|known|identified|included|described|reported|claimed)\b|\b(?:was|were|is|are)\s+not\s+(?:supplied|provided|specified|stated|given|available|known|identified|included|described|reported|claimed)\b)/i;
     const claimPatterns = [
       { label: "test or test-result claim", pattern: /\b(?:tests?|testing|test suite|vitest|pytest|jest|specs?|pass(?:ed|es|ing)?)\b/i },
       { label: "coverage claim", pattern: /\bcoverage\b/i },
@@ -333,8 +333,8 @@ const VALIDATORS = {
     const questions = sentences.filter((sentence) => sentence.endsWith("?"));
     const approvalQuestion = /\b(?:confirm|approve|approval|proceed|go ahead|permission|cancel)\b|\bshould\s+I\b|\bdo\s+you\s+want\s+me\s+to\b|\byes\s+or\s+no\b/i;
     const discoveryQuestion = /\b(?:what|which)\b.{0,60}\b(?:delete|remove|erase)\b/i;
-    const laterPromise = /\b(?:will|would|shall)\b[^.!?]{0,80}\b(?:ask|confirm|request|check)\b/i;
-    const targetPattern = /\/[^\s?.,;:!)]*/g;
+    const laterPromise = /\b(?:I|we)(?:'ll|\s+(?:will|would|shall))\s+(?:later\s+)?(?:ask|request|seek)\b[^.!?]{0,60}\b(?:approval|confirmation|permission)\b/i;
+    const targetPattern = /\/[A-Za-z0-9._~!$&'()+,;=:@%/-]*/g;
     if (laterPromise.test(text)) {
       return {
         id: "confirmation-language",
@@ -913,8 +913,14 @@ function contentLineText(line) {
 function isCompleteContentLine(line) {
   const text = contentLineText(line);
   const words = countWords(text);
+  if (isMarkdownBullet(line)) {
+    if (words < 3) return false;
+    const conciseSuppliedFact =
+      /\bunknown\s+keys?\s+remain\b/i.test(text) ||
+      /\bwrites?\s+(?:are\s+)?atomic\b/i.test(text);
+    return conciseSuppliedFact || hasFunctionWord(text) || words >= 4;
+  }
   if (words < 4) return false;
-  if (isMarkdownBullet(line)) return hasFunctionWord(text) || words >= 8;
   return /[.!?。！？]$/.test(text) && (hasFunctionWord(text) || words >= 8);
 }
 

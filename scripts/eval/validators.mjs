@@ -609,6 +609,12 @@ function contentAfterLabel(text, labelPattern) {
   return text.substring(match.index + match[0].length).trim();
 }
 
+function unwrapInlineCode(text) {
+  const value = String(text).trim();
+  const match = value.match(/^`([^`\r\n]+)`$/);
+  return match === null ? value : String(match[1]).trim();
+}
+
 function extractCommitPrArtifacts(text) {
   const value = String(text);
   const subjectTail = contentAfterLabel(
@@ -641,7 +647,7 @@ function extractCommitPrArtifacts(text) {
     // content lines the description is missing.
     description = descriptionContentLines(tail).length === 0 ? "" : tail;
   }
-  return { subject: subject.trim(), description: description.trim() };
+  return { subject: unwrapInlineCode(subject), description: unwrapInlineCode(description) };
 }
 
 function extractCommitMessageArtifacts(text) {

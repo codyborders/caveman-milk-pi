@@ -294,7 +294,7 @@ describe("pricing gate preflight", () => {
         }),
       );
       expect(report.gate).toBe("cost");
-      expect(report.validatorVersion).toBe("schema4-corrected-v9");
+      expect(report.validatorVersion).toBe("schema4-corrected-v10");
       expect(report.pricing).toEqual(table);
       expect(report.runIdentity.gate).toBe("cost");
       expect(report.runIdentity.pricing).toEqual(table);

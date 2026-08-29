@@ -33,7 +33,7 @@ Prompt contract v9 has SHA-256 `3611fa174ef844d6323a1e1f28428c78d00316588607d6f0
 
 `src/prompt-contract.json` records the exact common text and its trailing ASCII space.
 
-All active prompts remain below the 800-character limit. V5 measured 94 incremental primary input-plus-cache-read tokens for `lite` and 96 for `full`. V6 measured 102 and 104. V7 measured 101 and 100. V8 measured 103 and 102. Contract v9 remains unexecuted.
+All active prompts remain below the 800-character limit. V5 measured 94 incremental primary input-plus-cache-read tokens for `lite` and 96 for `full`. V6 measured 102 and 104. V7 measured 101 and 100. V8 measured 103 and 102. Contract v9 passed a corrected 36-case development check. Its final blinded gate remains pending.
 
 ## Install
 

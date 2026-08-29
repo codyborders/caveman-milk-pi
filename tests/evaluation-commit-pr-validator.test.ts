@@ -97,6 +97,11 @@ describe("persisted commit-pr validator", () => {
     expect(diagnostics.valid).toBe(true);
   });
 
+  it("accepts inline-code formatting around both requested artifacts", () => {
+    const response = "Commit subject: `Config migration: migrate legacy config.json to settings.json`\n\nPR description: `Config migration of the legacy config.json to settings.json. Unknown keys remain. Writes are atomic.`";
+    expect(diagnoseCommitPrArtifacts(response).valid).toBe(true);
+  });
+
   it("accepts concise supplied-fact bullets", () => {
     const diagnostics = diagnoseCommitPrArtifacts(draft([
       "Config migration",

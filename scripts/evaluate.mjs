@@ -82,6 +82,35 @@ export function validateRunConfiguration({ modes, repetitions, plannedCalls, max
   return true;
 }
 
+// Preflight validation of selected schema-4 categories. Paragraph-count
+// requirements own the document boundary shared with persisted-prose, so a
+// category may declare at most one, and its includeHeadings flag, when
+// supplied, must be Boolean. Rejecting here keeps every invalid shape away
+// from plan construction, checkpoints, and paid calls.
+export function validateSelectedCategories(categories) {
+  for (const category of categories) {
+    const paragraphRequirements = (category.requirements ?? []).filter(
+      (requirement) => requirement?.kind === "paragraph-count",
+    );
+    if (paragraphRequirements.length > 1) {
+      throw new Error(
+        `Category '${category.id}' declares ${paragraphRequirements.length} paragraph-count requirements; at most one is allowed.`,
+      );
+    }
+    for (const requirement of paragraphRequirements) {
+      if (
+        requirement.includeHeadings !== undefined &&
+        typeof requirement.includeHeadings !== "boolean"
+      ) {
+        throw new Error(
+          `Category '${category.id}' declares a paragraph-count requirement whose includeHeadings is not Boolean.`,
+        );
+      }
+    }
+  }
+  return true;
+}
+
 export function hashFixtureContent(content) {
   const normalized = String(content).replaceAll("\r\n", "\n");
   return crypto.createHash("sha256").update(normalized).digest("hex");
@@ -817,6 +846,11 @@ export async function runProviderEvaluation(options) {
   const categories = selectNamedItems(fixtures.categories, categorySelection);
   const activeModes = modes.filter((mode) => mode !== "off");
   const isSchema4 = fixtures.fixtureSet !== undefined && fixtures.fixtureSet !== "pilot-v1";
+  // Preflight guard: invalid schema-4 requirement shapes must reject before
+  // the plan is built, before any checkpoint exists, and before paid traffic.
+  if (isSchema4) {
+    validateSelectedCategories(categories);
+  }
   if (activeModes.length > 0 && !modes.includes("off")) {
     throw new Error(
       `Comparative scoring requires the off baseline arm; selected modes: ${modes.join(", ")}. ` +

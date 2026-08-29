@@ -746,7 +746,29 @@ function protectedValuesForRequirement(requirement) {
 }
 
 export function runRequirements(text, requirements = [], context = {}) {
-  const paragraphRequirement = requirements.find((requirement) => requirement.kind === "paragraph-count");
+  const paragraphRequirements = requirements.filter(
+    (requirement) => requirement?.kind === "paragraph-count",
+  );
+  // Mirror of the schema-4 preflight: at most one paragraph-count requirement
+  // may own the document boundary, and a supplied includeHeadings must be
+  // Boolean. Direct callers fail closed instead of silently picking one.
+  if (paragraphRequirements.length > 1) {
+    throw new Error(
+      `requirements declare ${paragraphRequirements.length} paragraph-count entries; at most one is allowed: ${paragraphRequirements
+        .map((requirement) => String(requirement.id ?? requirement.kind))
+        .join(", ")}`,
+    );
+  }
+  const paragraphRequirement = paragraphRequirements[0];
+  if (
+    paragraphRequirement !== undefined &&
+    paragraphRequirement.includeHeadings !== undefined &&
+    typeof paragraphRequirement.includeHeadings !== "boolean"
+  ) {
+    throw new Error(
+      `paragraph-count requirement '${String(paragraphRequirement.id ?? paragraphRequirement.kind)}' supplies a non-Boolean includeHeadings value.`,
+    );
+  }
   const includeHeadings = paragraphRequirement?.includeHeadings ?? true;
   const validatorConfigs = [];
   const requiredTerms = [];

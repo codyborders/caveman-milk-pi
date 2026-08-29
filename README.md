@@ -33,7 +33,7 @@ Prompt contract v9 has SHA-256 `3611fa174ef844d6323a1e1f28428c78d00316588607d6f0
 
 `src/prompt-contract.json` records the exact common text and its trailing ASCII space.
 
-All active prompts remain below the 800-character limit. V5 measured 94 incremental primary input-plus-cache-read tokens for `lite` and 96 for `full`. V6 measured 102 and 104. V7 measured 101 and 100. V8 measured 103 and 102. Contract v9 passed all 80 active hard cases after offline validator correction. Blinded quality had no active losses. Fresh-v1 is the next gate.
+All active prompts remain below the 800-character limit. V5 measured 94 incremental primary input-plus-cache-read tokens for `lite` and 96 for `full`. V6 measured 102 and 104. V7 measured 101 and 100. V8 measured 103 and 102. Contract v9 passed all 80 targeted active cases after offline validator correction. Fresh-v1 then failed active task success and token-confidence gates. Mode `off` remains default.
 
 ## Install
 

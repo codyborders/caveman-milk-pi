@@ -105,6 +105,19 @@ Tests and coverage were not supplied. No test coverage or implementation details
     expect(outcome.groups.groundednessPass).toBe(true);
   });
 
+  it("does not classify pass-through wording as a test-result claim", () => {
+    const response = `${validCommitPr} The migration uses a pass-through layer.`;
+    const outcome = runRequirements(response, commitRequirements, {
+      artifactText: response,
+      taskClass: "commit",
+    });
+
+    expect(outcome.passed).toBe(false);
+    expect(outcome.checks.find((check) => check.id === "supplied-facts")?.detail).not.toContain(
+      "test or test-result claim",
+    );
+  });
+
   it("fails closed when supplied-facts configuration is empty", () => {
     const outcome = runRequirements(validCommitPr, [
       { id: "supplied-facts", kind: "supplied-facts", allowedFacts: [], hardGroup: "groundedness" },

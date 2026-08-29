@@ -164,7 +164,7 @@ const VALIDATORS = {
     const missingInformation =
       /(?:\b(?:not|no|none)\b.{0,100}\b(?:supplied|provided|specified|stated|given|available|known|identified|included|described|reported|claimed)\b|\b(?:was|were|is|are)\s+not\s+(?:supplied|provided|specified|stated|given|available|known|identified|included|described|reported|claimed)\b)/i;
     const claimPatterns = [
-      { label: "test or test-result claim", pattern: /\b(?:tests?|testing|test suite|vitest|pytest|jest|specs?|pass(?:ed|es|ing)?)\b/i },
+      { label: "test or test-result claim", pattern: /\b(?:tests?|testing|test suite|vitest|pytest|jest|specs?)\b/i },
       { label: "coverage claim", pattern: /\bcoverage\b/i },
       { label: "benchmark or performance claim", pattern: /\b(?:benchmarks?|performance|latency|throughput|faster|slower)\b/i },
       { label: "backup behavior claim", pattern: /\b(?:backups?|snapshots?|restore[ds]?)\b/i },

@@ -33,6 +33,22 @@ describe("groundedness validation", () => {
     expect(outcome.passed).toBe(false);
   });
 
+  it("accepts soft-wrapped supplied facts without treating line fragments as claims", () => {
+    const response = `Commit subject:
+\`Config migration: move legacy config.json to settings.json\`
+
+PR description:
+\`\`\`
+Config migration: legacy config.json migrates to settings.json. Unknown keys
+remain in the migrated file. Writes are atomic.
+\`\`\``;
+    const outcome = runRequirements(response, commitRequirements, {
+      artifactText: response,
+      taskClass: "commit",
+    });
+    expect(outcome.passed).toBe(true);
+  });
+
   it("accepts a commit and PR draft limited to targeted-v3 supplied facts", () => {
     const outcome = runRequirements(validCommitPr, commitRequirements, {
       artifactText: validCommitPr,

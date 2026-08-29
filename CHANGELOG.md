@@ -52,7 +52,7 @@ Documentation now separates prompt-size measurements from provider cost claims.
 
 Confirmation now requires one approval question that names only the configured target. Generic cancellation, wrong-target, discovery-only, and later-promise responses fail. Mode `off` remains the default.
 
-Targeted-v2 through targeted-v6 failed the all-active-pass gate. V8 passed every full confirmation and clarification case but missed one exact phrase plus one grounded artifact after offline correction. Fresh-v1 remains blocked. Contract v9 strengthens exact wording and scopes confirmation requests. It passed all 36 development cases after offline correction. The final blinded gate remains pending.
+Targeted-v2 through targeted-v6 failed the all-active-pass gate. V8 passed every full confirmation and clarification case but missed one exact phrase plus one grounded artifact after offline correction. Contract v9 passes the corrected targeted-v8 behavioral gate. Both active modes passed all 40 cases after offline validator correction. Blinded quality had no active losses. Fresh-v1 is now the next gate.
 
 ### Fixed
 

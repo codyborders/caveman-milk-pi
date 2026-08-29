@@ -185,7 +185,7 @@ const VALIDATORS = {
       return migrationFact || unknownKeysFact || atomicWritesFact;
     };
     const claimText = config.artifactType === "commit-pr"
-      ? extractCommitPrArtifacts(text).description
+      ? descriptionContentLines(extractCommitPrArtifacts(text).description).join("\n")
       : String(text);
     const units = claimText
       .split(/(?<=[.!?。！？])\s+|\n+/)
@@ -934,11 +934,27 @@ function isCompleteContentLine(line) {
 }
 
 function descriptionContentLines(description) {
-  const lines = String(description)
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0 && !/^```/.test(line) && !/^#{1,6}\s+\S/.test(line));
-  return lines.filter((line, index) => {
+  const content = [];
+  let current = "";
+  const flush = () => {
+    if (current.length > 0) content.push(current);
+    current = "";
+  };
+  for (const rawLine of String(description).split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (line.length === 0 || /^```/.test(line) || /^#{1,6}\s+\S/.test(line)) {
+      flush();
+      continue;
+    }
+    if (isMarkdownBullet(line)) {
+      flush();
+      current = line;
+      continue;
+    }
+    current = current.length === 0 ? line : `${current} ${line}`;
+  }
+  flush();
+  return content.filter((line, index) => {
     const plainOpeningTitle =
       index === 0 &&
       !isMarkdownBullet(line) &&

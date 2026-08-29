@@ -103,6 +103,8 @@ describe("persisted commit-pr validator", () => {
       "- Legacy config.json migrates to settings.json",
       "- Unknown keys remain",
       "- Writes are atomic",
+      "## Testing",
+      "None supplied.",
     ].join("\n")));
     expect(diagnostics.valid).toBe(true);
   });

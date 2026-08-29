@@ -162,7 +162,7 @@ const VALIDATORS = {
       allowedFacts.flatMap((fact) => fact.match(/\b[\w-]+\.[a-z0-9]+\b/gi) ?? []),
     );
     const missingInformation =
-      /(?:\b(?:not|no)\b.{0,100}\b(?:supplied|provided|specified|stated|given|available|known|identified|included|described|reported|claimed)\b|\b(?:was|were|is|are)\s+not\s+(?:supplied|provided|specified|stated|given|available|known|identified|included|described|reported|claimed)\b)/i;
+      /(?:\b(?:not|no|none)\b.{0,100}\b(?:supplied|provided|specified|stated|given|available|known|identified|included|described|reported|claimed)\b|\b(?:was|were|is|are)\s+not\s+(?:supplied|provided|specified|stated|given|available|known|identified|included|described|reported|claimed)\b)/i;
     const claimPatterns = [
       { label: "test or test-result claim", pattern: /\b(?:tests?|testing|test suite|vitest|pytest|jest|specs?|pass(?:ed|es|ing)?)\b/i },
       { label: "coverage claim", pattern: /\bcoverage\b/i },
@@ -196,6 +196,8 @@ const VALIDATORS = {
       const explicitMissingInformation =
         missingInformation.test(unit) && !/\b(?:but|however|yet|nevertheless)\b/i.test(unit);
       if (explicitMissingInformation) continue;
+      const isArtifactLabel = countWords(unit) <= 3 && !/[.!?。！？]$/.test(unit);
+      if (isArtifactLabel) continue;
       for (const { label, pattern } of claimPatterns) {
         if (pattern.test(unit)) unsupported.push(label);
       }
@@ -211,10 +213,8 @@ const VALIDATORS = {
       if (migrationDomainClaim && !matchesAllowedFact(unit)) {
         unsupported.push("unsupported migration behavior claim");
       }
-      const isArtifactLabel = countWords(unit) <= 3 && !/[.!?。！？]$/.test(unit);
       if (
         config.artifactType === "commit-pr" &&
-        !isArtifactLabel &&
         !matchesAllowedFact(unit)
       ) {
         unsupported.push("claim outside supplied facts");
@@ -913,6 +913,9 @@ function contentLineText(line) {
 function isCompleteContentLine(line) {
   const text = contentLineText(line);
   const words = countWords(text);
+  const missingInformationLine =
+    /\b(?:not|no|none)\b.{0,80}\b(?:supplied|provided|specified|stated|given|claimed)\b/i.test(text);
+  if (missingInformationLine && /[.!?。！？]$/.test(text)) return true;
   if (isMarkdownBullet(line)) {
     if (words < 3) return false;
     const conciseSuppliedFact =

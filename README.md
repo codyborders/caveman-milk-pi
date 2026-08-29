@@ -29,11 +29,11 @@ The compact generator replaces the former filtered-markdown injector. Measuremen
 | `wenyan` | 4,262 | 497 | 1,066 | 124 |
 | `wenyan-ultra` | 4,158 | 507 | 1,040 | 127 |
 
-Prompt contract v7 has SHA-256 `01fc92b7cc2648cd1795fbc3dfeb0d7f82afdea39e0969ded8552d3f0aeb87be`. Mode `off` remains empty.
+Prompt contract v8 has SHA-256 `aeaea7ce720c55c3a0a25875c36e86248629941d265282e5a1a18f3cd0b0d4ba`. Mode `off` remains empty.
 
 `src/prompt-contract.json` records the exact common text and its trailing ASCII space.
 
-All active prompts remain below the 800-character limit. V5 measured 94 incremental primary input-plus-cache-read tokens for `lite` and 96 for `full`. V6 measured 102 and 104. Contract v7 remains unexecuted.
+All active prompts remain below the 800-character limit. V5 measured 94 incremental primary input-plus-cache-read tokens for `lite` and 96 for `full`. V6 measured 102 and 104. V7 measured 101 and 100. Contract v8 remains unexecuted.
 
 ## Install
 

@@ -76,6 +76,9 @@ describe("groundedness validation", () => {
   it("allows explicit statements that facts were not supplied", () => {
     const response = `${validCommitPr}
 
+## Testing
+None supplied.
+
 Tests and coverage were not supplied. No test coverage or implementation details are claimed. No benchmark results were provided. Backup behavior was not specified. No extra modules were identified. Manual verification was not supplied. Comment handling was not specified.`;
     const outcome = runRequirements(response, commitRequirements, {
       artifactText: response,

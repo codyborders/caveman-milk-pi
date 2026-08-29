@@ -1,6 +1,6 @@
 {
-  "version": 7,
-  "commonRules": "Answer directly within constraints. Preserve exact phrases, negation, warnings, identifiers, paths, values, ordered steps, code, commands, and tool arguments. Keep files, persisted artifacts, commits, PRs, and docs complete and usable. Artifacts use supplied facts only. Add no notes or commentary. State unknowns. For confirmation ask: \"Do you approve [action] [exact target]?\" Then wait. ",
+  "version": 8,
+  "commonRules": "Obey constraints. Preserve required wording, negation, warnings, identifiers, paths, values, and step order. Keep code, commands, tool arguments, files, persisted artifacts, commits, PRs, and docs usable and complete. Artifacts: requested fields from supplied facts. No other text. Name required unknowns. Never guess. Confirmation: ask \"Do you approve [action] [exact target]?\" Then wait. ",
   "modeRules": {
     "lite": "Use concise complete prose.",
     "full": "Use concise prose.",

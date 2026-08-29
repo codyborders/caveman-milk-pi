@@ -8,9 +8,11 @@ import { buildRescoredReport, rescoreStoredResult } from "../scripts/eval/rescor
 
 describe("offline rescore", () => {
   let rescoredReport: ReturnType<typeof buildRescoredReport>;
+  let rescoredReportBuffer: Buffer;
 
   beforeAll(() => {
     rescoredReport = buildRescoredReport();
+    rescoredReportBuffer = Buffer.from(`${JSON.stringify(rescoredReport, null, 2)}\n`, "utf8");
   }, 30_000);
 
   it("uses versioned validator identity", () => {
@@ -102,9 +104,8 @@ describe("offline rescore", () => {
   });
 
   it("builds committed rescored JSON byte-for-byte in process", () => {
-    const generated = `${JSON.stringify(rescoredReport, null, 2)}\n`;
-    expect(Buffer.from(generated, "utf8")).toEqual(
+    expect(rescoredReportBuffer).toEqual(
       readFileSync("evaluation/results/benchmark-regression-v2-rescored.json"),
     );
-  });
+  }, 30_000);
 });

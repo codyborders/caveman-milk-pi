@@ -275,9 +275,7 @@ const VALIDATORS = {
     }
     const includeHeadings = config.includeHeadings === true;
     const artifact = extractDocumentArtifact(text, count, includeHeadings);
-    const paragraphs = splitParagraphBlocks(artifact).filter((part) =>
-      part.split("\n").some((line) => !/^\s*#{1,6}\s+/.test(line) && line.trim().length > 0),
-    );
+    const paragraphs = splitParagraphBlocks(artifact).filter((part) => paragraphHasProse(part, includeHeadings));
     const matches = paragraphs.length === count;
     return {
       id: "paragraph-count",
@@ -497,19 +495,17 @@ function extractPullRequestArtifact(text) {
 function extractDocumentArtifact(text, expectedParagraphs, includeHeadings = false) {
   const value = String(text).replace(/\r\n?/g, "\n");
   const lines = value.split("\n");
-  const headingIndex = findHeadingOutsideFence(lines);
+  const firstContent = lines.findIndex((line) => line.trim().length > 0);
+  const opening = firstContent === -1 ? null : parseFenceOpening(lines[firstContent]);
+  const closing = opening === null ? -1 : findClosingFence(lines, firstContent + 1, opening);
   let artifact;
-  if (headingIndex !== -1) {
-    artifact = lines.slice(headingIndex).join("\n").trim();
+  if (opening !== null && closing !== -1 && isDocumentFenceLanguage(opening.language)) {
+    artifact = lines.slice(firstContent + 1, closing).join("\n").trim();
   } else {
-    const firstContent = lines.findIndex((line) => line.trim().length > 0);
-    const opening = firstContent === -1 ? null : parseFenceOpening(lines[firstContent]);
-    const closing = opening === null ? -1 : findClosingFence(lines, firstContent + 1, opening);
-    if (opening !== null && closing !== -1 && isDocumentFenceLanguage(opening.language)) {
-      artifact = lines.slice(firstContent + 1, closing).join("\n").trim();
-    } else {
-      artifact = value.trim();
-    }
+    const headingIndex = findHeadingOutsideFence(lines);
+    artifact = headingIndex === -1
+      ? value.trim()
+      : lines.slice(headingIndex).join("\n").trim();
   }
   if (!Number.isInteger(expectedParagraphs) || expectedParagraphs < 1) return artifact;
   return trimTrailingCommentary(artifact, expectedParagraphs, includeHeadings);
@@ -617,9 +613,9 @@ function splitParagraphBlocksWithCode(text) {
   return blocks;
 }
 
-function paragraphHasProse(block) {
+function paragraphHasProse(block, includeHeadings = false) {
   return block.split("\n").some((line) =>
-    line.trim().length > 0 && !/^\s*#{1,6}\s+/.test(line),
+    line.trim().length > 0 && (includeHeadings || !/^\s*#{1,6}\s+/.test(line)),
   );
 }
 
@@ -628,7 +624,7 @@ function trimTrailingCommentary(text, expectedParagraphs, includeHeadings) {
   let counted = 0;
   let boundary = blocks.length;
   for (let index = 0; index < blocks.length; index += 1) {
-    if (paragraphHasProse(blocks[index].visible)) counted += 1;
+    if (paragraphHasProse(blocks[index].visible, includeHeadings)) counted += 1;
     if (counted >= expectedParagraphs) {
       boundary = index + 1;
       break;
@@ -750,6 +746,8 @@ function protectedValuesForRequirement(requirement) {
 }
 
 export function runRequirements(text, requirements = [], context = {}) {
+  const paragraphRequirement = requirements.find((requirement) => requirement.kind === "paragraph-count");
+  const includeHeadings = paragraphRequirement?.includeHeadings ?? true;
   const validatorConfigs = [];
   const requiredTerms = [];
   for (const requirement of requirements) {
@@ -785,7 +783,7 @@ export function runRequirements(text, requirements = [], context = {}) {
           ...common,
           id: "paragraph-count",
           count: requirement.count,
-          includeHeadings: requirement.includeHeadings ?? true,
+          includeHeadings,
         });
         break;
       case "tool":
@@ -799,13 +797,12 @@ export function runRequirements(text, requirements = [], context = {}) {
         break;
     }
   }
-  const paragraphRequirement = requirements.find((requirement) => requirement.kind === "paragraph-count");
   const validation = runValidators(text, validatorConfigs, {
     ...context,
     toolCall: context.toolCall ?? context.toolCalls?.[0] ?? null,
     requiredTerms,
     artifactParagraphCount: paragraphRequirement === undefined ? undefined : Number(paragraphRequirement.count),
-    artifactIncludeHeadings: paragraphRequirement?.includeHeadings === true,
+    artifactIncludeHeadings: includeHeadings,
   });
   const checks = validation.checks.map((check, index) => ({
     ...check,

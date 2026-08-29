@@ -836,6 +836,7 @@ export async function runProviderEvaluation(options) {
     sleepImpl,
     pairOrderStrategy = "seeded",
     cacheCondition = "observed",
+    cachePromptStrategy = "observed",
   } = options;
 
   if (checkpointPath !== undefined && seedOption === undefined) {
@@ -1022,6 +1023,9 @@ export async function runProviderEvaluation(options) {
   if (!["observed", "cold", "warm"].includes(cacheCondition)) {
     throw new Error(`Unsupported cache condition '${cacheCondition}'.`);
   }
+  if (!["observed", "unique-arm", "shared"].includes(cachePromptStrategy)) {
+    throw new Error(`Unsupported cache prompt strategy '${cachePromptStrategy}'.`);
+  }
   const pricing = gatePricing !== null ? gatePricing : validatePricing(pricingOption);
   // Explicit rates per model: structured tables key by model name, legacy
   // flat pricing applies one rate set to every model.
@@ -1084,6 +1088,7 @@ export async function runProviderEvaluation(options) {
     seed: formatSeed(seed),
     pairOrderStrategy,
     cacheCondition,
+    cachePromptStrategy,
     baseSystemPromptHash: crypto
       .createHash("sha256")
       .update(baseSystemPrompt)
@@ -1195,6 +1200,7 @@ export async function runProviderEvaluation(options) {
           spawnImpl: spawnImpl ?? defaultSpawn,
           timeoutMs,
           nowImpl,
+          cachePromptStrategy,
         })
       : null;
 
@@ -1439,6 +1445,7 @@ export async function runProviderEvaluation(options) {
       cacheCondition: {
         label: cacheCondition,
         promptCacheEligible: true,
+        promptStrategy: cachePromptStrategy,
         cacheReadTokens: usage.cacheRead,
         cacheWriteTokens: usage.cacheWrite,
       },
@@ -2254,6 +2261,8 @@ export function createPiRunner({
   extensionPath,
   toolExtensionPath = path.resolve(here, "eval", "pi-eval-tool.ts"),
   workspaceExtensionPath = path.resolve(here, "eval", "pi-eval-workspace.ts"),
+  cacheControlExtensionPath = path.resolve(here, "eval", "pi-eval-cache-control.ts"),
+  cachePromptStrategy = "observed",
   model,
   thinkingLevel,
   spawnImpl = defaultSpawn,
@@ -2271,7 +2280,7 @@ export function createPiRunner({
   // response); time to first token and generation duration are derived from
   // child-reported assistant message timestamps and stay null when the
   // child reports none.
-  async function runPiSession({ mode, args, workspace = null }) {
+  async function runPiSession({ mode, args, workspace = null, cacheNonce = null }) {
     const configDir = mkdtempImpl("caveman-pi-config-");
     fs.writeFileSync(
       path.join(configDir, "caveman-milk-pi.json"),
@@ -2293,6 +2302,7 @@ export function createPiRunner({
           ...baseEnv,
           CAVEMAN_MILK_CONFIG_DIR: configDir,
           ...(workspaceDir === null ? {} : { CAVEMAN_EVAL_WORKSPACE_DIR: workspaceDir }),
+          ...(cacheNonce === null ? {} : { CAVEMAN_EVAL_CACHE_NONCE: cacheNonce }),
         },
         timeout: timeoutMs,
       });
@@ -2519,8 +2529,13 @@ export function createPiRunner({
     "handoff_to_parent",
   ];
   return {
-    async execute({ mode, category }) {
+    async execute({ mode, category, repetition }) {
       const isWorkspaceCase = category.workspace !== undefined && category.workspace !== null;
+      const cacheNonce = cachePromptStrategy === "unique-arm"
+        ? crypto.createHash("sha256").update(`${category.id}|${repetition}|${mode}`).digest("hex").substring(0, 16)
+        : cachePromptStrategy === "shared"
+          ? "shared-warm-v1"
+          : null;
       const args = [
         piBin,
         "--mode",
@@ -2538,6 +2553,7 @@ export function createPiRunner({
         extensionPath,
         "-e",
         isWorkspaceCase ? workspaceExtensionPath : toolExtensionPath,
+        ...(cacheNonce === null ? [] : ["-e", cacheControlExtensionPath]),
         "--model",
         model,
         ...(thinkingLevel === undefined ? [] : ["--thinking", thinkingLevel]),
@@ -2548,6 +2564,7 @@ export function createPiRunner({
         mode,
         args,
         workspace: isWorkspaceCase ? category.workspace : null,
+        cacheNonce,
       });
       if (session.text.length === 0 && session.toolCallCount === 0) {
         throw new Error("pi runner produced no assistant text or tool call for the case.");
@@ -2693,6 +2710,7 @@ async function main() {
           ),
           pairOrderStrategy: process.env.CAVEMAN_EVAL_PAIR_ORDER,
           cacheCondition: process.env.CAVEMAN_EVAL_CACHE_CONDITION,
+          cachePromptStrategy: process.env.CAVEMAN_EVAL_CACHE_PROMPT_STRATEGY,
         });
 
   const serialized = JSON.stringify(report, null, 2) + "\n";

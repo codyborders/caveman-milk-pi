@@ -97,6 +97,33 @@ describe("pi runner adapter", () => {
     fs.rmSync(homeRoot, { recursive: true, force: true });
   });
 
+  it("prepends equal-length unique cache identifiers for cold arm trials", async () => {
+    const spawns = [];
+    const homeRoot = fs.mkdtempSync(path.join(os.tmpdir(), "caveman-pi-cache-"));
+    const runner = evaluate.createPiRunner({
+      piBin: "/opt/pi/bin/pi",
+      extensionPath: "/repo/index.ts",
+      cacheControlExtensionPath: "/repo/scripts/eval/pi-eval-cache-control.ts",
+      cachePromptStrategy: "unique-arm",
+      model: "test-model",
+      spawnImpl: async (args, options) => {
+        spawns.push({ args, nonce: options.env.CAVEMAN_EVAL_CACHE_NONCE });
+        return { code: 0, stdout: jsonlEvents, stderr: "" };
+      },
+      mkdtempImpl: (prefix) => fs.mkdtempSync(path.join(homeRoot, prefix)),
+    });
+
+    try {
+      await runner.execute({ mode: "off", category: { id: "facts", prompt: "Report facts." }, repetition: 1 });
+      await runner.execute({ mode: "lite", category: { id: "facts", prompt: "Report facts." }, repetition: 1 });
+      expect(spawns[0].args).toContain("/repo/scripts/eval/pi-eval-cache-control.ts");
+      expect(spawns[0].nonce).not.toBe(spawns[1].nonce);
+      expect(spawns[0].nonce).toHaveLength(spawns[1].nonce.length);
+    } finally {
+      fs.rmSync(homeRoot, { recursive: true, force: true });
+    }
+  });
+
   it("accepts a tool-only assistant turn when Pi returns no final text", async () => {
     const homeRoot = fs.mkdtempSync(path.join(os.tmpdir(), "caveman-pi-tool-only-"));
     const runner = evaluate.createPiRunner({

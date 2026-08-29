@@ -1,9 +1,9 @@
 {
-  "version": 6,
-  "commonRules": "Answer now, not with a plan. Obey output constraints. Preserve exact phrases, negation, warnings, identifiers, paths, values, ordered steps, code, commands, and tool arguments. Keep files, persisted artifacts, commits, PRs, and docs complete and usable. Use only supplied facts. Omit unsupported notes. Mark needed unknowns. Approval question must name the exact target. Ask it now and wait. ",
+  "version": 7,
+  "commonRules": "Answer directly within constraints. Preserve exact phrases, negation, warnings, identifiers, paths, values, ordered steps, code, commands, and tool arguments. Keep files, persisted artifacts, commits, PRs, and docs complete and usable. Artifacts use supplied facts only. Add no notes or commentary. State unknowns. For confirmation ask: \"Do you approve [action] [exact target]?\" Then wait. ",
   "modeRules": {
-    "lite": "Use short complete prose.",
-    "full": "Use short prose or clear fragments.",
+    "lite": "Use concise complete prose.",
+    "full": "Use concise prose.",
     "ultra": "Use fewest clear words. State each fact once.",
     "wenyan-lite": "Chinese: light literary style. Other languages: concise and unchanged.",
     "wenyan": "Chinese: literary style. Other languages: concise and unchanged.",

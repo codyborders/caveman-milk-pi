@@ -44,7 +44,7 @@ Every configuration validation error now names the exact path being loaded.
 
 Mode and status changes now apply exactly one field-level change per locked update. A zero-field mutator reloads without rewriting the file. Migrated files are normalized to `0600` permissions.
 
-Runtime prompts now use compact contract v6 instead of filtered markdown. Active prompts contain 453 to 509 characters. Mode `off` injects zero bytes. Contract v6 remains unexecuted.
+Runtime prompts now use compact contract v7 instead of filtered markdown. Active prompts contain 444 to 507 characters. Mode `off` injects zero bytes. Contract v7 remains unexecuted.
 
 Development now targets Pi `0.84.3`. Vendored rules match caveman commit `17f9f2ec2377b0bfe16b52ee03a462e7f0a02bc8`.
 
@@ -52,7 +52,7 @@ Documentation now separates prompt-size measurements from provider cost claims.
 
 Confirmation now requires one approval question that names only the configured target. Generic cancellation, wrong-target, discovery-only, and later-promise responses fail. Mode `off` remains the default.
 
-Targeted-v2 ran and failed hard confirmation plus commit and PR behavior. Targeted-v3 then completed 120 primary processes plus 80 blinded judge processes. It failed active-only hard behavior, so fresh-v1 remains blocked. Contract v6 corrects the observed prompt failures but remains unexecuted.
+Targeted-v2, targeted-v3, and targeted-v4 failed active-only hard behavior. Fresh-v1 remains blocked. V6 fixed exact negation but missed confirmation and artifact grounding. Contract v7 adds exact approval and artifact templates but remains unexecuted.
 
 ### Fixed
 

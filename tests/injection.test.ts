@@ -38,7 +38,7 @@ describe("computeInjection determinism", () => {
 
 describe("computeInjection compact rules", () => {
   it("keeps constraint, protection, fact, and approval rules", () => {
-    expect(promptContract.commonRules).toContain("Answer now, not with a plan. Obey output constraints.");
+    expect(promptContract.commonRules).toContain("Answer directly within constraints.");
     expect(promptContract.commonRules).toContain(
       "Preserve exact phrases, negation, warnings, identifiers, paths, values, ordered steps, code, commands, and tool arguments.",
     );
@@ -46,10 +46,10 @@ describe("computeInjection compact rules", () => {
       "Keep files, persisted artifacts, commits, PRs, and docs complete and usable.",
     );
     expect(promptContract.commonRules).toContain(
-      "Use only supplied facts. Omit unsupported notes. Mark needed unknowns.",
+      "Artifacts use supplied facts only. Add no notes or commentary. State unknowns.",
     );
     expect(promptContract.commonRules).toContain(
-      "Approval question must name the exact target. Ask it now and wait.",
+      "For confirmation ask: \"Do you approve [action] [exact target]?\" Then wait.",
     );
   });
 
@@ -65,22 +65,22 @@ describe("computeInjection compact rules", () => {
     }
   });
 
-  it("uses exact v6 injection lengths and hashes with off at zero", () => {
-    expect(promptContract.version).toBe(6);
+  it("uses exact v7 injection lengths and hashes with off at zero", () => {
+    expect(promptContract.version).toBe(7);
     expect(computeInjection("off")).toEqual({ mode: "off", text: "", sourceHash: "" });
     const canonicalContractHash = createHash("sha256")
       .update(JSON.stringify(promptContract))
       .digest("hex");
     expect(canonicalContractHash).toBe(
-      "1e7bb43691c1d46b76a89209aca010ef413abf93ba48c66c9e647558ccf59b3c",
+      "01fc92b7cc2648cd1795fbc3dfeb0d7f82afdea39e0969ded8552d3f0aeb87be",
     );
     const expected = {
-      lite: { length: 453, hash: "573ee9953f97f38d" },
-      full: { length: 463, hash: "a8167347e47c0f77" },
-      ultra: { length: 474, hash: "d2eb1a06a399bf3b" },
-      "wenyan-lite": { length: 505, hash: "374fef17abc1766d" },
-      wenyan: { length: 499, hash: "ebbb5ea8850644f1" },
-      "wenyan-ultra": { length: 509, hash: "ca8640e672d92fc1" },
+      lite: { length: 453, hash: "3783d1c8cf5bf39a" },
+      full: { length: 444, hash: "12dbbc0d838fa95e" },
+      ultra: { length: 472, hash: "2c8752d5c1c6cd84" },
+      "wenyan-lite": { length: 503, hash: "7c435e3d0fe995d2" },
+      wenyan: { length: 497, hash: "8290e7450ea71558" },
+      "wenyan-ultra": { length: 507, hash: "21d2b192c4a8d27e" },
     } as const;
     for (const mode of VALID_MODES.filter((item) => item !== "off")) {
       const injection = computeInjection(mode);
@@ -101,9 +101,9 @@ describe("computeInjection compact rules", () => {
     expect(result.text).not.toContain("| **full** |");
   });
 
-  it("uses the exact v6 mode rules", () => {
-    expect(promptContract.modeRules.lite).toBe("Use short complete prose.");
-    expect(promptContract.modeRules.full).toBe("Use short prose or clear fragments.");
+  it("uses the exact v7 mode rules", () => {
+    expect(promptContract.modeRules.lite).toBe("Use concise complete prose.");
+    expect(promptContract.modeRules.full).toBe("Use concise prose.");
     expect(promptContract.modeRules.ultra).toBe("Use fewest clear words. State each fact once.");
     expect(promptContract.modeRules["wenyan-lite"]).toBe(
       "Chinese: light literary style. Other languages: concise and unchanged.",
@@ -121,7 +121,7 @@ describe("computeInjection compact rules", () => {
       const text = computeInjection(mode).text;
       expect(text, `mode=${mode}`).toContain("Chinese:");
       expect(text, `mode=${mode}`).toContain("Other languages: concise and unchanged.");
-      expect(text, `mode=${mode}`).toContain("Obey output constraints");
+      expect(text, `mode=${mode}`).toContain("within constraints");
     }
   });
 

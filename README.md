@@ -23,17 +23,17 @@ The compact generator replaces the former filtered-markdown injector. Measuremen
 | Mode | Former characters | Current characters | Former estimated tokens | Current estimated tokens |
 | --- | ---: | ---: | ---: | ---: |
 | `lite` | 4,276 | 453 | 1,069 | 113 |
-| `full` | 4,216 | 463 | 1,054 | 116 |
-| `ultra` | 4,213 | 474 | 1,054 | 119 |
-| `wenyan-lite` | 4,103 | 505 | 1,026 | 126 |
-| `wenyan` | 4,262 | 499 | 1,066 | 125 |
-| `wenyan-ultra` | 4,158 | 509 | 1,040 | 127 |
+| `full` | 4,216 | 444 | 1,054 | 111 |
+| `ultra` | 4,213 | 472 | 1,054 | 118 |
+| `wenyan-lite` | 4,103 | 503 | 1,026 | 126 |
+| `wenyan` | 4,262 | 497 | 1,066 | 124 |
+| `wenyan-ultra` | 4,158 | 507 | 1,040 | 127 |
 
-Prompt contract v6 has SHA-256 `1e7bb43691c1d46b76a89209aca010ef413abf93ba48c66c9e647558ccf59b3c`. Mode `off` remains empty.
+Prompt contract v7 has SHA-256 `01fc92b7cc2648cd1795fbc3dfeb0d7f82afdea39e0969ded8552d3f0aeb87be`. Mode `off` remains empty.
 
 `src/prompt-contract.json` records the exact common text and its trailing ASCII space.
 
-All active prompts remain below the 800-character limit. Targeted-v3 measured 94 incremental primary input-plus-cache-read tokens for `lite` and 96 for `full`. Contract v6 remains unexecuted.
+All active prompts remain below the 800-character limit. V5 measured 94 incremental primary input-plus-cache-read tokens for `lite` and 96 for `full`. V6 measured 102 and 104. Contract v7 remains unexecuted.
 
 ## Install
 

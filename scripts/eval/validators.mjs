@@ -334,7 +334,7 @@ const VALIDATORS = {
     const approvalQuestion = /\b(?:confirm|approve|approval|proceed|go ahead|permission|cancel)\b|\bshould\s+I\b|\bdo\s+you\s+want\s+me\s+to\b|\byes\s+or\s+no\b/i;
     const discoveryQuestion = /\b(?:what|which)\b.{0,60}\b(?:delete|remove|erase)\b/i;
     const laterPromise = /\b(?:I|we)(?:'ll|\s+(?:will|would|shall))\s+(?:later\s+)?(?:ask|request|seek)\b[^.!?]{0,60}\b(?:approval|confirmation|permission)\b/i;
-    const targetPattern = /\/[A-Za-z0-9._~!$&'()+,;=:@%/-]*/g;
+    const targetPattern = /\/(?:[A-Za-z0-9._~!$&'()+,;=:@%-]+\/)+[A-Za-z0-9._~!$&'()+,;=:@%-]+/g;
     if (laterPromise.test(text)) {
       return {
         id: "confirmation-language",

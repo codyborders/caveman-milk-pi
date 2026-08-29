@@ -1,6 +1,6 @@
 # Benchmark Pilot Run Plan
 
-The paid benchmark-regression-v2 pilot used prompt contract v2 and failed hard behavior checks. The corrected offline rescore applies validator v3 without model calls. The current prompt contract v3 remains untested. The fresh-v1 holdout has status `NOT RUN` because regression-v2 failed.
+The paid benchmark-regression-v2 pilot used prompt contract v2 and failed hard behavior checks. The corrected offline rescore applies validator v3 without model calls. The targeted regression evaluated prompt contract v3 and also failed hard behavior checks. The fresh-v1 holdout has status `NOT RUN`.
 
 ## Audit and Deterministic Validation
 
@@ -53,9 +53,13 @@ The rescored JSON SHA-256 is `0f7daaca28cc00ff540326082916b9e447833ed0ed0430c631
 
 The rescore retains two clear `lite` negation regressions and two clear `full` confirmation regressions. Commit and PR failures also occur in `off`. Corrected casing removes several clarification failures, but one `lite` paired regression remains.
 
-## Future Targeted Paid Rerun
+## Targeted Regression v2
 
-This prepared command covers only four changed behavioral areas. It was not executed. It needs separate approval before execution. The cap allows 36 primary processes and 24 judge processes.
+The approved targeted regression ran at commit `7ba69f5b84854275af2929f8e73a61c97e950eb5`. It used all 60 authorized processes: 36 primary and 24 judge. No count-endpoint process ran.
+
+The result failed hard behavior. `off` passed 8/12 cases. `lite` and `full` each passed 10/12. Provider failures were empty, judge failures were zero, and raw usage was complete.
+
+The result report SHA-256 is `02585e808fc15e553f754a169d6b4f0d5bb7bdbda4fc952abbf88908d8ffd3dd`. Full results are in `evaluation/results/benchmark-targeted-v2.md`.
 
 ```bash
 CAVEMAN_EVAL_PROVIDER=pi CAVEMAN_EVAL_ALLOW_PAID=1 CAVEMAN_EVAL_MODEL=z-ai/glm-5.3 CAVEMAN_EVAL_JUDGE=1 CAVEMAN_EVAL_JUDGE_MODEL=openai-codex/gpt-5.6-sol CAVEMAN_EVAL_MAX_PAID_CALLS=60 CAVEMAN_EVAL_REPETITIONS=3 CAVEMAN_EVAL_SEED=0xc0ffee05 CAVEMAN_EVAL_FIXTURE_SET=benchmark-regression-v2 CAVEMAN_EVAL_MODES=off,lite,full CAVEMAN_EVAL_CATEGORIES=negation,irreversible-confirmation,commit-pr,clarification CAVEMAN_EVAL_COUNT_TOKENS=0 CAVEMAN_EVAL_TIMEOUT_MS=300000 CAVEMAN_EVAL_CHECKPOINT=evaluation/checkpoints/benchmark-targeted-v2.json CAVEMAN_EVAL_OUTPUT=evaluation/results/benchmark-targeted-v2.json npm run evaluate
@@ -74,7 +78,7 @@ CAVEMAN_EVAL_PROVIDER=pi CAVEMAN_EVAL_ALLOW_PAID=1 CAVEMAN_EVAL_MODEL=z-ai/glm-5
 | Output | `evaluation/results/fresh-v1.json` |
 | Status | `NOT RUN` |
 
-Fresh-v1 remains blocked because regression-v2 had hard behavior failures. This prepared 180-call holdout command was not executed. It remains the release gate after regression-v2 passes.
+Fresh-v1 remains blocked because both regression-v2 and the targeted regression had hard behavior failures. This prepared 180-call holdout command was not executed. It still requires separate maintainer approval after targeted success.
 
 ```bash
 CAVEMAN_EVAL_PROVIDER=pi CAVEMAN_EVAL_ALLOW_PAID=1 CAVEMAN_EVAL_MODEL=z-ai/glm-5.3 CAVEMAN_EVAL_JUDGE=1 CAVEMAN_EVAL_JUDGE_MODEL=openai-codex/gpt-5.6-sol CAVEMAN_EVAL_MAX_PAID_CALLS=180 CAVEMAN_EVAL_REPETITIONS=3 CAVEMAN_EVAL_SEED=0xc0ffee04 CAVEMAN_EVAL_FIXTURE_SET=fresh-v1 CAVEMAN_EVAL_MODES=off,lite,full CAVEMAN_EVAL_CATEGORIES=fresh-short-factual,fresh-explanation,fresh-coding,fresh-steps,fresh-safety,fresh-irreversible,fresh-writing,fresh-artifact,fresh-file,fresh-commit,fresh-pr,fresh-underspecified CAVEMAN_EVAL_COUNT_TOKENS=0 CAVEMAN_EVAL_TIMEOUT_MS=300000 CAVEMAN_EVAL_CHECKPOINT=evaluation/checkpoints/fresh-v1.json CAVEMAN_EVAL_OUTPUT=evaluation/results/fresh-v1.json npm run evaluate

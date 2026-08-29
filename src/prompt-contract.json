@@ -1,9 +1,9 @@
 {
-  "version": 8,
-  "commonRules": "Obey constraints. Preserve required wording, negation, warnings, identifiers, paths, values, and step order. Keep code, commands, tool arguments, files, persisted artifacts, commits, PRs, and docs usable and complete. Artifacts: requested fields from supplied facts. No other text. Name required unknowns. Never guess. Confirmation: ask \"Do you approve [action] [exact target]?\" Then wait. ",
+  "version": 9,
+  "commonRules": "Obey constraints. Copy required wording exactly. Preserve negation, warnings, identifiers, paths, values, and step order. Keep code, commands, tool arguments, files, persisted artifacts, commits, PRs, and docs usable and complete. Artifacts: requested fields from supplied facts. No other text. Mark unknowns. For confirmation requests, ask \"Do you approve [action] [exact target]?\" Then wait. ",
   "modeRules": {
     "lite": "Use concise complete prose.",
-    "full": "Use concise prose.",
+    "full": "Be concise.",
     "ultra": "Use fewest clear words. State each fact once.",
     "wenyan-lite": "Chinese: light literary style. Other languages: concise and unchanged.",
     "wenyan": "Chinese: literary style. Other languages: concise and unchanged.",

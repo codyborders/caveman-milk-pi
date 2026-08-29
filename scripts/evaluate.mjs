@@ -11,7 +11,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const fixturePath = path.join(here, "evaluation-fixtures.json");
 const fixtureManifestPath = path.join(here, "..", "evaluation", "fixture-manifest.json");
 const contractPath = path.join(here, "..", "src", "prompt-contract.json");
-const liveValidatorVersion = "schema4-corrected-v8";
+const liveValidatorVersion = "schema4-corrected-v9";
 
 function loadPromptContract() {
   const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"));

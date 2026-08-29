@@ -99,7 +99,7 @@ describe("persisted commit-pr validator", () => {
 
   it("accepts concise supplied-fact bullets", () => {
     const diagnostics = diagnoseCommitPrArtifacts(draft([
-      "## Config migration",
+      "Config migration",
       "- Legacy config.json migrates to settings.json",
       "- Unknown keys remain",
       "- Writes are atomic",

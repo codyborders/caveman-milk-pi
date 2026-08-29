@@ -928,10 +928,19 @@ function isCompleteContentLine(line) {
 }
 
 function descriptionContentLines(description) {
-  return String(description)
+  const lines = String(description)
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter((line) => line.length > 0 && !/^```/.test(line) && !/^#{1,6}\s+\S/.test(line));
+  return lines.filter((line, index) => {
+    const plainOpeningTitle =
+      index === 0 &&
+      !isMarkdownBullet(line) &&
+      countWords(line) <= 3 &&
+      !/[.!?。！？]$/.test(line) &&
+      !isPlaceholder(line);
+    return !plainOpeningTitle;
+  });
 }
 
 function isValidPullRequestDescription(description, minWords) {

@@ -11,7 +11,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const fixturePath = path.join(here, "evaluation-fixtures.json");
 const fixtureManifestPath = path.join(here, "..", "evaluation", "fixture-manifest.json");
 const contractPath = path.join(here, "..", "src", "prompt-contract.json");
-const liveValidatorVersion = "schema4-corrected-v4";
+const liveValidatorVersion = "schema4-corrected-v5";
 
 function loadPromptContract() {
   const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"));
@@ -328,6 +328,7 @@ function collectEnvironment({
   provider,
   runner,
   model,
+  thinkingLevel,
   fixtureVersion,
   pricing,
   seed,
@@ -359,6 +360,7 @@ function collectEnvironment({
     provider,
     runner,
     model,
+    thinkingLevel: thinkingLevel ?? null,
     fixtureVersion,
     pricing,
     seed,
@@ -819,6 +821,7 @@ export async function runProviderEvaluation(options) {
     judgeFetchImpl,
     spawnImpl,
     piBinOption,
+    thinkingLevel,
     execGit,
     commitOverride,
     readPiVersion,
@@ -847,6 +850,12 @@ export async function runProviderEvaluation(options) {
   }
   if (typeof model !== "string" || model.length === 0) {
     throw new Error("Provider evaluation requires CAVEMAN_EVAL_MODEL.");
+  }
+  if (
+    thinkingLevel !== undefined &&
+    !["off", "minimal", "low", "medium", "high", "xhigh", "max"].includes(thinkingLevel)
+  ) {
+    throw new Error(`Unsupported CAVEMAN_EVAL_THINKING_LEVEL '${thinkingLevel}'.`);
   }
   if (typeof fetchImpl !== "function") {
     throw new Error("Provider evaluation requires fetch support.");
@@ -1003,6 +1012,7 @@ export async function runProviderEvaluation(options) {
     provider,
     runner: runnerKind,
     model,
+    thinkingLevel,
     fixtureVersion: fixtures.version,
     pricing,
     seed: formatSeed(seed),
@@ -1027,6 +1037,7 @@ export async function runProviderEvaluation(options) {
     provider,
     endpoint,
     model,
+    thinkingLevel: thinkingLevel ?? null,
     judge: judge === true,
     judgeModel: judge === true ? (judgeModel ?? model) : null,
     gate: options.gate ?? null,
@@ -1147,6 +1158,7 @@ export async function runProviderEvaluation(options) {
           ...(piBinOption === undefined ? {} : { piBin: piBinOption }),
           extensionPath: path.resolve(here, "..", "index.ts"),
           model,
+          thinkingLevel,
           spawnImpl: spawnImpl ?? defaultSpawn,
           timeoutMs,
           nowImpl,
@@ -2125,6 +2137,7 @@ export function createPiRunner({
   extensionPath,
   toolExtensionPath = path.resolve(here, "eval", "pi-eval-tool.ts"),
   model,
+  thinkingLevel,
   spawnImpl = defaultSpawn,
   timeoutMs = 300000,
   nowImpl = Date.now,
@@ -2278,6 +2291,7 @@ export function createPiRunner({
         toolExtensionPath,
         "--model",
         model,
+        ...(thinkingLevel === undefined ? [] : ["--thinking", thinkingLevel]),
         "-p",
         category.prompt,
       ];
@@ -2306,6 +2320,7 @@ export function createPiRunner({
         system,
         "--model",
         judgeModel ?? model,
+        ...(thinkingLevel === undefined ? [] : ["--thinking", thinkingLevel]),
         "-p",
         user,
       ];
@@ -2413,6 +2428,7 @@ async function main() {
           judge: process.env.CAVEMAN_EVAL_JUDGE === "1",
           judgeModel: process.env.CAVEMAN_EVAL_JUDGE_MODEL,
           piBinOption: process.env.CAVEMAN_EVAL_PI_BIN,
+          thinkingLevel: process.env.CAVEMAN_EVAL_THINKING_LEVEL,
           commitOverride: process.env.CAVEMAN_EVAL_COMMIT,
           timeoutMs: parseIntegerEnvironment(
             "CAVEMAN_EVAL_TIMEOUT_MS",

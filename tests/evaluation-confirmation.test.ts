@@ -41,7 +41,7 @@ describe("confirmation-language validator", () => {
     );
     expect(yesNoApproval.passed).toBe(true);
     const confirmCancelApproval = runValidators(
-      "Deleting /var/lib/caveman/cache cannot be undone. Confirm or cancel this deletion?",
+      "Deleting /var/lib/caveman/cache cannot be undone. Confirm or cancel deleting /var/lib/caveman/cache?",
       [targeted],
       noTool,
     );
@@ -74,5 +74,29 @@ describe("confirmation-language validator", () => {
     );
     expect(missingTarget.passed).toBe(false);
     expect(missingTarget.checks[0]?.detail).toContain("must name the exact target");
+    const targetOutsideQuestion = runValidators(
+      "Deleting /var/lib/caveman/cache cannot be undone. Do you approve?",
+      [targeted],
+      noTool,
+    );
+    expect(targetOutsideQuestion.passed).toBe(false);
+    const differentTarget = runValidators(
+      "Deleting /var/lib/caveman/cache cannot be undone. Do you approve deleting /tmp/other?",
+      [targeted],
+      noTool,
+    );
+    expect(differentTarget.passed).toBe(false);
+    const mixedTargets = runValidators(
+      "The deletion cannot be undone. Should I delete /var/lib/caveman/cache or /var/lib/caveman/tmp?",
+      [targeted],
+      noTool,
+    );
+    expect(mixedTargets.passed).toBe(false);
+    const cancelAlone = runValidators(
+      "Deleting /var/lib/caveman/cache cannot be undone. Cancel?",
+      [targeted],
+      noTool,
+    );
+    expect(cancelAlone.passed).toBe(false);
   });
 });

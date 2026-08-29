@@ -22,14 +22,24 @@ The compact generator replaces the former filtered-markdown injector. Measuremen
 
 | Mode | Former characters | Current characters | Former estimated tokens | Current estimated tokens |
 | --- | ---: | ---: | ---: | ---: |
-| `lite` | 4,276 | 695 | 1,069 | 174 |
-| `full` | 4,216 | 702 | 1,054 | 176 |
-| `ultra` | 4,213 | 739 | 1,054 | 185 |
-| `wenyan-lite` | 4,103 | 764 | 1,026 | 191 |
-| `wenyan` | 4,262 | 788 | 1,066 | 197 |
-| `wenyan-ultra` | 4,158 | 798 | 1,040 | 200 |
+| `lite` | 4,276 | 441 | 1,069 | 110 |
+| `full` | 4,216 | 451 | 1,054 | 113 |
+| `ultra` | 4,213 | 458 | 1,054 | 115 |
+| `wenyan-lite` | 4,103 | 489 | 1,026 | 122 |
+| `wenyan` | 4,262 | 483 | 1,066 | 121 |
+| `wenyan-ultra` | 4,158 | 493 | 1,040 | 123 |
 
-All active prompts remain below the 800-character limit. Exact token counts remain unreported until a provider count endpoint returns them.
+Prompt contract v5 has SHA-256 `54db1906a6ad94028edac682fa0324d28d426d98aa92de41703cd14495d7fd1e`. Mode `off` remains empty.
+
+Exact common text:
+
+```text
+Be concise. Obey output constraints. Preserve exact phrases, negation, warnings, identifiers, paths, values, ordered steps, and commands. Keep code, tool arguments, files, persisted artifacts, commits, PRs, and docs complete and usable. Use supplied facts only. State unknowns without invention. When confirmation is requested, ask approval for the named target now and wait.
+```
+
+The runtime common string adds one trailing ASCII space before each mode rule.
+
+All active prompts remain below the 800-character limit. Provider-measured prompt overhead remains pending until targeted-v3 runs.
 
 ## Install
 

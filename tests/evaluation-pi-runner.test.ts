@@ -31,6 +31,7 @@ describe("pi runner adapter", () => {
       piBin: "/opt/pi/bin/pi",
       extensionPath: "/repo/index.ts",
       model: "test-model",
+      thinkingLevel: "medium",
       spawnImpl: async (args, options) => {
         spawns.push({
           args,
@@ -65,6 +66,7 @@ describe("pi runner adapter", () => {
     expect(flags).not.toContain("--session-id");
     expect(flags).toContain("--model");
     expect(flags[flags.indexOf("--model") + 1]).toBe("test-model");
+    expect(flags[flags.indexOf("--thinking") + 1]).toBe("medium");
     expect(flags[flags.indexOf("-p") + 1]).toBe("Explain this backup policy.");
 
     // The extension config is isolated through the documented override and

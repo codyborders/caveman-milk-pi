@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as evaluate from "../scripts/evaluate.mjs";
 
-const frozenSha256 = "063defefd41130e742020e80ed138a268cccfa55faa5754e9d911496f0707c9c";
+const frozenSha256 = "4612cffeff328204c2458d965b008dd251b1c270c0b52ddfb97e515018e04004";
 
 describe("benchmark-targeted-v3 fixture contract", () => {
   it("loads benchmark-targeted-v3 with the targeted categories and frozen hash", () => {
@@ -50,6 +50,18 @@ describe("benchmark-targeted-v3 fixture contract", () => {
     );
     expect(commitPr?.requirements).toContainEqual(
       expect.objectContaining({ kind: "exact-term", value: "Config migration" }),
+    );
+    expect(commitPr?.requirements).toContainEqual(
+      expect.objectContaining({
+        id: "supplied-facts",
+        kind: "supplied-facts",
+        allowedFacts: [
+          "legacy config.json migrates to settings.json",
+          "unknown keys remain",
+          "writes are atomic",
+        ],
+        hardGroup: "groundedness",
+      }),
     );
     const manifest = JSON.parse(readFileSync("evaluation/fixture-manifest.json", "utf8"));
     const normalized = readFileSync("scripts/evaluation-fixtures-targeted-v3.json", "utf8")

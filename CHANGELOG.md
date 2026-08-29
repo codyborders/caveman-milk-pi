@@ -44,15 +44,15 @@ Every configuration validation error now names the exact path being loaded.
 
 Mode and status changes now apply exactly one field-level change per locked update. A zero-field mutator reloads without rewriting the file. Migrated files are normalized to `0600` permissions.
 
-Runtime prompts now use one versioned contract instead of filtered markdown. Active prompts contain 663 to 766 characters.
+Runtime prompts now use compact contract v5 instead of filtered markdown. Active prompts contain 441 to 493 characters. Mode `off` injects zero bytes. Contract v5 is not yet provider-tested.
 
 Development now targets Pi `0.84.3`. Vendored rules match caveman commit `17f9f2ec2377b0bfe16b52ee03a462e7f0a02bc8`.
 
 Documentation now separates prompt-size measurements from provider cost claims.
 
-Confirmation rule now asks a direct question and waits for approval when an action requires confirmation. Other safety safeguards remain unchanged. Mode `off` remains the default.
+Confirmation now requires one approval question that names only the configured target. Generic cancellation, wrong-target, discovery-only, and later-promise responses fail. Mode `off` remains the default.
 
-Evaluation documentation now distinguishes paid benchmark-regression-v2 prompt contract v2 results, corrected offline validator v3 rescore output, and the untested current prompt contract v3. Fresh-v1 remains the release gate. Raw usage fields stay preserved. Provider-priced cost appears only when prices are known. Total tokens are never presented as cost.
+Targeted-v2 ran and failed hard confirmation plus commit and PR behavior. Corrected prompt contract v5 and targeted-v3 remain unexecuted. Fresh-v1 stays blocked until targeted-v3 passes. These corrections started no provider or judge process.
 
 ### Fixed
 
@@ -61,6 +61,8 @@ Schema 4 summaries preserve the strict report status instead of rendering every 
 Exact-term validation now ignores natural-language capitalization unless fixtures require exact casing. Markdown emphasis does not alter the underlying phrase check.
 
 Persisted-content validation now recognizes commit subjects, PR headings, PR lists, and document paragraphs. It validates requested artifacts without letting surrounding commentary determine the result.
+
+Targeted confirmation binds approval to the exact configured target inside one qualifying question. Targeted commit and PR groundedness rejects unsupported tests, coverage, benchmarks, backups, manual verification, extra files, modules, and migration behavior. Explicit statements about missing information remain valid.
 
 Git commit discovery now imports `execFileSync` at module scope, so the default discovery works in plain ESM node processes without `CAVEMAN_EVAL_COMMIT`.
 

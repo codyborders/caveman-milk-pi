@@ -3,12 +3,18 @@ import { createHash } from "node:crypto";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { buildRescoredReport, rescoreStoredResult } from "../scripts/eval/rescore.mjs";
 
 describe("offline rescore", () => {
+  let rescoredReport: ReturnType<typeof buildRescoredReport>;
+
+  beforeAll(() => {
+    rescoredReport = buildRescoredReport();
+  }, 30_000);
+
   it("uses versioned validator identity", () => {
-    expect(buildRescoredReport().rescore.validatorVersion).toBe("schema4-corrected-v3");
+    expect(rescoredReport.rescore.validatorVersion).toBe("schema4-corrected-v3");
   });
 
   it("validates stored artifact text instead of assistant commentary", () => {
@@ -96,7 +102,7 @@ describe("offline rescore", () => {
   });
 
   it("builds committed rescored JSON byte-for-byte in process", () => {
-    const generated = `${JSON.stringify(buildRescoredReport(), null, 2)}\n`;
+    const generated = `${JSON.stringify(rescoredReport, null, 2)}\n`;
     expect(Buffer.from(generated, "utf8")).toEqual(
       readFileSync("evaluation/results/benchmark-regression-v2-rescored.json"),
     );

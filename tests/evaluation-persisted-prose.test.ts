@@ -76,6 +76,83 @@ describe("persisted-prose validator", () => {
     expect(outcome.passed).toBe(true);
   });
 
+  it("starts at heading before an internal code fence", () => {
+    const outcome = runRequirements(
+      "# Installation\n\nInstall the extension through Pi, then select a mode from the command menu.\n\n```bash\nnpm install package\n```",
+      [{ kind: "paragraph-count", count: 1, includeHeadings: false }],
+      noTool,
+    );
+    expect(outcome.passed).toBe(true);
+  });
+
+  it("starts headed documents before internal fences", () => {
+    const outcome = runRequirements(
+      "# Installation\n\nInstall the extension through Pi, then select a mode from the command menu.\n\n```bash\nnpm install\n\npackage\n```",
+      [
+        { kind: "paragraph-count", count: 1, includeHeadings: false },
+        { kind: "persisted-prose", artifactType: "readme-paragraph", minWords: 12 },
+      ],
+      { ...noTool, taskClass: "file-output" },
+    );
+    expect(outcome.passed).toBe(true);
+  });
+
+  it("starts headed documents after a preamble fence", () => {
+    const outcome = runRequirements(
+      "```bash\necho preamble\n```\n\n## Installation\n\nInstall the extension through Pi, then select a mode from the command menu.",
+      [{ kind: "persisted-prose", artifactType: "readme-paragraph", minWords: 12 }],
+      { ...noTool, taskClass: "file-output" },
+    );
+    expect(outcome.passed).toBe(true);
+  });
+
+  it("keeps prose around a shorter internal fence in a four-backtick wrapper", () => {
+    const outcome = runRequirements(
+      "````markdown\n# Installation\n\nInstall the extension through Pi, then select a mode from the command menu.\n\n```bash\nnpm install\n\npackage\n```\n\nThis second paragraph remains part of the requested document.\n````\n\nThe draft is ready for review.",
+      [
+        { kind: "paragraph-count", count: 2, includeHeadings: false },
+        { kind: "persisted-prose", artifactType: "readme-paragraph", minWords: 12 },
+      ],
+      { ...noTool, taskClass: "file-output" },
+    );
+    expect(outcome.passed).toBe(true);
+  });
+
+  it("does not treat standalone shell or JSON fences as documents", () => {
+    for (const text of [
+      "```bash\necho \\\"This document contains enough complete words to appear like valid persisted prose for this check.\\\"\n```",
+      "```json\n{ \\\"message\\\": \\\"This document contains enough complete words to appear like valid persisted prose for this check.\\\" }\n```",
+    ]) {
+      const outcome = runRequirements(
+        text,
+        [{ kind: "persisted-prose", artifactType: "document", minWords: 12 }],
+        { ...noTool, taskClass: "file-output" },
+      );
+      expect(outcome.passed).toBe(false);
+    }
+  });
+
+  it("ignores fenced code blocks and heading-only sections in paragraph count", () => {
+    const outcome = runRequirements(
+      "# Installation\n\nInstall the extension through Pi, then select a mode from the command menu.\n\n```bash\nnpm install\n\npackage\n```\n\n## Notes",
+      [{ kind: "paragraph-count", count: 1, includeHeadings: false }],
+      noTool,
+    );
+    expect(outcome.passed).toBe(true);
+  });
+
+  it("keeps conversational requested paragraphs before trailing chat removal", () => {
+    const outcome = runRequirements(
+      "# Installation\n\nLet me know if you want to install the extension globally. This requested paragraph remains part of the document.\n\nThe draft is ready for review.",
+      [
+        { kind: "paragraph-count", count: 1, includeHeadings: false },
+        { kind: "persisted-prose", artifactType: "readme-paragraph", minWords: 12 },
+      ],
+      { ...noTool, taskClass: "file-output" },
+    );
+    expect(outcome.passed).toBe(true);
+  });
+
   it("requires full prose in a README paragraph", () => {
     const valid = runRequirements(
       "I prepared the requested text.\n\n## Installation\n\nInstall the extension through Pi, then select a mode from the command menu. The default remains off until you enable it.",

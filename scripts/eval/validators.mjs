@@ -275,11 +275,9 @@ const VALIDATORS = {
     }
     const includeHeadings = config.includeHeadings === true;
     const artifact = extractDocumentArtifact(text, count, includeHeadings);
-    const paragraphs = artifact
-      .split(/\n[ \t]*\n+/)
-      .map((part) => part.trim())
-      .filter((part) => part.length > 0)
-      .filter((part) => config.includeHeadings === true || !part.split("\n").every((line) => /^#{1,6}\s/.test(line.trim())));
+    const paragraphs = splitParagraphBlocks(artifact).filter((part) =>
+      part.split("\n").some((line) => !/^\s*#{1,6}\s+/.test(line) && line.trim().length > 0),
+    );
     const matches = paragraphs.length === count;
     return {
       id: "paragraph-count",
@@ -497,35 +495,149 @@ function extractPullRequestArtifact(text) {
 }
 
 function extractDocumentArtifact(text, expectedParagraphs, includeHeadings = false) {
-  const value = String(text);
-  const fenced = extractFirstFence(value);
-  if (fenced !== null) return fenced;
-
-  const heading = value.search(/^#{1,6}\s+\S+/m);
-  if (heading === -1) return value.trim();
-  const artifact = value.substring(heading).trim();
+  const value = String(text).replace(/\r\n?/g, "\n");
+  const lines = value.split("\n");
+  const headingIndex = findHeadingOutsideFence(lines);
+  let artifact;
+  if (headingIndex !== -1) {
+    artifact = lines.slice(headingIndex).join("\n").trim();
+  } else {
+    const firstContent = lines.findIndex((line) => line.trim().length > 0);
+    const opening = firstContent === -1 ? null : parseFenceOpening(lines[firstContent]);
+    const closing = opening === null ? -1 : findClosingFence(lines, firstContent + 1, opening);
+    if (opening !== null && closing !== -1 && isDocumentFenceLanguage(opening.language)) {
+      artifact = lines.slice(firstContent + 1, closing).join("\n").trim();
+    } else {
+      artifact = value.trim();
+    }
+  }
   if (!Number.isInteger(expectedParagraphs) || expectedParagraphs < 1) return artifact;
   return trimTrailingCommentary(artifact, expectedParagraphs, includeHeadings);
 }
 
+function parseFenceOpening(line) {
+  const match = String(line).match(/^ {0,3}([`~]{3,})([^]*)$/);
+  if (match === null) return null;
+  const info = match[2].trim();
+  if (match[1][0] === "`" && info.includes("`")) return null;
+  return {
+    character: match[1][0],
+    markerLength: match[1].length,
+    language: info.split(/\s+/)[0]?.toLowerCase() ?? "",
+  };
+}
+
+function isFenceClosing(line, opening = null) {
+  const match = String(line).match(/^ {0,3}([`~]{3,})\s*$/);
+  if (match === null) return false;
+  if (opening === null) return true;
+  return match[1][0] === opening.character && match[1].length >= opening.markerLength;
+}
+
+function findClosingFence(lines, start, opening) {
+  for (let index = start; index < lines.length; index += 1) {
+    if (isFenceClosing(lines[index], opening)) return index;
+  }
+  return -1;
+}
+
+function findHeadingOutsideFence(lines) {
+  let opening = null;
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (opening !== null) {
+      if (isFenceClosing(line, opening)) opening = null;
+      continue;
+    }
+    const candidate = parseFenceOpening(line);
+    if (candidate !== null) {
+      opening = candidate;
+      continue;
+    }
+    if (/^ {0,3}#{1,6}\s+\S+/.test(line)) return index;
+  }
+  return -1;
+}
+
+function isDocumentFenceLanguage(language) {
+  return ["", "markdown", "md", "text", "plaintext"].includes(language);
+}
+
+function maskFencedCode(text) {
+  const lines = String(text).replace(/\r\n?/g, "\n").split("\n");
+  let opening = null;
+  return lines.map((line) => {
+    if (opening !== null) {
+      if (isFenceClosing(line, opening)) opening = null;
+      return "";
+    }
+    const candidate = parseFenceOpening(line);
+    if (candidate !== null) {
+      opening = candidate;
+      return "";
+    }
+    return line;
+  }).join("\n");
+}
+
+function splitParagraphBlocks(text) {
+  return splitParagraphBlocksWithCode(text)
+    .map((block) => block.visible.trim())
+    .filter((part) => part.length > 0);
+}
+
+function splitParagraphBlocksWithCode(text) {
+  const lines = String(text).replace(/\r\n?/g, "\n").split("\n");
+  const visibleLines = maskFencedCode(text).split("\n");
+  const blocks = [];
+  let raw = [];
+  let visible = [];
+  let opening = null;
+  const flush = () => {
+    if (raw.length > 0) blocks.push({ raw: raw.join("\n"), visible: visible.join("\n") });
+    raw = [];
+    visible = [];
+  };
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (opening === null && line.trim().length === 0) {
+      flush();
+      continue;
+    }
+    raw.push(line);
+    visible.push(visibleLines[index]);
+    if (opening !== null) {
+      if (isFenceClosing(line, opening)) opening = null;
+    } else {
+      const candidate = parseFenceOpening(line);
+      if (candidate !== null) opening = candidate;
+    }
+  }
+  flush();
+  return blocks;
+}
+
+function paragraphHasProse(block) {
+  return block.split("\n").some((line) =>
+    line.trim().length > 0 && !/^\s*#{1,6}\s+/.test(line),
+  );
+}
+
 function trimTrailingCommentary(text, expectedParagraphs, includeHeadings) {
-  const blocks = String(text).split(/\n[ \t]*\n+/).map((part) => part.trim());
+  const blocks = splitParagraphBlocksWithCode(text);
   let counted = 0;
   let boundary = blocks.length;
   for (let index = 0; index < blocks.length; index += 1) {
-    const block = blocks[index];
-    if (block.length === 0) continue;
-    const headingOnly = block.split("\n").every((line) => /^#{1,6}\s/.test(line.trim()));
-    if (includeHeadings || !headingOnly) counted += 1;
+    if (paragraphHasProse(blocks[index].visible)) counted += 1;
     if (counted >= expectedParagraphs) {
       boundary = index + 1;
       break;
     }
   }
-  while (blocks.length > boundary && isConversationalCommentary(blocks.at(-1))) {
+  while (blocks.length > boundary && isConversationalCommentary(blocks.at(-1).raw)) {
     blocks.pop();
   }
-  return blocks.join("\n\n").trim();
+  return blocks.map((block) => block.raw.trim()).join("\n\n").trim();
 }
 
 function isConversationalCommentary(block) {
@@ -534,7 +646,7 @@ function isConversationalCommentary(block) {
 }
 
 function stripMarkdownHeadings(text) {
-  return String(text)
+  return maskFencedCode(text)
     .split(/\r?\n/)
     .filter((line) => !/^\s{0,3}#{1,6}\s+/.test(line))
     .join("\n")

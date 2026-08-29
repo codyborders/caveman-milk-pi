@@ -43,13 +43,29 @@ describe("paragraph-count validator", () => {
     expect(outcome.passed).toBe(true);
   });
 
-  it("fails when a genuine extra document paragraph follows the request", () => {
-    const outcome = runValidators(
+  it("fails count one for two prose paragraphs around an internal bash fence", () => {
+    const original = runValidators(
       "# Installation\n\nInstall the package from the registry.\n\nConfigure the package before first use.\n\nThis third paragraph is part of the requested document.",
       [{ id: "paragraph-count", count: 2, includeHeadings: false }],
       noTool,
     );
+    expect(original.passed).toBe(false);
+
+    const outcome = runValidators(
+      "# Installation\n\nFirst requested paragraph has complete installation guidance.\n\n```bash\nnpm install package\n```\n\nSecond requested paragraph has more complete installation guidance.",
+      [{ id: "paragraph-count", count: 1, includeHeadings: false }],
+      noTool,
+    );
     expect(outcome.passed).toBe(false);
+  });
+
+  it("does not count blank-line-separated fenced code before conversational prose", () => {
+    const outcome = runValidators(
+      "# Installation\n\nInstall the extension through Pi, then select a mode from the command menu.\n\n```bash\nnpm install\n\npackage\n```\n\nLet me know if you want to install the extension globally. This requested paragraph remains part of the document.\n\nThe draft is ready for review.",
+      [{ id: "paragraph-count", count: 2, includeHeadings: false }],
+      noTool,
+    );
+    expect(outcome.passed).toBe(true);
   });
 
   it("keeps a requested paragraph that starts conversationally", () => {

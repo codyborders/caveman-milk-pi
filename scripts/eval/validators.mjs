@@ -535,6 +535,398 @@ const VALIDATORS = {
           : `only ${fullSentences}/${sentences.length} sentences reach ${minSentenceWords} words; persisted content must stay full prose.`,
     };
   },
+
+// Protected-fact manifest validator. Everything here is content truth:
+// required claims, negations, warnings, identifiers, paths, commands,
+// numbers, ordered actions, declared gaps, altered facts, unsupported
+// completion claims, and ordering errors. No length, paragraph-count, or
+// stylistic verbosity check is ever applied.
+"protected-facts": (text, config, _context) => {
+  const requiredClaims = Array.isArray(config.requiredClaims) ? config.requiredClaims : [];
+  const negatedClaims = Array.isArray(config.negatedClaims) ? config.negatedClaims : [];
+  const warnings = Array.isArray(config.warnings) ? config.warnings : [];
+  const identifiers = Array.isArray(config.identifiers) ? config.identifiers : [];
+  const paths = Array.isArray(config.paths) ? config.paths : [];
+  const commands = Array.isArray(config.commands) ? config.commands : [];
+  const numbers = Array.isArray(config.numbers) ? config.numbers : [];
+  const orderedActions = Array.isArray(config.orderedActions) ? config.orderedActions : [];
+  const knownGaps = Array.isArray(config.knownGaps) ? config.knownGaps : [];
+  const suppliedCompletions = Array.isArray(config.suppliedCompletions)
+    ? config.suppliedCompletions.map((completion) => normalizeWhitespace(completion).toLowerCase())
+    : [];
+  if (
+    requiredClaims.length + negatedClaims.length + warnings.length + identifiers.length +
+    paths.length + commands.length + numbers.length + orderedActions.length + knownGaps.length === 0
+  ) {
+    throw new Error("protected-facts requires at least one declared fact group.");
+  }
+  const findings = [];
+  const normalizedText = normalizeWhitespace(text);
+  const units = splitClaimUnits(text);
+
+  for (const claim of requiredClaims) {
+    const expected = normalizeWhitespace(claim?.text ?? "");
+    if (expected.length === 0) throw new Error("protected-facts requiredClaim needs a non-empty text.");
+    if (text.includes(expected) || normalizedText.includes(expected)) continue;
+    if (normalizedText.toLowerCase().includes(expected.toLowerCase())) {
+      findings.push({
+        type: "altered-fact",
+        id: String(claim.id ?? expected),
+        detail: `required claim '${expected}' appears with altered wording or casing.`,
+      });
+      continue;
+    }
+    findings.push({
+      type: claim.critical === false ? "noncritical-omission" : "critical-omission",
+      id: String(claim.id ?? expected),
+      detail: `required claim '${expected}' is missing.`,
+    });
+  }
+
+  for (const negation of negatedClaims) {
+    const sentence = normalizeWhitespace(negation?.sentence ?? "");
+    const core = String(negation?.core ?? "");
+    if (sentence.length === 0 || core.length === 0) {
+      throw new Error("protected-facts negatedClaim needs sentence and core.");
+    }
+    if (!normalizedText.includes(sentence)) {
+      findings.push({
+        type: "missing-negation",
+        id: String(negation.id ?? sentence),
+        detail: `negated sentence '${sentence}' is missing.`,
+      });
+      continue;
+    }
+    const negationWindow = 24;
+    const negationPattern = /\b(not|never|no|cannot|can't|dont|don't|avoid|forbid|forbidden|prohibit|prohibited|refrain)\b/i;
+    let searchFrom = 0;
+    let unguarded = -1;
+    while (searchFrom <= normalizedText.length - core.length) {
+      const index = normalizedText.indexOf(core, searchFrom);
+      if (index === -1) break;
+      const before = normalizedText.substring(Math.max(0, index - negationWindow), index);
+      if (!negationPattern.test(before)) {
+        unguarded = index;
+        break;
+      }
+      searchFrom = index + core.length;
+    }
+    if (unguarded !== -1) {
+      findings.push({
+        type: "missing-negation",
+        id: String(negation.id ?? sentence),
+        detail: `affirmative '${core}' appears without a negation guard near offset ${unguarded}.`,
+      });
+    }
+  }
+
+  for (const warning of warnings) {
+    const marker = String(warning?.marker ?? "");
+    if (marker.length === 0) throw new Error("protected-facts warning needs a non-empty marker.");
+    const missingTerms = (Array.isArray(warning.requiredTerms) ? warning.requiredTerms : [])
+      .map(String)
+      .filter((term) => !text.toLowerCase().includes(term.toLowerCase()));
+    if (!text.includes(marker) || missingTerms.length > 0) {
+      findings.push({
+        type: "missing-warning",
+        id: String(warning.id ?? marker),
+        detail: !text.includes(marker)
+          ? `warning marker '${marker}' is missing.`
+          : `warning is missing required content: ${missingTerms.join(", ")}.`,
+      });
+    }
+  }
+
+  for (const [group, type] of [
+    [identifiers, "missing-identifier"],
+    [paths, "missing-path"],
+    [commands, "missing-command"],
+  ]) {
+    for (const entry of group) {
+      const value = String(entry?.value ?? "");
+      if (value.length === 0) {
+        throw new Error(`protected-facts ${type.replace("missing-", "")} entry needs a value.`);
+      }
+      if (!text.includes(value)) {
+        findings.push({ type, id: String(entry.id ?? value), detail: `'${value}' is missing.` });
+      }
+    }
+  }
+
+  for (const entry of numbers) {
+    const value = Number(entry?.value);
+    if (!Number.isFinite(value)) {
+      throw new Error("protected-facts number entry needs a finite value.");
+    }
+    const pattern = new RegExp(
+      `(?<![\\d.])${String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?!\\d)(?!\\.\\d)`,
+    );
+    if (!pattern.test(text)) {
+      findings.push({
+        type: "missing-number",
+        id: String(entry.id ?? String(value)),
+        detail: `numeric value ${value} is missing.`,
+      });
+    }
+  }
+
+  for (const action of orderedActions) {
+    const items = Array.isArray(action?.items) ? action.items.map(String) : [];
+    if (items.length < 2) {
+      throw new Error("protected-facts orderedAction needs at least two items.");
+    }
+    const positions = items.map((item) => {
+      const index = text.toLowerCase().indexOf(item.toLowerCase());
+      return { item, index };
+    });
+    const missing = positions.filter((position) => position.index === -1);
+    if (missing.length > 0) {
+      findings.push({
+        type: "critical-omission",
+        id: String(action.id ?? items.join(" > ")),
+        detail: `ordered action is missing step(s): ${missing.map((position) => position.item).join(", ")}.`,
+      });
+      continue;
+    }
+    const inOrder = positions.every(
+      (position, index) => index === 0 || position.index > positions[index - 1].index,
+    );
+    if (!inOrder) {
+      findings.push({
+        type: "ordering-error",
+        id: String(action.id ?? items.join(" > ")),
+        detail: `steps are out of order: expected ${items.join(" > ")}.`,
+      });
+    }
+  }
+
+  for (const gap of knownGaps) {
+    const description = String(gap?.description ?? "");
+    if (description.length === 0) {
+      throw new Error("protected-facts knownGap needs a description.");
+    }
+    if (gap.mustMark !== true) continue;
+    const keywords = descriptionKeywords(description);
+    const marked = units.some(
+      (unit) => isGapMarker(unit) && keywords.some((keyword) => unit.toLowerCase().includes(keyword)),
+    );
+    if (!marked) {
+      findings.push({
+        type: "gap-not-marked",
+        id: String(gap.id ?? description),
+        detail: `missing fact '${description}' is not explicitly marked as a gap.`,
+      });
+    }
+  }
+
+  for (const unit of units) {
+    const allowed = suppliedCompletions.some((completion) =>
+      normalizeWhitespace(unit).toLowerCase().includes(completion),
+    );
+    if (allowed) continue;
+    for (const { label, pattern } of COMPLETION_CLAIM_PATTERNS) {
+      if (pattern.test(unit)) {
+        findings.push({
+          type: "unsupported-claim",
+          id: label,
+          detail: `unit asserts ${label} without a supplied fact: ${unit.substring(0, 120)}`,
+        });
+      }
+    }
+  }
+
+  const uniqueFindings = [
+    ...new Map(findings.map((finding) => [`${finding.type}:${finding.id}:${finding.detail}`, finding])).values(),
+  ];
+  const count = (type) => uniqueFindings.filter((finding) => finding.type === type).length;
+  const summary = {
+    requiredClaims: requiredClaims.length,
+    negatedClaims: negatedClaims.length,
+    warnings: warnings.length,
+    identifiers: identifiers.length,
+    paths: paths.length,
+    commands: commands.length,
+    numbers: numbers.length,
+    orderedActions: orderedActions.length,
+    knownGaps: knownGaps.length,
+    criticalOmissions: count("critical-omission"),
+    noncriticalOmissions: count("noncritical-omission"),
+    alteredFacts: count("altered-fact"),
+    unsupportedClaims: count("unsupported-claim"),
+    orderingErrors: count("ordering-error"),
+  };
+  return {
+    id: "protected-facts",
+    passed: uniqueFindings.length === 0,
+    findings: uniqueFindings,
+    summary,
+    detail:
+      uniqueFindings.length === 0
+        ? `all ${requiredClaims.length + negatedClaims.length + warnings.length + identifiers.length + paths.length + commands.length + numbers.length + orderedActions.length} declared facts verified.`
+        : `protected-fact violations: ${uniqueFindings
+            .map((finding) => `${finding.type}(${finding.id})`)
+            .slice(0, 6)
+            .join(", ")}.`,
+  };
+},
+  // Usability checks for requested artifacts. Structure only: valid JSON,
+  // required fields present, and values that are not placeholders. No
+  // length, paragraph-count, or stylistic verbosity check applies.
+  "artifact-usability": (text, config, _context) => {
+    const artifactType = String(config.artifactType ?? "json");
+    const requiredFields = Array.isArray(config.requiredFields)
+      ? config.requiredFields.map(String)
+      : [];
+    if (requiredFields.length === 0) {
+      throw new Error("artifact-usability requires a non-empty requiredFields option.");
+    }
+    const isPlaceholderValue = (value) =>
+      typeof value === "string" &&
+      (/^\s*\[?GAP\b/i.test(value) || /^\s*\[[^\]]*\]\s*$/.test(value.trim()) || value.trim().length === 0);
+    const findings = [];
+    if (artifactType === "json") {
+      const fenced = [...String(text).matchAll(/```[a-zA-Z]*\n([\s\S]*?)```/g)].map((m) => m[1] ?? "");
+      const candidates = fenced.length > 0 ? fenced : [String(text)];
+      const parsed = candidates.map((candidate) => {
+        try {
+          return { ok: true, value: JSON.parse(candidate) };
+        } catch {
+          return { ok: false, value: null };
+        }
+      });
+      const valid = parsed.find((candidate) => candidate.ok && candidate.value && typeof candidate.value === "object");
+      if (valid === undefined) {
+        findings.push({
+          type: "invalid-json",
+          id: "artifact",
+          detail: "requested JSON artifact is not valid JSON.",
+        });
+      } else {
+        const source = valid.value;
+        for (const field of requiredFields) {
+          if (!Object.prototype.hasOwnProperty.call(source, field)) {
+            findings.push({ type: "missing-field", id: field, detail: `required field '${field}' is absent.` });
+          } else if (isPlaceholderValue(source[field])) {
+            findings.push({
+              type: "placeholder-value",
+              id: field,
+              detail: `field '${field}' holds only a placeholder, so the artifact is unusable.`,
+            });
+          }
+        }
+      }
+    } else if (artifactType === "fields") {
+      for (const field of requiredFields) {
+        const match = new RegExp(
+          `${field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*([^\\n]*)`,
+        ).exec(String(text));
+        const content = match === null ? "" : (match[1] ?? "").trim();
+        if (match === null) {
+          findings.push({ type: "missing-field", id: field, detail: `required field '${field}' is absent.` });
+        } else if (content.length === 0 || /^\[?GAP\b/i.test(content) || /^\[[^\]]*\]$/.test(content)) {
+          findings.push({
+            type: "placeholder-field",
+            id: field,
+            detail: `field '${field}' holds only a placeholder, so the artifact is unusable.`,
+          });
+        }
+      }
+    } else {
+      throw new Error(`artifact-usability does not support artifactType '${artifactType}'.`);
+    }
+    return {
+      id: "artifact-usability",
+      passed: findings.length === 0,
+      findings,
+      detail:
+        findings.length === 0
+          ? `artifact is usable: all ${requiredFields.length} required fields carry real content.`
+          : `artifact usability violations: ${findings.map((finding) => `${finding.type}(${finding.id})`).join(", ")}.`,
+    };
+  },
+  // Handoff checks: the named parent/subagent handoff tool must actually be
+  // called, and one single call's message must carry every declared term.
+  "handoff-message": (_text, config, context) => {
+    const toolName = String(config.toolName ?? "");
+    const requiredTerms = Array.isArray(config.requiredTerms) ? config.requiredTerms.map(String) : [];
+    if (toolName.length === 0 || requiredTerms.length === 0) {
+      throw new Error("handoff-message requires toolName and a non-empty requiredTerms option.");
+    }
+    const calls = (context.toolCalls ?? []).filter((call) => call?.name === toolName);
+    const findings = [];
+    if (calls.length === 0) {
+      findings.push({
+        type: "handoff-missing",
+        id: toolName,
+        detail: `expected a ${toolName} tool call but none was recorded.`,
+      });
+    } else {
+      const messageOf = (call) => String(call?.input?.message ?? call?.input?.content ?? "");
+      const carries = (term) =>
+        calls.some((call) => messageOf(call).toLowerCase().includes(term.toLowerCase()));
+      for (const term of requiredTerms) {
+        if (!carries(term)) {
+          findings.push({
+            type: "handoff-term-missing",
+            id: term,
+            detail: `${toolName} message is missing required content '${term}'.`,
+          });
+        }
+      }
+    }
+    return {
+      id: "handoff-message",
+      passed: findings.length === 0,
+      findings,
+      detail:
+        findings.length === 0
+          ? `${toolName} call carries all ${requiredTerms.length} required terms.`
+          : `handoff violations: ${findings.map((finding) => `${finding.type}(${finding.id})`).join(", ")}.`,
+    };
+  },
+  // Workspace discipline: measured session behavior decides the check. A
+  // coding case that never runs tests, or that ends right after failing
+  // tests without an assistant corrective turn, fails deterministically.
+  "workspace-discipline": (_text, config, context) => {
+    const metrics = context.sessionToolMetrics ?? {};
+    const findings = [];
+    if (config.requireTests === true) {
+      const testsRun = Number(metrics.testsRun ?? 0);
+      if (!Number.isInteger(testsRun) || testsRun < 1) {
+        findings.push({
+          type: "tests-not-run",
+          id: "workspace_run_tests",
+          detail: "the session never ran the workspace test suite.",
+        });
+      }
+    }
+    if (metrics.failedTestsWithoutCorrectiveTurn === true) {
+      findings.push({
+        type: "failed-test-without-corrective-turn",
+        id: "workspace_run_tests",
+        detail: "tests failed and the session ended without an assistant corrective turn after the failure.",
+      });
+    }
+    if (
+      config.requirePassingTests === true &&
+      (Number(metrics.passingTestRuns ?? 0) < 1 || metrics.finalTestRunPassed !== true)
+    ) {
+      findings.push({
+        type: "tests-not-passing",
+        id: "workspace_run_tests",
+        detail: "the session did not finish with a passing workspace test run.",
+      });
+    }
+    return {
+      id: "workspace-discipline",
+      passed: findings.length === 0,
+      findings,
+      detail:
+        findings.length === 0
+          ? "workspace discipline satisfied: tests ran and every failure got a corrective turn."
+          : `workspace discipline violations: ${findings.map((finding) => finding.type).join(", ")}.`,
+    };
+  },
   "tool-structure": (_text, config, context) => {
     const toolName = String(config.toolName ?? "");
     const requiredInput = Array.isArray(config.requiredInput) ? config.requiredInput.map(String) : [];
@@ -596,6 +988,46 @@ const VALIDATORS = {
 function extractFirstFence(text) {
   const match = String(text).match(/```[^\n]*\n([\s\S]*?)```/);
   return match === null ? null : String(match[1] ?? "").trim();
+}
+
+function normalizeWhitespace(value) {
+  return String(value).replace(/\s+/g, " ").trim();
+}
+
+function splitClaimUnits(text) {
+  return String(text)
+    .split(/(?<=[.!\u3002!?\uff01?\uff1f])\s+|\n+/)
+    .map((unit) => unit.trim())
+    .filter((unit) => unit.length > 0);
+}
+
+const COMPLETION_CLAIM_PATTERNS = [
+  {
+    label: "implementation-completion",
+    pattern:
+      /\b(?:I|we)\b[^.!\u3002!?\uff01?\uff1f]{0,60}\b(?:implemented|added|updated|fixed|wrote|created|deleted|removed|migrated|refactored)\b/i,
+  },
+  {
+    label: "test-completion",
+    pattern:
+      /\b(?:tests?|test suite|build)\b[^.!\u3002!?\uff01?\uff1f]{0,40}\b(?:pass(?:ed|es|ing)?|succeed(?:ed|s)?|green|all passing)\b|\ball\s+\d+\s+tests?\s+pass\b/i,
+  },
+  {
+    label: "repository-completion",
+    pattern:
+      /\b(?:committed|pushed|merged|repository updated|branch (?:created|pushed)|pull request (?:opened|created))\b/i,
+  },
+];
+
+function isGapMarker(unit) {
+  return /\bGAP\b|\[GAP|GAP:|\bnot supplied\b|\bnot provided\b|\bno [a-z][a-z ]{2,40} suppl(?:ied|ied)\b|\bmissing (?:fact|value|detail|information|schema|input)\b/i.test(unit);
+}
+
+function descriptionKeywords(description) {
+  return normalizeWhitespace(description)
+    .toLowerCase()
+    .split(/[^a-z0-9-]+/)
+    .filter((word) => word.length >= 4 && !["facts", "fact", "figures", "figure", "value", "values", "details", "detail"].includes(word));
 }
 
 function extractLeadingFence(text) {
@@ -1070,6 +1502,25 @@ function protectedValuesForRequirement(requirement) {
     requirement.count,
     requirement.toolName,
     ...(Array.isArray(requirement.orderedTerms) ? requirement.orderedTerms : []),
+    ...(Array.isArray(requirement.requiredClaims)
+      ? requirement.requiredClaims.map((claim) => claim?.text)
+      : []),
+    ...(Array.isArray(requirement.negatedClaims)
+      ? requirement.negatedClaims.map((claim) => claim?.sentence)
+      : []),
+    ...(Array.isArray(requirement.warnings)
+      ? requirement.warnings.flatMap((warning) => [
+          warning?.marker,
+          ...(Array.isArray(warning?.requiredTerms) ? warning.requiredTerms : []),
+        ])
+      : []),
+    ...(Array.isArray(requirement.identifiers) ? requirement.identifiers.map((item) => item?.value) : []),
+    ...(Array.isArray(requirement.paths) ? requirement.paths.map((item) => item?.value) : []),
+    ...(Array.isArray(requirement.commands) ? requirement.commands.map((item) => item?.value) : []),
+    ...(Array.isArray(requirement.numbers) ? requirement.numbers.map((item) => item?.value) : []),
+    ...(Array.isArray(requirement.orderedActions)
+      ? requirement.orderedActions.flatMap((action) => (Array.isArray(action?.items) ? action.items : []))
+      : []),
   ];
   return values
     .filter((value) => value !== undefined && value !== null)
@@ -1155,6 +1606,46 @@ export function runRequirements(text, requirements = [], context = {}) {
           ...common,
           id: "supplied-facts",
           allowedFacts: requirement.allowedFacts,
+        });
+        break;
+      case "protected-facts":
+        validatorConfigs.push({
+          ...common,
+          id: "protected-facts",
+          requiredClaims: requirement.requiredClaims,
+          negatedClaims: requirement.negatedClaims,
+          warnings: requirement.warnings,
+          identifiers: requirement.identifiers,
+          paths: requirement.paths,
+          commands: requirement.commands,
+          numbers: requirement.numbers,
+          orderedActions: requirement.orderedActions,
+          knownGaps: requirement.knownGaps,
+          suppliedCompletions: requirement.suppliedCompletions,
+        });
+        break;
+      case "artifact-usability":
+        validatorConfigs.push({
+          ...common,
+          id: "artifact-usability",
+          artifactType: requirement.artifactType,
+          requiredFields: requirement.requiredFields,
+        });
+        break;
+      case "handoff-message":
+        validatorConfigs.push({
+          ...common,
+          id: "handoff-message",
+          toolName: requirement.toolName,
+          requiredTerms: requirement.requiredTerms,
+        });
+        break;
+      case "workspace-discipline":
+        validatorConfigs.push({
+          ...common,
+          id: "workspace-discipline",
+          requireTests: requirement.requireTests,
+          requirePassingTests: requirement.requirePassingTests,
         });
         break;
       default:

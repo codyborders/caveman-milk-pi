@@ -11,7 +11,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const fixturePath = path.join(here, "evaluation-fixtures.json");
 const fixtureManifestPath = path.join(here, "..", "evaluation", "fixture-manifest.json");
 const contractPath = path.join(here, "..", "src", "prompt-contract.json");
-const liveValidatorVersion = "schema4-corrected-v12";
+const liveValidatorVersion = "schema5-protected-facts-v13";
 
 function loadPromptContract() {
   const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"));
@@ -655,17 +655,22 @@ function derivePairSeed(seed, repetition, categoryId) {
   return (hashToUint32(`${seed}:${repetition}:${categoryId}`) ^ (seed >>> 0)) >>> 0;
 }
 
-function buildPlan({ modes, categories, repetitions, seed }) {
+function buildPlan({ modes, categories, repetitions, seed, pairOrderStrategy = "seeded" }) {
   const plan = [];
+  let pairIndex = 0;
   for (let repetition = 1; repetition <= repetitions; repetition += 1) {
     for (const category of categories) {
-      const armOrder = createArmOrder(modes, derivePairSeed(seed, repetition, category.id));
+      const armOrder = pairOrderStrategy === "alternating"
+        ? (pairIndex % 2 === 0 ? [...modes] : [...modes].reverse())
+        : createArmOrder(modes, derivePairSeed(seed, repetition, category.id));
+      pairIndex += 1;
       plan.push(
         ...armOrder.map((mode, armPosition) => ({
           repetition,
           category: category.id,
           mode,
           armPosition,
+          pairOrder: { order: [...armOrder], position: armPosition, ranFirst: armPosition === 0 },
           key: `${repetition}::${category.id}::${mode}`,
         })),
       );
@@ -829,6 +834,8 @@ export async function runProviderEvaluation(options) {
     timeoutMs,
     maxAttempts,
     sleepImpl,
+    pairOrderStrategy = "seeded",
+    cacheCondition = "observed",
   } = options;
 
   if (checkpointPath !== undefined && seedOption === undefined) {
@@ -983,6 +990,19 @@ export async function runProviderEvaluation(options) {
   const modes = selectNamedItems(fixtures.modes, modeSelection);
   const categories = selectNamedItems(fixtures.categories, categorySelection);
   const activeModes = modes.filter((mode) => mode !== "off");
+  const runnerKind = provider === "pi" ? "pi" : "direct";
+  // Workspace coding cases execute real tools inside a Pi process; any other
+  // provider cannot honor them, so reject before a plan or checkpoint exists.
+  if (runnerKind !== "pi") {
+    const workspaceCategory = categories.find(
+      (category) => category.workspace !== undefined && category.workspace !== null,
+    );
+    if (workspaceCategory !== undefined) {
+      throw new Error(
+        `Workspace category '${workspaceCategory.id}' requires the pi provider; direct providers have no workspace tools.`,
+      );
+    }
+  }
   const isSchema4 = fixtures.fixtureSet !== undefined && fixtures.fixtureSet !== "pilot-v1";
   // Preflight guard: invalid schema-4 requirement shapes must reject before
   // the plan is built, before any checkpoint exists, and before paid traffic.
@@ -996,6 +1016,12 @@ export async function runProviderEvaluation(options) {
     );
   }
   const repetitionCount = repetitions ?? 3;
+  if (!["seeded", "alternating"].includes(pairOrderStrategy)) {
+    throw new Error(`Unsupported pair-order strategy '${pairOrderStrategy}'.`);
+  }
+  if (!["observed", "cold", "warm"].includes(cacheCondition)) {
+    throw new Error(`Unsupported cache condition '${cacheCondition}'.`);
+  }
   const pricing = gatePricing !== null ? gatePricing : validatePricing(pricingOption);
   // Explicit rates per model: structured tables key by model name, legacy
   // flat pricing applies one rate set to every model.
@@ -1006,8 +1032,13 @@ export async function runProviderEvaluation(options) {
         ? pricing.models[candidateModel] ?? null
         : pricing;
   const seed = parseSeed(seedOption);
-  const plan = buildPlan({ modes, categories, repetitions: repetitionCount, seed });
-  const runnerKind = provider === "pi" ? "pi" : "direct";
+  const plan = buildPlan({
+    modes,
+    categories,
+    repetitions: repetitionCount,
+    seed,
+    pairOrderStrategy,
+  });
   const environment = collectEnvironment({
     provider,
     runner: runnerKind,
@@ -1051,6 +1082,8 @@ export async function runProviderEvaluation(options) {
     categories: categories.map((category) => category.id),
     repetitions: repetitionCount,
     seed: formatSeed(seed),
+    pairOrderStrategy,
+    cacheCondition,
     baseSystemPromptHash: crypto
       .createHash("sha256")
       .update(baseSystemPrompt)
@@ -1219,6 +1252,10 @@ export async function runProviderEvaluation(options) {
         assistantTurns: piOutcome.assistantTurns,
         rawUsageTurns: piOutcome.rawUsageTurns,
         toolCalls: piOutcome.toolCalls,
+        timing: piOutcome.timing,
+        toolMetrics: piOutcome.toolMetrics,
+        usageTurns: piOutcome.usageTurns,
+        sessionToolMetrics: piOutcome.sessionToolMetrics,
       };
     } else {
       const systemBlocks = buildSystemBlocks(baseSystemPrompt, cavemanText);
@@ -1271,6 +1308,21 @@ export async function runProviderEvaluation(options) {
         assistantTurns: 1,
         rawUsageTurns: [outcome.json.usage ?? null],
         toolCalls: null,
+        timing: {
+          timeToFirstTokenMs: null,
+          generationDurationMs: null,
+          totalElapsedMs: nowImpl() - startedAtMs,
+        },
+        toolMetrics: {
+          toolCalls: 0,
+          toolDurationMs: null,
+          rereads: null,
+          correctiveTurns: null,
+          failedTestsWithoutCorrectiveTurn: null,
+          retries: Math.max(0, outcome.attempts - 1),
+        },
+        usageTurns: [normalizeUsage(outcome.json.usage)],
+        sessionToolMetrics: null,
       };
     }
     const extracted = extractResponseText(payload, category.expectsTool === true);
@@ -1293,20 +1345,61 @@ export async function runProviderEvaluation(options) {
       ...(category.validators ?? []),
       ...((category.requiredTerms ?? []).length > 0 ? [{ id: "terms" }] : []),
     ];
+    const categoryRequirements = category.requirements ?? [];
     const validation = isSchema4
-      ? runRequirements(extracted.validationText, category.requirements ?? [], {
+      ? runRequirements(extracted.validationText, categoryRequirements, {
           taskPrompt: category.prompt,
           taskClass: category.taskClass,
           artifactText: extracted.validationText,
           toolCall: extracted.toolCall,
           toolCalls: resultToolCalls,
           expectsTool: category.expectsTool === true,
+          sessionToolMetrics: executionExtras.sessionToolMetrics ?? null,
         })
       : runValidators(extracted.validationText, validatorConfigs, {
           toolCall: extracted.toolCall,
           expectsTool: category.expectsTool === true,
           requiredTerms: category.requiredTerms ?? [],
         });
+    const manifestRequirement = categoryRequirements.find(
+      (requirement) => requirement.kind === "protected-facts",
+    );
+    const protectedFactManifest = manifestRequirement === undefined
+      ? null
+      : Object.fromEntries(
+          [
+            "requiredClaims",
+            "negatedClaims",
+            "warnings",
+            "identifiers",
+            "paths",
+            "commands",
+            "numbers",
+            "orderedActions",
+            "knownGaps",
+          ].map((field) => [field, manifestRequirement[field] ?? []]),
+        );
+    const preservationFindings = validation.checks.flatMap((check) => check.findings ?? []);
+    const countFinding = (types) => preservationFindings.filter(
+      (finding) => types.includes(finding.type),
+    ).length;
+    const preservation = {
+      criticalOmissionCount: countFinding([
+        "critical-omission",
+        "missing-negation",
+        "missing-warning",
+        "missing-identifier",
+        "missing-path",
+        "missing-command",
+        "missing-number",
+        "gap-not-marked",
+      ]),
+      noncriticalOmissionCount: countFinding(["noncritical-omission"]),
+      alteredFactCount: countFinding(["altered-fact"]),
+      unsupportedClaimCount: countFinding(["unsupported-claim"]),
+      orderingErrorCount: countFinding(["ordering-error"]),
+      findings: preservationFindings,
+    };
     results.push({
       seq: (seq += 1),
       key: call.key,
@@ -1314,17 +1407,41 @@ export async function runProviderEvaluation(options) {
       category: call.category,
       mode: call.mode,
       armPosition: call.armPosition,
+      pairOrder: call.pairOrder,
       response: extracted.text,
       validationText: extracted.validationText,
       wordCount: countWords(extracted.validationText),
       requiredTermRatio: scoreRequiredTerms(extracted.validationText, category.requiredTerms ?? []),
       validation,
+      protectedFactManifest,
+      preservation,
       usage,
       rawUsage: executionExtras.rawUsage ?? payload.usage ?? null,
       rawUsageTurns:
         executionExtras.rawUsageTurns ?? [payload.usage ?? null],
+      usageTurns:
+        executionExtras.usageTurns ?? [normalizeUsage(payload.usage)],
       assistantTurns: executionExtras.assistantTurns ?? 1,
       toolCalls: resultToolCalls,
+      timing: executionExtras.timing ?? {
+        timeToFirstTokenMs: null,
+        generationDurationMs: null,
+        totalElapsedMs: executionExtras.elapsedMs,
+      },
+      toolMetrics: executionExtras.toolMetrics ?? {
+        toolCalls: toolCallCount,
+        toolDurationMs: null,
+        rereads: null,
+        correctiveTurns: null,
+        failedTestsWithoutCorrectiveTurn: null,
+        retries: Math.max(0, (executionExtras.attempts ?? 1) - 1),
+      },
+      cacheCondition: {
+        label: cacheCondition,
+        promptCacheEligible: true,
+        cacheReadTokens: usage.cacheRead,
+        cacheWriteTokens: usage.cacheWrite,
+      },
       compressionPolicy: isSchema4 ? category.compressionPolicy : undefined,
       costUsd,
       providerReportedCostUsd,
@@ -2136,6 +2253,7 @@ export function createPiRunner({
   ),
   extensionPath,
   toolExtensionPath = path.resolve(here, "eval", "pi-eval-tool.ts"),
+  workspaceExtensionPath = path.resolve(here, "eval", "pi-eval-workspace.ts"),
   model,
   thinkingLevel,
   spawnImpl = defaultSpawn,
@@ -2146,18 +2264,36 @@ export function createPiRunner({
 }) {
   // Shared single-turn Pi session: isolated config directory holding the
   // requested mode, exactly one spawned process, documented JSON event
-  // parsing, and best-effort directory removal in a finally block.
-  async function runPiSession({ mode, args }) {
+  // parsing, and best-effort directory removal in a finally block. A
+  // workspace category additionally gets a fresh per-process workspace
+  // directory seeded with the fixture files. Timing is measured from
+  // process start (the initial request) through process exit (the final
+  // response); time to first token and generation duration are derived from
+  // child-reported assistant message timestamps and stay null when the
+  // child reports none.
+  async function runPiSession({ mode, args, workspace = null }) {
     const configDir = mkdtempImpl("caveman-pi-config-");
     fs.writeFileSync(
       path.join(configDir, "caveman-milk-pi.json"),
       JSON.stringify({ schemaVersion: 1, mode, showStatus: false }, null, 2) + "\n",
       { mode: 0o600 },
     );
+    const workspaceDir = workspace === null ? null : mkdtempImpl("caveman-pi-workspace-");
+    if (workspace !== null) {
+      for (const [relativePath, content] of Object.entries(workspace.files ?? {})) {
+        const target = path.join(workspaceDir, relativePath);
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, String(content), "utf8");
+      }
+    }
     try {
       const startedAtMs = nowImpl();
       const result = await spawnImpl(args, {
-        env: { ...baseEnv, CAVEMAN_MILK_CONFIG_DIR: configDir },
+        env: {
+          ...baseEnv,
+          CAVEMAN_MILK_CONFIG_DIR: configDir,
+          ...(workspaceDir === null ? {} : { CAVEMAN_EVAL_WORKSPACE_DIR: workspaceDir }),
+        },
         timeout: timeoutMs,
       });
       const elapsedMs = nowImpl() - startedAtMs;
@@ -2177,8 +2313,22 @@ export function createPiRunner({
       let usage = { input: null, output: null, cacheWrite: null, cacheRead: null };
       let rawUsage = null;
       let rawUsageTurns = [];
+      const usageTurns = [];
       let costUsd = null;
       let providerError = null;
+      let firstAssistantTimestampMs = null;
+      const toolCallIds = [];
+      const toolDurationsById = new Map();
+      const toolDurationsByIndex = new Map();
+      const readPaths = new Map();
+      let rereads = 0;
+      let testsRun = 0;
+      let passingTestRuns = 0;
+      let finalTestRunPassed = null;
+      let failingTestEndSeen = false;
+      let failedTestsWithoutCorrectiveTurn = false;
+      let correctiveTurns = 0;
+      let toolExecutionEndCount = 0;
       for (const line of (result.stdout ?? "").split("\n")) {
         const trimmed = line.trim();
         if (trimmed.length === 0) continue;
@@ -2191,13 +2341,55 @@ export function createPiRunner({
         if (event.type === "tool_execution_start") {
           toolCallCount += 1;
           toolCalls.push({ name: event.toolName, input: event.args });
+          toolCallIds.push(
+            event.toolCallId === undefined || event.toolCallId === null ? null : String(event.toolCallId),
+          );
           if (event.toolName === "write_artifact" && toolCall === null) {
             toolCall = { name: event.toolName, input: event.args };
           }
+          if (event.toolName === "workspace_read") {
+            const readPath = String(event.args?.path ?? "");
+            if (readPaths.has(readPath)) rereads += 1;
+            else readPaths.set(readPath, true);
+          }
+        }
+        if (event.type === "tool_execution_end") {
+          const duration = event.result?.details?.durationMs;
+          if (typeof duration === "number" && Number.isFinite(duration)) {
+            if (event.toolCallId != null) toolDurationsById.set(event.toolCallId, duration);
+            else toolDurationsByIndex.set(toolExecutionEndCount, duration);
+          }
+          const failed = Number(event.result?.details?.failed);
+          if (event.toolName === "workspace_run_tests") {
+            testsRun += 1;
+            if (Number.isFinite(failed) && failed > 0) {
+              finalTestRunPassed = false;
+              failingTestEndSeen = true;
+            } else if (failed === 0) {
+              passingTestRuns += 1;
+              finalTestRunPassed = true;
+            } else {
+              finalTestRunPassed = null;
+            }
+          }
+          toolExecutionEndCount += 1;
         }
         if (event.type === "message_end" && event.message?.role === "assistant") {
           const message = event.message;
           assistantTurns += 1;
+          if (failingTestEndSeen) {
+            correctiveTurns += 1;
+            failingTestEndSeen = false;
+          }
+          const timestamp = message.timestamp;
+          if (
+            firstAssistantTimestampMs === null &&
+            typeof timestamp === "number" &&
+            Number.isFinite(timestamp) &&
+            timestamp >= startedAtMs
+          ) {
+            firstAssistantTimestampMs = timestamp;
+          }
           text = (message.content ?? [])
             .filter((block) => block.type === "text")
             .map((block) => block.text)
@@ -2218,6 +2410,7 @@ export function createPiRunner({
             rawUsage = message.usage;
             rawUsageTurns.push(message.usage);
             const turnUsage = normalizeUsage(message.usage);
+            usageTurns.push(turnUsage);
             for (const field of ["input", "output", "cacheWrite", "cacheRead"]) {
               if (typeof turnUsage[field] === "number") {
                 usageTotals[field] += turnUsage[field];
@@ -2232,11 +2425,15 @@ export function createPiRunner({
             // Turn alignment matters more than density: a missing usage
             // stays a null entry in the ordered per-turn record.
             rawUsageTurns.push(null);
+            usageTurns.push(null);
             for (const field of ["input", "output", "cacheWrite", "cacheRead"]) {
               usageComplete[field] = false;
             }
           }
         }
+      }
+      if (failingTestEndSeen) {
+        failedTestsWithoutCorrectiveTurn = true;
       }
       if (sawUsage) {
         usage = Object.fromEntries(
@@ -2251,6 +2448,37 @@ export function createPiRunner({
         // message comes from Pi's own error field, never from credentials.
         throw new Error(`Pi provider error: ${providerError.substring(0, 500)}`);
       }
+      const timeToFirstTokenMs =
+        firstAssistantTimestampMs === null ? null : firstAssistantTimestampMs - startedAtMs;
+      const toolDurationMs =
+        toolCalls.length === 0
+          ? null
+          : toolCalls.map((_call, index) => {
+              const id = toolCallIds[index];
+              if (id !== null && toolDurationsById.has(id)) return toolDurationsById.get(id);
+              return toolDurationsByIndex.get(index) ?? null;
+            });
+      const timing = {
+        timeToFirstTokenMs,
+        generationDurationMs: timeToFirstTokenMs === null ? null : elapsedMs - timeToFirstTokenMs,
+        totalElapsedMs: elapsedMs,
+      };
+      const toolMetrics = {
+        toolCalls: toolCallCount,
+        toolDurationMs,
+        retries: null,
+        rereads: readPaths.size === 0 ? null : rereads,
+        correctiveTurns,
+        failedTestsWithoutCorrectiveTurn: testsRun === 0 ? null : failedTestsWithoutCorrectiveTurn,
+      };
+      const sessionToolMetrics = {
+        testsRun,
+        passingTestRuns,
+        finalTestRunPassed,
+        failedTestsWithoutCorrectiveTurn: testsRun === 0 ? null : failedTestsWithoutCorrectiveTurn,
+        correctiveTurns,
+        rereads: readPaths.size === 0 ? null : rereads,
+      };
       return {
         text,
         toolCall,
@@ -2260,8 +2488,12 @@ export function createPiRunner({
         usage,
         rawUsage,
         rawUsageTurns,
+        usageTurns,
         costUsd,
         elapsedMs,
+        timing,
+        toolMetrics,
+        sessionToolMetrics,
       };
     } finally {
       // Best-effort cleanup: a locked file must not fail the finished call.
@@ -2270,10 +2502,25 @@ export function createPiRunner({
       } catch {
         // Leave the temp directory for the operating system to reap.
       }
+      if (workspaceDir !== null) {
+        try {
+          fs.rmSync(workspaceDir, { recursive: true, force: true });
+        } catch {
+          // Leave the temp directory for the operating system to reap.
+        }
+      }
     }
   }
+  const WORKSPACE_TOOLS = [
+    "workspace_read",
+    "workspace_write",
+    "workspace_run_tests",
+    "handoff_to_subagent",
+    "handoff_to_parent",
+  ];
   return {
     async execute({ mode, category }) {
+      const isWorkspaceCase = category.workspace !== undefined && category.workspace !== null;
       const args = [
         piBin,
         "--mode",
@@ -2282,21 +2529,27 @@ export function createPiRunner({
         "--no-skills",
         "--no-context-files",
         "--no-prompt-templates",
-        ...(category.expectsTool === true
-          ? ["--tools", "write_artifact"]
-          : ["--no-tools"]),
+        ...(isWorkspaceCase
+          ? ["--tools", WORKSPACE_TOOLS.join(",")]
+          : category.expectsTool === true
+            ? ["--tools", "write_artifact"]
+            : ["--no-tools"]),
         "-e",
         extensionPath,
         "-e",
-        toolExtensionPath,
+        isWorkspaceCase ? workspaceExtensionPath : toolExtensionPath,
         "--model",
         model,
         ...(thinkingLevel === undefined ? [] : ["--thinking", thinkingLevel]),
         "-p",
         category.prompt,
       ];
-      const session = await runPiSession({ mode, args });
-      if (session.text.length === 0 && session.toolCall === null) {
+      const session = await runPiSession({
+        mode,
+        args,
+        workspace: isWorkspaceCase ? category.workspace : null,
+      });
+      if (session.text.length === 0 && session.toolCallCount === 0) {
         throw new Error("pi runner produced no assistant text or tool call for the case.");
       }
       return { ...session, attempts: 1, systemPromptSent: null, sessionId: null };
@@ -2438,6 +2691,8 @@ async function main() {
             "CAVEMAN_EVAL_MAX_ATTEMPTS",
             process.env.CAVEMAN_EVAL_MAX_ATTEMPTS,
           ),
+          pairOrderStrategy: process.env.CAVEMAN_EVAL_PAIR_ORDER,
+          cacheCondition: process.env.CAVEMAN_EVAL_CACHE_CONDITION,
         });
 
   const serialized = JSON.stringify(report, null, 2) + "\n";

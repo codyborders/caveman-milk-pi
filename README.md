@@ -22,12 +22,12 @@ The compact generator replaces the former filtered-markdown injector. Measuremen
 
 | Mode | Former characters | Current characters | Former estimated tokens | Current estimated tokens |
 | --- | ---: | ---: | ---: | ---: |
-| `lite` | 4,276 | 663 | 1,069 | 166 |
-| `full` | 4,216 | 670 | 1,054 | 168 |
-| `ultra` | 4,213 | 707 | 1,054 | 177 |
-| `wenyan-lite` | 4,103 | 732 | 1,026 | 183 |
-| `wenyan` | 4,262 | 756 | 1,066 | 189 |
-| `wenyan-ultra` | 4,158 | 766 | 1,040 | 192 |
+| `lite` | 4,276 | 695 | 1,069 | 174 |
+| `full` | 4,216 | 702 | 1,054 | 176 |
+| `ultra` | 4,213 | 739 | 1,054 | 185 |
+| `wenyan-lite` | 4,103 | 764 | 1,026 | 191 |
+| `wenyan` | 4,262 | 788 | 1,066 | 197 |
+| `wenyan-ultra` | 4,158 | 798 | 1,040 | 200 |
 
 All active prompts remain below the 800-character limit. Exact token counts remain unreported until a provider count endpoint returns them.
 
@@ -146,7 +146,7 @@ The offline rescore command verifies locked paid-report and source-fixture hashe
 npm run rescore:offline
 ```
 
-Provider execution is disabled by default. It requires a key, a model name, and explicit paid-run authorization. Supported providers are `offline`, `anthropic`, and `pi`. Other names exit before any request.
+The evaluator disables provider execution by default. It requires a key, a model name, and explicit paid-run authorization. Supported providers are `offline`, `anthropic`, and `pi`. Other names exit before any request.
 
 Optional token accounting uses the provider count endpoint. Reports label counts as `not-run` unless that endpoint returns exact model values.
 
@@ -189,9 +189,11 @@ Each completed paid call is written to an incremental atomic checkpoint. Checkpo
 
 After a request failure, rerun the same command to resume completed calls. A provider success followed by local checkpoint failure can still require manual review.
 
-Reports contain paired raw results and aggregate statistics. Aggregates cover input tokens, cache writes, cache reads, output tokens, latency, quality scores, and provider cost. Cost appears only when `CAVEMAN_EVAL_PRICING` supplies a JSON pricing table. Example: `{"inputPerMTok":5,"outputPerMTok":25,"cacheWritePerMTok":6.25,"cacheReadPerMTok":0.5}`.
+Reports contain paired raw results and aggregate statistics. Aggregates cover input tokens, cache writes, cache reads, output tokens, latency, quality scores, and provider cost. Legacy non-gated runs can supply one flat `CAVEMAN_EVAL_PRICING` rate table.
 
-Every report records the Git commit, Pi version, Node version, platform, provider, model, fixture version, seed, run id, and execution order.
+Cost or release gates set `CAVEMAN_EVAL_GATE=cost` or `release`. These runs require a schema-versioned pricing table for every primary and judge model. Each model entry records the source, effective date, and four token rates. Missing or malformed gated pricing fails before plan or checkpoint creation. See `evaluation/results/benchmark-targeted-v3-run-plan.md` for the complete format.
+
+Every report records the Git commit, Pi version, Node version, platform, provider, model, fixture version, seed, run id, execution order, gate, and full pricing table.
 
 The evaluation never publishes a savings percentage. Publish claims only from committed raw reports.
 
@@ -201,9 +203,11 @@ The paid benchmark-regression-v2 report records prompt contract v2 results. Its 
 
 The corrected offline rescore uses validator v3 and makes zero provider calls. It is separate from paid results.
 
-The current prompt contract v3 has not been tested. The prepared targeted 60-call regression command remains unexecuted.
+The immutable targeted-v2 regression evaluated prompt contract v3 and failed. Its failure audit is in `evaluation/results/benchmark-targeted-v2-failure-audit.md`.
 
-The prepared fresh-v1 180-call holdout command also remains unexecuted. Fresh-v1 is the release gate after regression-v2 passes.
+Prompt contract v4 has no paid result. The prepared targeted-v3 60-process plan remains unexecuted and requires separate approval.
+
+The prepared fresh-v1 180-call holdout also remains unexecuted. It stays blocked until targeted-v3 passes every behavior, quality, cost, usage, and integrity gate.
 
 Mode `off` remains the default. Reported total tokens are usage, not cost. Provider-priced cost is calculated only when pricing values are known.
 

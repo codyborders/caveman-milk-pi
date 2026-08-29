@@ -11,6 +11,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const fixturePath = path.join(here, "evaluation-fixtures.json");
 const fixtureManifestPath = path.join(here, "..", "evaluation", "fixture-manifest.json");
 const contractPath = path.join(here, "..", "src", "prompt-contract.json");
+const liveValidatorVersion = "schema4-corrected-v4";
 
 function loadPromptContract() {
   const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"));
@@ -296,6 +297,15 @@ function computeCostUsd(usage, pricing) {
     (usage.cacheWrite / 1e6) * pricing.cacheWritePerMTok +
     (usage.cacheRead / 1e6) * pricing.cacheReadPerMTok;
   return Number(cost.toFixed(8));
+}
+
+// Explicit rates are the recorded cost. Provider-reported cost stays in its
+// own raw field, and an unpriced provider-reported zero never becomes a
+// costUsd total: zero means unknown here, not free.
+export function resolveCostUsd({ computedCostUsd, providerReportedCostUsd }) {
+  if (computedCostUsd !== null && computedCostUsd !== undefined) return computedCostUsd;
+  if (providerReportedCostUsd === null || providerReportedCostUsd === undefined) return null;
+  return providerReportedCostUsd > 0 ? providerReportedCostUsd : null;
 }
 
 function defaultExecGit() {
@@ -841,6 +851,125 @@ export async function runProviderEvaluation(options) {
   if (typeof fetchImpl !== "function") {
     throw new Error("Provider evaluation requires fetch support.");
   }
+  if ((options.gate === "cost" || options.gate === "release") && options.pricing == null) {
+    throw new Error(`CAVEMAN_EVAL_GATE=${options.gate} requires CAVEMAN_EVAL_PRICING with schemaVersion 1 and an entry for every primary and judge model before any paid process starts.`);
+  }
+  if (
+    options.gate !== "cost" &&
+    options.gate !== "release" &&
+    options.gate !== undefined &&
+    options.gate !== null
+  ) {
+    throw new Error(`CAVEMAN_EVAL_GATE must be 'cost' or 'release'; got '${options.gate}'.`);
+  }
+  if (
+    options.gate !== "cost" &&
+    options.gate !== "release" &&
+    options.pricing !== undefined &&
+    options.pricing !== null &&
+    typeof options.pricing === "object" &&
+    !Array.isArray(options.pricing) &&
+    (options.pricing.schemaVersion !== undefined || options.pricing.models !== undefined)
+  ) {
+    throw new Error(
+      "Structured CAVEMAN_EVAL_PRICING requires CAVEMAN_EVAL_GATE=cost or release.",
+    );
+  }
+  let gatePricing = null;
+  if (options.gate === "cost" || options.gate === "release") {
+    if (options.pricing.schemaVersion !== 1) {
+      throw new Error(`Structured CAVEMAN_EVAL_PRICING requires schemaVersion 1; got ${JSON.stringify(options.pricing.schemaVersion)}.`);
+    }
+    const rawModels = options.pricing.models;
+    if (typeof rawModels !== "object" || rawModels === null) {
+      throw new Error(
+        "Structured CAVEMAN_EVAL_PRICING requires a models table keyed by model name or a list of entries with a model field.",
+      );
+    }
+    const rawEntries = Array.isArray(rawModels)
+      ? rawModels.map((entry) => [undefined, entry])
+      : Object.entries(rawModels);
+    const models = {};
+    for (const [key, entry] of rawEntries) {
+      const modelName =
+        typeof key === "string" && key.length > 0
+          ? key
+          : entry && typeof entry.model === "string" && entry.model.length > 0
+            ? entry.model
+            : null;
+      if (modelName === null) {
+        throw new Error(
+          "Every CAVEMAN_EVAL_PRICING entry needs its model name through the table key or a model field.",
+        );
+      }
+      if (typeof key === "string" && typeof entry?.model === "string" && entry.model !== key) {
+        throw new Error(
+          `Pricing entry keyed '${key}' declares a conflicting model field '${entry.model}'.`,
+        );
+      }
+      models[modelName] = entry;
+    }
+    if (Object.keys(models).length === 0) {
+      throw new Error("Structured CAVEMAN_EVAL_PRICING has an empty models table.");
+    }
+    gatePricing = { schemaVersion: 1, models };
+    const requiredPricingModels = [
+      ...new Set(
+        options.judge === true
+          ? [options.model, options.judgeModel ?? options.model]
+          : [options.model],
+      ),
+    ];
+    const missingPricingModels = requiredPricingModels.filter(
+      (modelName) => models[modelName] === undefined,
+    );
+    if (missingPricingModels.length > 0) {
+      throw new Error(
+        `CAVEMAN_EVAL_PRICING is missing entries for required model(s): ${missingPricingModels.join(", ")}.`,
+      );
+    }
+    for (const [modelName, entry] of Object.entries(models)) {
+      if (typeof entry !== "object" || entry === null || Array.isArray(entry)) {
+        throw new Error(`Pricing entry for '${modelName}' must be an object.`);
+      }
+      if (typeof entry.source !== "string" || entry.source.trim().length === 0) {
+        throw new Error(`Pricing entry for '${modelName}' requires a nonempty source.`);
+      }
+      if (
+        typeof entry.effectiveDate !== "string" ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(entry.effectiveDate) ||
+        Number.isNaN(Date.parse(`${entry.effectiveDate}T00:00:00Z`)) ||
+        new Date(`${entry.effectiveDate}T00:00:00Z`).toISOString().substring(0, 10) !== entry.effectiveDate
+      ) {
+        throw new Error(
+          `Pricing entry for '${modelName}' requires effectiveDate as a valid YYYY-MM-DD date.`,
+        );
+      }
+      for (const field of [
+        "inputPerMTok",
+        "cacheWritePerMTok",
+        "cacheReadPerMTok",
+        "outputPerMTok",
+      ]) {
+        const value = entry[field];
+        if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+          throw new Error(
+            `Pricing entry for '${modelName}' field '${field}' must be a finite non-negative number.`,
+          );
+        }
+      }
+      if (
+        entry.inputPerMTok === 0 &&
+        entry.cacheWritePerMTok === 0 &&
+        entry.cacheReadPerMTok === 0 &&
+        entry.outputPerMTok === 0
+      ) {
+        throw new Error(
+          `Pricing entry for '${modelName}' is all zero; a gated run needs real rates or no run.`,
+        );
+      }
+    }
+  }
 
   const modes = selectNamedItems(fixtures.modes, modeSelection);
   const categories = selectNamedItems(fixtures.categories, categorySelection);
@@ -858,7 +987,15 @@ export async function runProviderEvaluation(options) {
     );
   }
   const repetitionCount = repetitions ?? 3;
-  const pricing = validatePricing(pricingOption);
+  const pricing = gatePricing !== null ? gatePricing : validatePricing(pricingOption);
+  // Explicit rates per model: structured tables key by model name, legacy
+  // flat pricing applies one rate set to every model.
+  const ratesFor = (candidateModel) =>
+    pricing === null
+      ? null
+      : pricing.models !== undefined
+        ? pricing.models[candidateModel] ?? null
+        : pricing;
   const seed = parseSeed(seedOption);
   const plan = buildPlan({ modes, categories, repetitions: repetitionCount, seed });
   const runnerKind = provider === "pi" ? "pi" : "direct";
@@ -892,6 +1029,9 @@ export async function runProviderEvaluation(options) {
     model,
     judge: judge === true,
     judgeModel: judge === true ? (judgeModel ?? model) : null,
+    gate: options.gate ?? null,
+    pricing,
+    validatorVersion: liveValidatorVersion,
     fixtureVersion: fixtures.version,
     fixtureSet: fixtures.fixtureSet,
     fixtureHash: fixtures.fixtureHash,
@@ -1123,10 +1263,13 @@ export async function runProviderEvaluation(options) {
     }
     const extracted = extractResponseText(payload, category.expectsTool === true);
     const usage = normalizeUsage(payload.usage);
-    const costUsd =
-      executionExtras.costUsd !== null && executionExtras.costUsd !== undefined
-        ? executionExtras.costUsd
-        : computeCostUsd(usage, pricing);
+    // Explicit rates own costUsd. Provider-reported cost stays separate, and
+    // an unpriced provider-reported zero never becomes a monetary total.
+    const providerReportedCostUsd = executionExtras.costUsd ?? null;
+    const costUsd = resolveCostUsd({
+      computedCostUsd: computeCostUsd(usage, ratesFor(model)),
+      providerReportedCostUsd,
+    });
     const resultToolCalls =
       executionExtras.toolCalls ?? (extracted.toolCall === null ? [] : [extracted.toolCall]);
     const toolCallCount =
@@ -1172,6 +1315,7 @@ export async function runProviderEvaluation(options) {
       toolCalls: resultToolCalls,
       compressionPolicy: isSchema4 ? category.compressionPolicy : undefined,
       costUsd,
+      providerReportedCostUsd,
       elapsedMs: executionExtras.elapsedMs,
       attempts: executionExtras.attempts,
       toolCall: extracted.toolCall,
@@ -1205,7 +1349,8 @@ export async function runProviderEvaluation(options) {
         // checked immediately before the process starts. Retries inside the
         // Pi process are not observable here and are never counted.
         reservePaidAttempt("judge");
-        return piRunner.executeJudge({ system, user, model: judgeModel });
+        const judgeOutcome = await piRunner.executeJudge({ system, user, model: judgeModel });
+        return { ...judgeOutcome, providerReportedCostUsd: judgeOutcome.costUsd ?? null };
       }
       const outcome = await requestJsonWithRetry({
         url: endpoint,
@@ -1234,7 +1379,8 @@ export async function runProviderEvaluation(options) {
         rawUsage: outcome.json.usage ?? null,
         rawUsageTurns: [outcome.json.usage ?? null],
         assistantTurns: 1,
-        costUsd: computeCostUsd(usage, pricing),
+        costUsd: computeCostUsd(usage, ratesFor(judgeModel ?? model)),
+        providerReportedCostUsd: null,
       };
     };
     const { promptText, rubricText } = loadJudgeMaterials();
@@ -1276,7 +1422,11 @@ export async function runProviderEvaluation(options) {
           rawUsage: outcome.rawUsage ?? null,
           rawUsageTurns: outcome.rawUsageTurns ?? [outcome.rawUsage ?? null],
           assistantTurns: outcome.assistantTurns ?? 1,
-          costUsd: outcome.costUsd ?? computeCostUsd(outcome.usage, pricing),
+          costUsd: resolveCostUsd({
+            computedCostUsd: computeCostUsd(outcome.usage, ratesFor(judgeModel ?? model)),
+            providerReportedCostUsd: outcome.providerReportedCostUsd ?? null,
+          }),
+          providerReportedCostUsd: outcome.providerReportedCostUsd ?? null,
         };
       } catch (error) {
         if (error instanceof PaidCallBudgetExceededError) {
@@ -1377,7 +1527,9 @@ export async function runProviderEvaluation(options) {
     model,
     tokenAccounting,
     judge: { enabled: judge === true, model: judge === true ? (judgeModel ?? model) : null, tolerance },
+    gate: options.gate ?? null,
     pricing,
+    validatorVersion: liveValidatorVersion,
     seed: formatSeed(seed),
     runId,
     runIdentity,
@@ -2219,6 +2371,10 @@ async function main() {
   const fixtures = loadFixtures(process.env.CAVEMAN_EVAL_FIXTURE_SET);
   const provider = process.env.CAVEMAN_EVAL_PROVIDER ?? "offline";
   validateProviderName(provider);
+  const gate = process.env.CAVEMAN_EVAL_GATE;
+  if (gate !== undefined && gate.length > 0 && gate !== "cost" && gate !== "release") {
+    throw new Error(`CAVEMAN_EVAL_GATE must be 'cost' or 'release'; got '${gate}'.`);
+  }
   const allowPaid = process.env.CAVEMAN_EVAL_ALLOW_PAID === "1";
   const maxPaidCalls = parseIntegerEnvironment(
     "CAVEMAN_EVAL_MAX_PAID_CALLS",
@@ -2250,6 +2406,7 @@ async function main() {
             "CAVEMAN_EVAL_PRICING",
             process.env.CAVEMAN_EVAL_PRICING,
           ),
+          gate: gate === undefined || gate.length === 0 ? undefined : gate,
           maxPaidCalls,
           baseSystemPromptOption: readBaseSystemPromptEnvironment(),
           checkpointPath: process.env.CAVEMAN_EVAL_CHECKPOINT,

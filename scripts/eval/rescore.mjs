@@ -96,6 +96,7 @@ export function rescoreStoredResult(result, category) {
     requiredTerms: category.requiredTerms ?? [],
     taskClass: correctedTaskClass(category),
     artifactText: validationText,
+    validatorVersion: VALIDATOR_VERSION,
   });
   const groups = {
     correctness: validation.groups.correctnessPass,

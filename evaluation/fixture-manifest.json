@@ -3,7 +3,8 @@
   "fixtureSets": {
     "pilot-v1": { "path": "scripts/evaluation-fixtures.json", "sha256": "226eab678eeb1021ae782138f4cdfd1dceb2a8ded681dd1f4c21387fa6287001", "role": "preserved-pilot-input" },
     "benchmark-regression-v2": { "path": "scripts/evaluation-fixtures-regression-v2.json", "sha256": "eec0f664fd4d94c653c532fda4b0293dba7b0b6471e6778489069a63c31fdfda", "role": "corrected-harness-regression" },
-    "fresh-v1": { "path": "scripts/evaluation-fixtures-fresh-v1.json", "sha256": "d961c987a01da8fe2280037489cca42e6c1f303fc06e9d570495dffde3818e3e", "role": "corrected-stratified-set" }
+    "fresh-v1": { "path": "scripts/evaluation-fixtures-fresh-v1.json", "sha256": "d961c987a01da8fe2280037489cca42e6c1f303fc06e9d570495dffde3818e3e", "role": "corrected-stratified-set" },
+    "benchmark-targeted-v3": { "path": "scripts/evaluation-fixtures-targeted-v3.json", "sha256": "063defefd41130e742020e80ed138a268cccfa55faa5754e9d911496f0707c9c", "role": "future-targeted-regression-input" }
   },
   "sourceFixtures": {
     "benchmark-regression-v2-paid": { "path": "evaluation/source-fixtures/benchmark-regression-v2.json", "sha256": "da6ff6b621fa512301c954cc94850ca7a1ff3873766302c97ad69ec1cd4d0adb", "role": "immutable-paid-run-input" }

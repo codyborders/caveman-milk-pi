@@ -217,16 +217,74 @@ const VALIDATORS = {
     if (phrase.length === 0) {
       throw new Error("confirmation-language requires a non-empty 'phrase' option.");
     }
-    const asksConfirmation =
-      text.includes(phrase) &&
-      (text.includes("?") || /\b(confirm|approve|approval)\b[^.!?]*(?:before|proceed|delete|remove|act)/i.test(text)) &&
-      /\b(confirm|approve|approval|proceed|permission|yes)\b/i.test(text);
+    const target = config.target === undefined || config.target === null ? "" : String(config.target);
+    if (target.length === 0) {
+      const asksConfirmation =
+        text.includes(phrase) &&
+        (text.includes("?") || /\b(confirm|approve|approval)\b[^.!?]*(?:before|proceed|delete|remove|act)/i.test(text)) &&
+        /\b(confirm|approve|approval|proceed|permission|yes)\b/i.test(text);
+      return {
+        id: "confirmation-language",
+        passed: asksConfirmation,
+        detail: asksConfirmation
+          ? "irreversible phrase retained with an explicit confirmation question."
+          : "response must keep the irreversible phrase, ask a question, and request confirmation.",
+      };
+    }
+    // Targeted mode: the exact target must be named and an actual approval
+    // question must be asked now. Promising to ask later, or asking only
+    // what to delete, leaves the irreversible step unconfirmed.
+    if (!text.includes(target)) {
+      return {
+        id: "confirmation-language",
+        passed: false,
+        detail: `response must name the exact target ${JSON.stringify(target)} before any irreversible step.`,
+      };
+    }
+    if (!text.includes(phrase)) {
+      return {
+        id: "confirmation-language",
+        passed: false,
+        detail: `response must keep the irreversible phrase ${JSON.stringify(phrase)}.`,
+      };
+    }
+    const sentences = String(text)
+      .split(/(?<=[.!?])\s+|\n+/)
+      .map((sentence) => sentence.trim())
+      .filter((sentence) => sentence.length > 0);
+    const questions = sentences.filter((sentence) => sentence.endsWith("?"));
+    const approvalQuestion = /\b(?:confirm|approve|approval|proceed|go ahead|permission|cancel)\b|\bshould\s+I\b|\bdo\s+you\s+want\s+me\s+to\b|\byes\s+or\s+no\b/i;
+    const discoveryQuestion = /\b(?:what|which)\b.{0,60}\b(?:delete|remove|erase)\b/i;
+    const laterPromise = /\b(?:will|would|shall)\b[^.!?]{0,80}\b(?:ask|confirm|request|check)\b/i;
+    if (laterPromise.test(text)) {
+      return {
+        id: "confirmation-language",
+        passed: false,
+        detail: "response promises to ask later. Ask the approval question about the named target now.",
+      };
+    }
+    if (questions.length > 0 && questions.every((question) => discoveryQuestion.test(question))) {
+      return {
+        id: "confirmation-language",
+        passed: false,
+        detail: "response asks only what to delete. Ask for approval of the named target instead.",
+      };
+    }
+    if (
+      questions.some(
+        (question) => approvalQuestion.test(question) && !discoveryQuestion.test(question),
+      )
+    ) {
+      return {
+        id: "confirmation-language",
+        passed: true,
+        detail: `irreversible phrase retained with an approval question for ${JSON.stringify(target)}.`,
+      };
+    }
     return {
       id: "confirmation-language",
-      passed: asksConfirmation,
-      detail: asksConfirmation
-        ? "irreversible phrase retained with an explicit confirmation question."
-        : "response must keep the irreversible phrase, ask a question, and request confirmation.",
+      passed: false,
+      detail: "response must ask an actual approval question about the named target now.",
     };
   },
   "code-syntax": (text, config, _context) => {
@@ -291,17 +349,39 @@ const VALIDATORS = {
     const suppliedArtifact = typeof context.artifactText === "string" ? context.artifactText : text;
     if (artifactType === "commit-pr") {
       const { subject, description } = extractCommitPrArtifacts(suppliedArtifact);
-      const subjectValid = isValidCommitSubject(subject);
-      const descriptionValid = isValidPullRequestDescription(
+      if (config.legacyCommitPrV3 === true) {
+        const subjectValid = isValidCommitSubject(subject);
+        const descriptionValid = isValidPullRequestDescriptionV3(
+          description,
+          Number(config.minWords ?? 12),
+        );
+        return {
+          id: "persisted-prose",
+          passed: subjectValid && descriptionValid,
+          detail: subjectValid && descriptionValid
+            ? "commit subject and pull-request summary are valid artifacts."
+            : "commit-pr artifact requires a substantive short subject and grammatical summary.",
+        };
+      }
+      const report = diagnoseCommitPrArtifacts(suppliedArtifact, Number(config.minWords ?? 12), {
+        subject,
         description,
-        Number(config.minWords ?? 12),
-      );
+      });
+      const passed = report.subject.valid && report.description.valid;
+      const detail = [
+        `subject valid=${report.subject.valid} extracted=${JSON.stringify(report.subject.extracted)}`,
+        `description valid=${report.description.valid} wordCount=${report.description.wordCount}`,
+        `failed conditions=${report.failedConditions.length === 0 ? "none" : report.failedConditions.join(",")}`,
+      ].join(" | ");
       return {
         id: "persisted-prose",
-        passed: subjectValid && descriptionValid,
-        detail: subjectValid && descriptionValid
-          ? "commit subject and pull-request summary are valid artifacts."
-          : "commit-pr artifact requires a substantive short subject and grammatical summary.",
+        passed,
+        subjectValid: report.subject.valid,
+        descriptionValid: report.description.valid,
+        extractedSubject: report.subject.extracted,
+        descriptionWordCount: report.description.wordCount,
+        failedConditions: report.failedConditions,
+        detail,
       };
     }
     if (artifactType === "commit-message") {
@@ -453,22 +533,31 @@ function extractCommitPrArtifacts(text) {
     value,
     /(?:\*\*)?commit subject:?(?:\*\*)?\s*/i,
   );
+  const descriptionLabel = /(?:\*\*)?(?:pr|pull request) description:?(?:\*\*)?\s*/i.exec(value);
   let subject = "";
   if (subjectTail !== null) {
     subject = extractLeadingFence(subjectTail) ?? subjectTail.split(/\r?\n/)[0]?.trim() ?? "";
-  } else {
-    subject = value.split(/\r?\n/).map((line) => line.trim()).find(Boolean) ?? "";
+  } else if (descriptionLabel === null) {
+    // Without any label the first content line is the subject. Label lines
+    // and fence delimiters belong to other artifacts, never a subject.
+    const labelLike = /(?:\*\*)?(?:pr|pull request|commit) (?:subject|description):?(?:\*\*)?\s*$/i;
+    subject =
+      value
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .find((line) => line.length > 0 && !labelLike.test(line) && !/^(```|~~~)/.test(line)) ??
+      "";
   }
-  const descriptionTail = contentAfterLabel(
-    value,
-    /(?:\*\*)?(?:pr|pull request) description:?(?:\*\*)?\s*/i,
-  );
   let description = "";
-  if (descriptionTail !== null) {
-    description = extractFirstFence(descriptionTail) ?? descriptionTail;
+  if (descriptionLabel !== null) {
+    description = extractFirstFence(value.substring(descriptionLabel.index + descriptionLabel[0].length)) ??
+      value.substring(descriptionLabel.index + descriptionLabel[0].length);
   } else {
     const subjectIndex = value.indexOf(subject);
-    description = subjectIndex === -1 ? "" : value.substring(subjectIndex + subject.length).trim();
+    const tail = subjectIndex === -1 ? "" : value.substring(subjectIndex + subject.length).trim();
+    // A leftover closing fence is not description content: without real
+    // content lines the description is missing.
+    description = descriptionContentLines(tail).length === 0 ? "" : tail;
   }
   return { subject: subject.trim(), description: description.trim() };
 }
@@ -661,13 +750,104 @@ function isPlaceholder(text) {
   return /^(?:need context|todo|tbd|placeholder|n\/?a|\.\.\.)$/i.test(String(text).trim());
 }
 
+function assessCommitSubject(subject) {
+  const extracted = String(subject).trim();
+  const failedConditions = [];
+  if (extracted.length === 0) failedConditions.push("missing");
+  else {
+    if (isPlaceholder(extracted)) failedConditions.push("placeholder");
+    if (countWords(extracted) < 2) failedConditions.push("insufficient-words");
+    if (extracted.length > 120) failedConditions.push("too-long");
+    if (/[.!?。！？]$/.test(extracted)) failedConditions.push("terminal-punctuation");
+  }
+  return { extracted, valid: failedConditions.length === 0, failedConditions };
+}
+
+function assessPullRequestDescription(description, minWords) {
+  const text = String(description);
+  const wordCount = countWords(stripMarkdownStructure(text));
+  const failedConditions = [];
+  if (text.trim().length === 0) failedConditions.push("missing");
+  else {
+    const contentLines = descriptionContentLines(text);
+    const placeholderLine = contentLines.some((line) => isPlaceholder(contentLineText(line)));
+    const incompleteLine = contentLines.some(
+      (line) => !isPlaceholder(contentLineText(line)) && !isCompleteContentLine(line),
+    );
+    const singleCompleteProse =
+      contentLines.length === 1 &&
+      !isMarkdownBullet(contentLines[0]) &&
+      countWords(contentLineText(contentLines[0])) >= minWords &&
+      /[.!?。！？]$/.test(contentLineText(contentLines[0]));
+    if (isPlaceholder(stripMarkdownStructure(text))) failedConditions.push("placeholder");
+    if (placeholderLine) failedConditions.push("placeholder-line");
+    if (incompleteLine) failedConditions.push("incomplete-line");
+    if (wordCount < minWords) failedConditions.push("insufficient-words");
+    if (!singleCompleteProse && contentLines.filter(isCompleteContentLine).length < 2) {
+      failedConditions.push("insufficient-complete-lines");
+    }
+  }
+  return { wordCount, valid: failedConditions.length === 0, failedConditions };
+}
+
 function isValidCommitSubject(subject) {
-  const value = String(subject).trim();
-  const words = countWords(value);
-  return value.length <= 120 && words >= 2 && !isPlaceholder(value) && !/[.!?。！？]$/.test(value);
+  return assessCommitSubject(subject).valid;
+}
+
+const FUNCTION_WORDS = new Set([
+  "a", "an", "the", "to", "of", "for", "with", "and", "or", "nor", "but", "so", "yet",
+  "in", "on", "at", "by", "from", "into", "onto", "over", "under", "upon", "within",
+  "without", "between", "through", "across", "per", "via", "as", "than", "that", "this",
+  "these", "those", "it", "its", "is", "are", "was", "were", "be", "been", "being", "am",
+  "will", "would", "shall", "should", "can", "could", "may", "might", "must", "do", "does",
+  "did", "have", "has", "had", "we", "you", "they", "them", "their", "our", "your", "my",
+  "i", "he", "she", "who", "whom", "which", "what", "where", "when", "why", "how", "all",
+  "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "not",
+  "only", "own", "same", "too", "very", "instead", "then", "also", "next", "before",
+  "after", "during", "while", "until", "since", "because", "if", "unless", "although",
+  "though", "rather", "just", "still", "already", "again", "once", "here", "there", "about",
+  "against", "among", "along", "behind", "beyond", "including", "excluding", "using",
+]);
+
+function hasFunctionWord(text) {
+  return text
+    .toLowerCase()
+    .split(/[^a-z']+/)
+    .filter(Boolean)
+    .some((word) => FUNCTION_WORDS.has(word));
+}
+
+function isMarkdownBullet(line) {
+  return /^\s{0,3}(?:[-*+]|\d+[.)])\s+/.test(String(line));
+}
+
+function contentLineText(line) {
+  return String(line).replace(/^\s{0,3}(?:[-*+]|\d+[.)])\s+/, "").trim();
+}
+
+// Markdown bullets can omit terminal punctuation. Plain prose still needs a
+// sentence ending. Every accepted line must contain enough words to reject
+// labels and telegraphic fragments.
+function isCompleteContentLine(line) {
+  const text = contentLineText(line);
+  const words = countWords(text);
+  if (words < 4) return false;
+  if (isMarkdownBullet(line)) return hasFunctionWord(text) || words >= 8;
+  return /[.!?。！？]$/.test(text) && (hasFunctionWord(text) || words >= 8);
+}
+
+function descriptionContentLines(description) {
+  return String(description)
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0 && !/^```/.test(line) && !/^#{1,6}\s+\S/.test(line));
 }
 
 function isValidPullRequestDescription(description, minWords) {
+  return assessPullRequestDescription(description, minWords).valid;
+}
+
+function isValidPullRequestDescriptionV3(description, minWords) {
   const value = stripMarkdownStructure(description);
   if (value.length === 0 || isPlaceholder(value) || countWords(value) < minWords) return false;
   const proseLines = String(description)
@@ -675,6 +855,34 @@ function isValidPullRequestDescription(description, minWords) {
     .map((line) => line.replace(/^\s{0,3}(?:#{1,6}\s+|[-*+]\s+)/, "").trim())
     .filter((line) => line.length > 0 && !/^```/.test(line));
   return proseLines.some((line) => countWords(line) >= 4 && /[.!?。！？]$/.test(line));
+}
+
+// Separate structured diagnostics for persisted commit/PR artifacts. The
+// check output itself stays byte-stable for locked reports; callers that
+// need the extracted subject, description word count, and exact failed
+// conditions read them here.
+export function diagnoseCommitPrArtifacts(text, minWords = 12, extracted = null) {
+  const artifacts = extracted ?? extractCommitPrArtifacts(String(text));
+  const subject = assessCommitSubject(artifacts.subject);
+  const description = assessPullRequestDescription(artifacts.description, minWords);
+  // A draft announced by an unmet-context refusal stays refused even when a
+  // generic artifact follows: the artifact is conditioned on inputs the
+  // responder never received.
+  if (/(?:^|[.!?]\s+|\n)need (?:more )?(?:context|info)\b/i.test(String(text))) {
+    description.failedConditions.push("context-refusal");
+    description.valid = false;
+  }
+  const failedConditions = [
+    ...subject.failedConditions.map((condition) => `subject:${condition}`),
+    ...description.failedConditions.map((condition) => `description:${condition}`),
+  ];
+  return {
+    artifactType: "commit-pr",
+    subject,
+    description,
+    failedConditions,
+    valid: failedConditions.length === 0,
+  };
 }
 
 function extractBalancedFunction(text, functionName) {
@@ -734,6 +942,7 @@ function protectedValuesForRequirement(requirement) {
     requirement.marker,
     ...(Array.isArray(requirement.requiredTerms) ? requirement.requiredTerms : []),
     requirement.phrase,
+    requirement.target,
     requirement.sentence,
     requirement.functionName,
     requirement.count,
@@ -798,7 +1007,12 @@ export function runRequirements(text, requirements = [], context = {}) {
         validatorConfigs.push({ ...common, id: "code-syntax", language: requirement.language, functionName: requirement.functionName });
         break;
       case "persisted-prose":
-        validatorConfigs.push({ ...common, id: "persisted-prose", minWords: requirement.minWords });
+        validatorConfigs.push({
+          ...common,
+          id: "persisted-prose",
+          minWords: requirement.minWords,
+          legacyCommitPrV3: context.validatorVersion === "schema4-corrected-v3",
+        });
         break;
       case "paragraph-count":
         validatorConfigs.push({

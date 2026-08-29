@@ -36,11 +36,13 @@ describe("computeInjection determinism", () => {
 });
 
 describe("computeInjection compact rules", () => {
-  it("keeps explicit constraints, exact phrases, negation, and confirmation rules", () => {
+  it("keeps explicit constraints, exact phrases, negation, and approval rules", () => {
     expect(promptContract.commonRules).toContain("Explicit output constraints outrank brevity.");
-    expect(promptContract.commonRules).toContain("Requested exact phrases stay verbatim; negation stays intact.");
-    expect(promptContract.commonRules).toContain("When an action requires confirmation, ask a direct question and wait for approval.");
-    expect(promptContract.commonRules).toContain("prefer replacement over repetition");
+    expect(promptContract.commonRules).toContain("Preserve exact phrases and negation.");
+    expect(promptContract.commonRules).toContain("Write actual approval questions now. Never promise to ask later.");
+    expect(promptContract.commonRules).toContain("Draft usable requested artifacts before asking for context.");
+    expect(promptContract.commonRules).toContain("Host authorization controls actions. Add no policy.");
+    expect(promptContract.commonRules).toContain("Remove filler and repetition");
   });
 
   it("off mode produces empty text", () => {
@@ -51,6 +53,23 @@ describe("computeInjection compact rules", () => {
 
   it("keeps every active mode below 800 characters", () => {
     for (const mode of VALID_MODES.filter((item) => item !== "off")) {
+      expect(computeInjection(mode).text.length, `mode=${mode}`).toBeLessThanOrEqual(800);
+    }
+  });
+
+  it("uses exact v4 injection lengths with off at zero", () => {
+    expect(promptContract.version).toBe(4);
+    expect(computeInjection("off").text).toBe("");
+    const lengths = {
+      lite: 695,
+      full: 702,
+      ultra: 739,
+      "wenyan-lite": 764,
+      wenyan: 788,
+      "wenyan-ultra": 798,
+    } as const;
+    for (const mode of VALID_MODES.filter((item) => item !== "off")) {
+      expect(computeInjection(mode).text.length, `mode=${mode}`).toBe(lengths[mode]);
       expect(computeInjection(mode).text.length, `mode=${mode}`).toBeLessThanOrEqual(800);
     }
   });
@@ -84,8 +103,9 @@ describe("computeInjection compact rules", () => {
   it("keeps document and persisted-content rules in every active mode", () => {
     for (const mode of VALID_MODES.filter((item) => item !== "off")) {
       const text = computeInjection(mode).text;
-      expect(text, `mode=${mode}`).toContain("Protect file bodies, requested artifacts");
-      expect(text, `mode=${mode}`).toContain("Use complete prose for security warnings");
+      expect(text, `mode=${mode}`).toContain("Protect code, files, paths, commands, commits, PRs");
+      expect(text, `mode=${mode}`).toContain("persisted artifacts");
+      expect(text, `mode=${mode}`).toContain("Use complete prose for protected artifacts");
     }
   });
 

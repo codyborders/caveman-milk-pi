@@ -42,6 +42,8 @@ function paidOptionsFromEnvironment() {
   if (typeof model !== "string" || model.length === 0) {
     throw new Error("Paid shared-prefix v12 evaluation requires CAVEMAN_EVAL_MODEL.");
   }
+  const thinking = process.env.CAVEMAN_EVAL_THINKING ?? "medium";
+  const judgeThinking = process.env.CAVEMAN_EVAL_JUDGE_THINKING ?? "medium";
   const judgeEnabled = process.env.CAVEMAN_EVAL_JUDGE === "1";
   let judgeModel = null;
   if (judgeEnabled) {
@@ -52,14 +54,19 @@ function paidOptionsFromEnvironment() {
       );
     }
   }
-  return { allowPaid, maxPaidProcesses, model, judgeEnabled, judgeModel };
+  return { allowPaid, maxPaidProcesses, model, thinking, judgeEnabled, judgeModel, judgeThinking };
 }
 
 // Deterministic identical-source judge: both texts come from finalizer arms
 // over the same locked canonical bytes. The verdict feeds the critical-loss
 // and unsupported-claim gates; usage stays outside primary metrics.
-function createJudgeImpl({ judgeModel, piBin, timeoutMs }) {
-  const judgeLaunch = createDefaultLaunchNode({ model: judgeModel, piBin, timeoutMs });
+function createJudgeImpl({ judgeModel, judgeThinking, piBin, timeoutMs }) {
+  const judgeLaunch = createDefaultLaunchNode({
+    model: judgeModel,
+    thinking: judgeThinking,
+    piBin,
+    timeoutMs,
+  });
   return async function judgeImpl({ taskPrompt, offText, candidateText, requiredFacts }) {
     const prompt = [
       "Compare two final answers produced from identical source context.",
@@ -118,6 +125,7 @@ async function main() {
     provider === "pi" && paid.allowPaid === true
       ? createDefaultLaunchNode({
           model: paid.model,
+          thinking: paid.thinking,
           piBin: process.env.CAVEMAN_EVAL_PI_BIN,
           timeoutMs,
         })
@@ -126,6 +134,7 @@ async function main() {
     provider === "pi" && paid.judgeEnabled === true
       ? createJudgeImpl({
           judgeModel: paid.judgeModel,
+          judgeThinking: paid.judgeThinking,
           piBin: process.env.CAVEMAN_EVAL_PI_BIN,
           timeoutMs,
         })

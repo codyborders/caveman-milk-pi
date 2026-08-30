@@ -99,17 +99,23 @@ function defaultSpawn(args, options) {
 
 export function createDefaultLaunchNode({
   model,
+  thinking = "medium",
   piBin,
   timeoutMs = 300000,
   spawnImpl = defaultSpawn,
   cwd = root,
   baseEnv = process.env,
+  nowImpl = Date.now,
 }) {
   if (typeof model !== "string" || model.length === 0) {
     throw new Error("The default launch node requires a model.");
   }
+  if (typeof thinking !== "string" || thinking.length === 0) {
+    throw new Error("The default launch node requires a thinking mode.");
+  }
   const resolvedPiBin = piBin ?? DEFAULT_PI_BIN;
   return async function launchNode(request) {
+    const startedAtMs = nowImpl();
     const args = [
       resolvedPiBin,
       "--mode",
@@ -124,6 +130,8 @@ export function createDefaultLaunchNode({
         : []),
       "--model",
       model,
+      "--thinking",
+      thinking,
       "-p",
       request.prompt,
     ];
@@ -182,6 +190,7 @@ export function createDefaultLaunchNode({
         usageComplete[field] ? total : null,
       ]),
     );
-    return { text, usage, usageTurns, rawEvents };
+    const elapsedMs = nowImpl() - startedAtMs;
+    return { text, usage, usageTurns, rawEvents, elapsedMs };
   };
 }

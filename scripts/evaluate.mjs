@@ -6,11 +6,13 @@ import os from "node:os";
 import path from "node:path";
 import { execFileSync, spawn as nodeSpawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { firstTurnCacheReads } from "./eval/selective-final-v11.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fixturePath = path.join(here, "evaluation-fixtures.json");
 const fixtureManifestPath = path.join(here, "..", "evaluation", "fixture-manifest.json");
 const contractPath = path.join(here, "..", "src", "prompt-contract.json");
+const finalResponseContractPath = path.join(here, "..", "src", "final-response-contract.json");
 const liveValidatorVersion = "schema5-task-success-v14";
 
 function loadPromptContract() {
@@ -36,6 +38,7 @@ function createRuntimePrompts(modes, contract) {
       if (mode === "off") return [mode, ""];
       const modeRule = contract.modeRules[mode];
       if (typeof modeRule !== "string") {
+        if (mode === "selective-final-v11") return [mode, ""];
         throw new Error(`Prompt contract has no rule for mode '${mode}'.`);
       }
       const label = mode === "wenyan" ? "wenyan-full" : mode;
@@ -1005,6 +1008,7 @@ export async function runProviderEvaluation(options) {
     }
   }
   const isSchema4 = fixtures.fixtureSet !== undefined && fixtures.fixtureSet !== "pilot-v1";
+  const isSelectiveFinal = fixtures.fixtureSet === "fresh-v4";
   // Preflight guard: invalid schema-4 requirement shapes must reject before
   // the plan is built, before any checkpoint exists, and before paid traffic.
   if (isSchema4) {
@@ -1059,7 +1063,9 @@ export async function runProviderEvaluation(options) {
     categories.filter((category) => category.nested === true).map((category) => category.id),
   );
   const plannedNestedCalls = plan.filter((call) => nestedCategoryIds.has(call.category)).length;
-  const plannedProviderCalls = plan.length + plannedNestedCalls;
+  const plannedProviderCalls = isSelectiveFinal
+    ? plan.length * 2 + plannedNestedCalls
+    : plan.length + plannedNestedCalls;
   const plannedJudgeCalls =
     judge === true ? activeModes.length * categories.length * repetitionCount : 0;
   const plannedCountCalls =
@@ -1206,6 +1212,7 @@ export async function runProviderEvaluation(options) {
           timeoutMs,
           nowImpl,
           cachePromptStrategy,
+          selectiveFinal: isSelectiveFinal,
         })
       : null;
 
@@ -1225,7 +1232,12 @@ export async function runProviderEvaluation(options) {
       // before the process starts. Retries inside the Pi process are not
       // observable here and are never claimed as counted attempts.
       try {
-        reservePaidAttempt("provider");
+        const reservedProcessCount = isSelectiveFinal
+          ? 2 + (category.nested === true ? 1 : 0)
+          : 1;
+        for (let processIndex = 0; processIndex < reservedProcessCount; processIndex += 1) {
+          reservePaidAttempt("provider");
+        }
       } catch (error) {
         checkpoint.recordFailure(
           call.key,
@@ -1268,6 +1280,9 @@ export async function runProviderEvaluation(options) {
         usageTurns: piOutcome.usageTurns,
         sessionToolMetrics: piOutcome.sessionToolMetrics,
         nested: piOutcome.nested ?? null,
+        baseResponse: piOutcome.baseResponse ?? null,
+        baseElapsedMs: piOutcome.baseElapsedMs ?? null,
+        finalizer: piOutcome.finalizer ?? null,
       };
     } else {
       const systemBlocks = buildSystemBlocks(baseSystemPrompt, cavemanText);
@@ -1452,6 +1467,9 @@ export async function runProviderEvaluation(options) {
       },
       sessionToolMetrics: executionExtras.sessionToolMetrics ?? null,
       nested: executionExtras.nested ?? null,
+      baseResponse: executionExtras.baseResponse ?? null,
+      baseElapsedMs: executionExtras.baseElapsedMs ?? null,
+      finalizer: executionExtras.finalizer ?? null,
       cacheCondition: {
         label: cacheCondition,
         promptCacheEligible: true,
@@ -1613,10 +1631,15 @@ export async function runProviderEvaluation(options) {
       else if (pair.active === undefined) pair.active = result;
       byPair.set(key, pair);
     }
-    const cacheReadsFor = (result) => [
-      result.usage?.cacheRead,
-      ...(result.nested?.children ?? []).map((child) => child.usage?.cacheRead),
-    ];
+    const cacheReadsFor = (result) => isSelectiveFinal
+      ? firstTurnCacheReads(result)
+      : [
+          result.usage?.cacheRead,
+          ...(result.nested?.children ?? []).map((child) => child.usage?.cacheRead),
+          ...(result.finalizer === null || result.finalizer === undefined
+            ? []
+            : [result.finalizer.usage?.cacheRead]),
+        ];
     const cacheState = (result) => {
       const reads = cacheReadsFor(result);
       if (reads.length === 0 || reads.some((value) => !Number.isFinite(value))) return "mixed";
@@ -1741,14 +1764,20 @@ export async function runProviderEvaluation(options) {
     (sum, result) => sum + (result.resumed === true ? 0 : (result.nested?.childCount ?? 0)),
     0,
   );
-  const actualProviderCalls = attemptState.provider + childProviderCalls;
-  const actualPaidCalls = paidAttempts() + childProviderCalls;
+  const actualProviderCalls = isSelectiveFinal
+    ? attemptState.provider
+    : attemptState.provider + childProviderCalls;
+  const actualPaidCalls = isSelectiveFinal
+    ? paidAttempts()
+    : paidAttempts() + childProviderCalls;
   const invocationParentProviderCalls = attemptState.provider - invocationStart.provider;
-  const invocationProviderCalls = invocationParentProviderCalls + invocationChildProviderCalls;
+  const invocationProviderCalls = isSelectiveFinal
+    ? invocationParentProviderCalls
+    : invocationParentProviderCalls + invocationChildProviderCalls;
   const invocationPaidCalls =
     paidAttempts() -
     (invocationStart.provider + invocationStart.judge + invocationStart.countEndpoint) +
-    invocationChildProviderCalls;
+    (isSelectiveFinal ? 0 : invocationChildProviderCalls);
 
   return {
     schemaVersion: isSchema4 ? 4 : 3,
@@ -1778,30 +1807,50 @@ export async function runProviderEvaluation(options) {
       cap: maxPaidCalls ?? null,
       planned: {
         provider: plannedProviderCalls,
-        ...(plannedNestedCalls === 0
-          ? {}
-          : { parentProvider: plan.length, childProvider: plannedNestedCalls }),
+        ...(isSelectiveFinal
+          ? {
+              baseParentProvider: plan.length,
+              finalizerProvider: plan.length,
+              childProvider: plannedNestedCalls,
+            }
+          : plannedNestedCalls === 0
+            ? {}
+            : { parentProvider: plan.length, childProvider: plannedNestedCalls }),
         judge: plannedJudgeCalls,
         countEndpoint: plannedCountCalls,
         total: plannedPaidCalls,
       },
       actual: {
         provider: actualProviderCalls,
-        ...(plannedNestedCalls === 0
-          ? {}
-          : { parentProvider: attemptState.provider, childProvider: childProviderCalls }),
+        ...(isSelectiveFinal
+          ? {
+              baseParentProvider: results.length,
+              finalizerProvider: results.filter((result) => result.finalizer !== null).length,
+              childProvider: childProviderCalls,
+            }
+          : plannedNestedCalls === 0
+            ? {}
+            : { parentProvider: attemptState.provider, childProvider: childProviderCalls }),
         judge: attemptState.judge,
         countEndpoint: attemptState.countEndpoint,
         total: actualPaidCalls,
       },
       invocation: {
         provider: invocationProviderCalls,
-        ...(plannedNestedCalls === 0
-          ? {}
-          : {
-              parentProvider: invocationParentProviderCalls,
+        ...(isSelectiveFinal
+          ? {
+              baseParentProvider: results.filter((result) => result.resumed !== true).length,
+              finalizerProvider: results.filter(
+                (result) => result.resumed !== true && result.finalizer !== null,
+              ).length,
               childProvider: invocationChildProviderCalls,
-            }),
+            }
+          : plannedNestedCalls === 0
+            ? {}
+            : {
+                parentProvider: invocationParentProviderCalls,
+                childProvider: invocationChildProviderCalls,
+              }),
         judge: attemptState.judge - invocationStart.judge,
         countEndpoint: attemptState.countEndpoint - invocationStart.countEndpoint,
         total: invocationPaidCalls,
@@ -2371,6 +2420,8 @@ export function createPiRunner({
   workspaceExtensionPath = path.resolve(here, "eval", "pi-eval-workspace.ts"),
   cacheControlExtensionPath = path.resolve(here, "eval", "pi-eval-cache-control.ts"),
   nestedExtensionPath = path.resolve(here, "eval", "pi-eval-nested.ts"),
+  finalResponseExtensionPath = path.resolve(here, "eval", "pi-eval-final-response.ts"),
+  selectiveFinal = false,
   cachePromptStrategy = "observed",
   model,
   thinkingLevel,
@@ -2380,6 +2431,16 @@ export function createPiRunner({
   mkdtempImpl = (prefix) => fs.mkdtempSync(path.join(os.tmpdir(), prefix)),
   baseEnv = process.env,
 }) {
+  const finalResponseContract = selectiveFinal
+    ? JSON.parse(fs.readFileSync(finalResponseContractPath, "utf8"))
+    : null;
+  if (
+    finalResponseContract !== null &&
+    (typeof finalResponseContract.text !== "string" ||
+      finalResponseContract.text.length !== finalResponseContract.characters)
+  ) {
+    throw new Error("Selective-final prompt contract metadata is invalid.");
+  }
   // Shared single-turn Pi session: isolated config directory holding the
   // requested mode, exactly one spawned process, documented JSON event
   // parsing, and best-effort directory removal in a finally block. A
@@ -2389,7 +2450,14 @@ export function createPiRunner({
   // response); time to first token and generation duration are derived from
   // child-reported assistant message timestamps and stay null when the
   // child reports none.
-  async function runPiSession({ mode, args, workspace = null, cacheNonce = null, nested = null }) {
+  async function runPiSession({
+    mode,
+    args,
+    workspace = null,
+    cacheNonce = null,
+    nested = null,
+    extraEnv = {},
+  }) {
     const configDir = mkdtempImpl("caveman-pi-config-");
     fs.writeFileSync(
       path.join(configDir, "caveman-milk-pi.json"),
@@ -2412,6 +2480,7 @@ export function createPiRunner({
           CAVEMAN_MILK_CONFIG_DIR: configDir,
           ...(workspaceDir === null ? {} : { CAVEMAN_EVAL_WORKSPACE_DIR: workspaceDir }),
           ...(cacheNonce === null ? {} : { CAVEMAN_EVAL_CACHE_NONCE: cacheNonce }),
+          ...extraEnv,
           ...(nested === null
             ? {}
             : {
@@ -2432,6 +2501,7 @@ export function createPiRunner({
                 ...(nested.cacheNonce === null
                   ? {}
                   : { CAVEMAN_EVAL_NESTED_CACHE_NONCE: nested.cacheNonce }),
+                CAVEMAN_EVAL_NESTED_CACHE_STRATEGY: nested.cachePromptStrategy,
               }),
         },
         timeout: timeoutMs,
@@ -2522,6 +2592,7 @@ export function createPiRunner({
           const details = event.result?.details ?? {};
           nestedChildren.push({
             nodeId: details.nodeId ?? null,
+            mode: nested?.mode ?? null,
             parentId: details.parentId ?? "root",
             task: details.task ?? null,
             responseText:
@@ -2709,6 +2780,7 @@ export function createPiRunner({
         toolMetrics,
         sessionToolMetrics,
         nested: nestedRecord,
+        rawEvents: rawParentLines,
       };
     } finally {
       // Best-effort cleanup: a locked file must not fail the finished call.
@@ -2733,8 +2805,7 @@ export function createPiRunner({
     "handoff_to_subagent",
     "handoff_to_parent",
   ];
-  return {
-    async execute({ mode, category, repetition }) {
+  async function executeBase({ mode, category, repetition, cacheArm = mode }) {
       const isWorkspaceCase = category.workspace !== undefined && category.workspace !== null;
       const isNestedCase = category.nested === true;
       if (isNestedCase && !isWorkspaceCase) {
@@ -2743,7 +2814,7 @@ export function createPiRunner({
         );
       }
       const cacheNonce = cachePromptStrategy === "unique-arm"
-        ? crypto.createHash("sha256").update(`${category.id}|${repetition}|${mode}`).digest("hex").substring(0, 16)
+        ? crypto.createHash("sha256").update(`${category.id}|${repetition}|${cacheArm}`).digest("hex").substring(0, 16)
         : cachePromptStrategy === "shared"
           ? "shared-warm-v1"
           : null;
@@ -2755,6 +2826,12 @@ export function createPiRunner({
         "--no-skills",
         "--no-context-files",
         "--no-prompt-templates",
+        ...(cachePromptStrategy !== "unique-arm" || cacheNonce === null
+          ? []
+          : [
+              "--system-prompt",
+              `You are a coding assistant. Complete the user task. Cache-Control-ID:${cacheNonce}. Ignore the cache identifier.`,
+            ]),
         ...(isWorkspaceCase
           ? [
               "--tools",
@@ -2793,6 +2870,7 @@ export function createPiRunner({
               workspaceExtensionPath,
               cacheControlExtensionPath,
               cacheNonce,
+              cachePromptStrategy,
             }
           : null,
       });
@@ -2800,6 +2878,97 @@ export function createPiRunner({
         throw new Error("pi runner produced no assistant text or tool call for the case.");
       }
       return { ...session, attempts: 1, systemPromptSent: null, sessionId: null };
+  }
+
+  async function executeSelectiveFinal({ mode, category, repetition }) {
+    if (mode !== "off" && mode !== "selective-final-v11") {
+      throw new Error(`Unsupported selective-final arm '${mode}'.`);
+    }
+    const base = await executeBase({ mode: "off", category, repetition, cacheArm: mode });
+    const cacheNonce = cachePromptStrategy === "unique-arm"
+      ? crypto.createHash("sha256").update(`${category.id}|${repetition}|${mode}|final`).digest("hex").substring(0, 16)
+      : cachePromptStrategy === "shared"
+        ? "shared-warm-final-v1"
+        : null;
+    const finalizerPrompt = [
+      "Produce the final user-facing response for the original task.",
+      "Preserve every fact, warning, uncertainty, negation, exact value, path, command, ordered step, and unfinished item in the complete draft.",
+      "Do not perform more work. Do not claim new completion.",
+      `Original task:\n${category.prompt}`,
+      `Complete draft:\n${base.text}`,
+    ].join("\n\n");
+    const args = [
+      piBin,
+      "--mode",
+      "json",
+      "--no-extensions",
+      "--no-skills",
+      "--no-context-files",
+      "--no-prompt-templates",
+      ...(cachePromptStrategy !== "unique-arm" || cacheNonce === null
+        ? []
+        : [
+            "--system-prompt",
+            `Return the requested final response. Cache-Control-ID:${cacheNonce}. Ignore the cache identifier.`,
+          ]),
+      "--no-tools",
+      "-e",
+      finalResponseExtensionPath,
+      ...(cacheNonce === null ? [] : ["-e", cacheControlExtensionPath]),
+      "--model",
+      model,
+      ...(thinkingLevel === undefined ? [] : ["--thinking", thinkingLevel]),
+      "-p",
+      finalizerPrompt,
+    ];
+    const finalizer = await runPiSession({
+      mode: "off",
+      args,
+      cacheNonce,
+      extraEnv: { CAVEMAN_EVAL_FINAL_ARM: mode },
+    });
+    if (finalizer.text.length === 0) {
+      throw new Error("selective-final finalizer produced no assistant text.");
+    }
+    const elapsedMs = base.elapsedMs + finalizer.elapsedMs;
+    return {
+      ...base,
+      text: finalizer.text,
+      baseResponse: base.text,
+      baseElapsedMs: base.elapsedMs,
+      elapsedMs,
+      timing: {
+        timeToFirstTokenMs:
+          typeof finalizer.timing.timeToFirstTokenMs === "number"
+            ? base.elapsedMs + finalizer.timing.timeToFirstTokenMs
+            : null,
+        generationDurationMs: finalizer.timing.generationDurationMs,
+        totalElapsedMs: elapsedMs,
+      },
+      finalizer: {
+        mode: "off",
+        arm: mode,
+        nodeId: "finalizer",
+        parentId: "root",
+        injectedCandidateNodes: mode === "selective-final-v11" ? 1 : 0,
+        injectedPromptCharacters:
+          mode === "selective-final-v11" ? finalResponseContract.characters : 0,
+        tools: [],
+        text: finalizer.text,
+        usage: finalizer.usage,
+        rawUsage: finalizer.rawUsage,
+        rawUsageTurns: finalizer.rawUsageTurns,
+        usageTurns: finalizer.usageTurns,
+        elapsedMs: finalizer.elapsedMs,
+        timing: finalizer.timing,
+        rawEvents: finalizer.rawEvents,
+      },
+    };
+  }
+
+  return {
+    async execute(input) {
+      return selectiveFinal ? executeSelectiveFinal(input) : executeBase(input);
     },
     // Blinded judge session: system prompt is the committed judge prompt
     // plus rubric, user content is the blinded task and responses only, the

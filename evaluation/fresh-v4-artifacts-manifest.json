@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "fixtureFrozenBeforeTrials": true,
+  "trialStatus": "complete-negative",
+  "modelCalls": 778,
+  "artifacts": [
+    {
+      "path": "scripts/evaluation-fixtures-fresh-v4.json",
+      "sha256": "34a051015ef549043f96731047ab5d8dc64160a81ee770a26c5d11ffd0266907",
+      "role": "frozen-holdout"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-preflight-v0.json",
+      "sha256": "3ec6f335932427166f0ddbdd5c3aebb9e19f4f510f16b4848575ead326551985",
+      "role": "preserved-invalid-preflight",
+      "status": "excluded-total-cache-read-classification"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-preflight-v1.json",
+      "sha256": "ab288373184aceb727c20d617129fc40e491727d9883efb9e7aa285adad4a698",
+      "role": "preserved-invalid-preflight",
+      "status": "excluded-static-system-cache-reuse"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-preflight.json",
+      "sha256": "d6965d7c52c72616628c975186513ba4032021e02e1f75ce5fbf722d9ea6a758",
+      "role": "controlled-preflight",
+      "status": "complete"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+      "sha256": "9e267111b52a3ab23641cbe27442735cbb28ec119977080e42e547d468e622ef",
+      "role": "controlled-cold-run",
+      "status": "complete"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-warmup-shared-v0.json",
+      "sha256": "333a7221af718c2dc22cb0f23baa68464440b7a064f40df0c1a6bfe56b8e1da5",
+      "role": "preserved-invalid-warmup",
+      "status": "excluded-short-system-prompt-cache-control"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-warmup-shared-v1.json",
+      "sha256": "bcb4de82239b8980254d1c1af5b358e4046e444612b44f169e8e6608a59c3e4e",
+      "role": "controlled-warmup",
+      "status": "complete"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+      "sha256": "9534b653864e969c4c57699b919faeb1936ff8d2e6067eaef7330dcd914295e5",
+      "role": "controlled-warm-run",
+      "status": "complete"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-analysis-v1.json",
+      "sha256": "f5f33c80be11512b2cf81dfb38117a2ddb12c7283e15651aaee52917f91d03a7",
+      "role": "derived-analysis",
+      "status": "complete"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-analysis-v1.md",
+      "sha256": "c8d270d31a36fe6e5355369d7de263b050de37eb22f2d26fa5936a5919a0d09d",
+      "role": "derived-analysis-prose",
+      "status": "complete"
+    }
+  ]
+}

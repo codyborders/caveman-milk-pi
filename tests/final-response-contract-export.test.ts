@@ -1,0 +1,1 @@
+import { expect, it } from "vitest"; import { FINAL_RESPONSE_CONTRACT_V11 } from "../index.js"; it("exports final contract text", () => { expect(typeof FINAL_RESPONSE_CONTRACT_V11).toBe("string"); });

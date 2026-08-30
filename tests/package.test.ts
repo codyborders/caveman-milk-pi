@@ -47,6 +47,8 @@ describe("fork release metadata", () => {
         "skill/SKILL.md",
         "src/command.ts",
         "src/config.ts",
+        "src/final-response-contract.json",
+        "src/final-response-contract.ts",
         "src/injection.ts",
         "src/prompt-contract.json",
         "src/types.ts",

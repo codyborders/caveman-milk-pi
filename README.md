@@ -70,6 +70,22 @@ Wenyan modes affect Chinese input only. English prompts remain English.
 
 Technical terms, commands, identifiers, quoted errors, and persisted content keep their appropriate original language.
 
+## Experimental final-response activation
+
+Use explicit one-response activation only while the persisted mode is `off`:
+
+```text
+/caveman final <request>
+```
+
+The command applies prompt contract v11 to exactly one final user-facing prose response. It does not change the saved mode.
+
+The extension disables tools for that response. It restores the exact prior tool list after completion or session shutdown. A send failure also restores tools. Overlapping activations are rejected.
+
+Safety warnings, confirmations, uncertainty, negation, scope, exact values, ordered steps, and unfinished work remain complete. Code, commands, paths, filenames, quotations, logs, commit text, PR text, documentation, files, and persisted artifacts remain unchanged.
+
+This explicit command avoids guessing whether a model request targets the user, a child agent, or a persisted artifact. Normal requests and child-agent handoffs receive no v11 injection.
+
 ## Status and diagnostics
 
 The footer shows `caveman: <mode>` by default.
@@ -139,6 +155,10 @@ Repeated calls within one mode return identical text. A mode change intentionall
 The repository includes preserved pilot-v1 inputs plus named benchmark-regression-v2 and fresh-v1 fixture sets. New sets use schema 4 structured `requirements[]` as the single source for hard checks and protected content.
 
 The `fresh-v2` set serves as the locked development regression input for contract checks. The `fresh-v3` set adds direct and nested categories. Nested categories run a parent Pi process that calls the `delegate_eval_child` tool. That tool spawns a real child Pi process with the same model, thinking level, caveman mode, repository extension, isolated config, and shared workspace. Reports retain node identifiers, per-node usage, complete-tree totals, raw parent events, and child events through the tool result. The `nested-delegation` requirement fails any incomplete tree.
+
+Selective-final v11 uses fresh-v4 as a frozen holdout. Each arm runs its normal parent and real mode-off children first, then a separate tools-disabled finalizer. Only selective-final-v11 injects its versioned candidate into that finalizer. Off injects zero candidate bytes. Complete-tree usage counts base, every child, and finalizer once. Primary metrics require cache eligibility for every node in both arms. Analysis uses 20,000 deterministic paired bootstrap samples and keeps mixed or incomplete pairs outside primary metrics.
+
+Fresh-v4 completed as a negative evaluation. Total tokens, end-to-end latency, nested task success, and information preservation all failed their release gates. Mode `off` remains the default. Selective-final v11 is not approved or recommended.
 
 Reports carry a `cacheVerification` block. It classifies every off-versus-lite pair as both-zero, both-positive, or mixed. A labeled cold or warm condition only counts when observed cache reads prove it on every pair. Mixed pairs stay in raw results. The deterministic `scripts/eval/fresh-v3-analysis.mjs` reads the controlled runs, verifies eligibility, pairs total tree tokens with root, first-token, and generation latency, and splits user-facing from inter-agent preservation. Its four conjunctive gates keep the default mode `off` unless every gate passes.
 

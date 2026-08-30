@@ -16,6 +16,10 @@ export interface CommandDeps {
   // Locked, concurrent-safe update: reloads latest config, applies exactly
   // one field-level change, saves atomically, releases its own lock.
   update: (mutator: (config: CavemanConfig) => CavemanConfig) => Promise<CavemanConfig>;
+  // Arms a one-response /caveman final activation: captures active tools,
+  // empties them, and sends exactly one user message.
+  armFinal: (request: string) => "started" | "busy" | "failed";
+  getFinalState: () => "idle" | "active";
 }
 
 export function registerCavemanCommand(pi: ExtensionAPI, deps: CommandDeps): void {
@@ -29,10 +33,56 @@ export function registerCavemanCommand(pi: ExtensionAPI, deps: CommandDeps): voi
         const current = deps.getCache();
         const mode = current?.mode ?? "off";
         const showStatus = deps.loadConfig().showStatus;
+        const finalState = deps.getFinalState();
         ctx.ui.notify(
-          `caveman: ${mode} (statusbar: ${showStatus ? "on" : "off"}). ` +
+          `caveman: ${mode} (statusbar: ${showStatus ? "on" : "off"}, final response: ${finalState}). ` +
             `Run /caveman <mode> to change. Valid: ${VALID_MODES.join(", ")}. ` +
             `Statusbar: /caveman status on|off. Diagnostic: /caveman diff`,
+          "info",
+        );
+        return;
+      }
+
+      // Experimental one-response activation. Requires a non-empty request;
+      // the bare form prints usage without arming anything.
+      if (trimmed === "final" || trimmed.startsWith("final ")) {
+        const finalRequest = trimmed.substring("final".length).trim();
+        if (!ctx.isIdle()) {
+          ctx.ui.notify(
+            "caveman: wait for the current response before using /caveman final.",
+            "warning",
+          );
+          return;
+        }
+        if (deps.loadConfig().mode !== "off") {
+          ctx.ui.notify(
+            "caveman: /caveman final requires mode off. Run /caveman off first.",
+            "warning",
+          );
+          return;
+        }
+        if (finalRequest.length === 0) {
+          ctx.ui.notify(
+            "caveman: /caveman final requires a request. Usage: /caveman final <request> " +
+              "— applies terse final-prose rules to exactly one response with tools disabled " +
+              "for that response. Requires mode off.",
+            "warning",
+          );
+          return;
+        }
+        const activation = deps.armFinal(finalRequest);
+        if (activation !== "started") {
+          ctx.ui.notify(
+            activation === "busy"
+              ? "caveman: a final response is already active."
+              : "caveman: final response could not start. The prior tool list was restored.",
+            "warning",
+          );
+          return;
+        }
+        ctx.ui.notify(
+          "caveman: final response sent. One response runs with tools disabled; " +
+            "the prior tool list is restored afterwards.",
           "info",
         );
         return;

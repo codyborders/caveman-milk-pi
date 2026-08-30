@@ -27,6 +27,8 @@ function createHarness(initialConfig: CavemanConfig) {
     },
     loadConfig: () => config,
     update,
+    armFinal: vi.fn(() => "started" as const),
+    getFinalState: vi.fn(() => "idle" as const),
   });
 
   return {

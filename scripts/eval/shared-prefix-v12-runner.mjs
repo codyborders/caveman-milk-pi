@@ -1066,6 +1066,182 @@ function assertCanonicalHash(lockedCapture, expectedHash) {
 // Structural offline report: fixture shape, arm definitions, contract
 // footprint, and the paid planning envelope. No process launches, no model
 // calls, and gates stay closed with zero claims.
+function analysisPreflight(report, index) {
+  const version = Number(report?.version);
+  const effectiveVersion = version === 12 && Number.isInteger(index) ? index + 1 : version;
+  const notes = {
+    1: "v1 preflight was invalid due a relative Pi launcher.",
+    2: "v2 was invalid because finalizers retained tools.",
+    3: "v3 was valid preflight only.",
+  };
+  if (!(effectiveVersion in notes)) throw new Error(`Unsupported preflight version: ${String(report?.version)}.`);
+  return { version: effectiveVersion, report: `shared-prefix-v12-preflight-v${effectiveVersion}.json`, valid: effectiveVersion === 3, passed: report.passed === true, defaultMode: report.defaultMode ?? "off", exclusions: Array.isArray(report.exclusions) ? report.exclusions.length : null, note: notes[effectiveVersion] };
+}
+
+export function buildSharedPrefixV12FinalAnalysis(report, preflightReports = []) {
+  if (report === null || typeof report !== "object") throw new Error("Final raw report must be an object.");
+  const contractOverheadRecords = report.eligibleGroup?.contractOverhead ?? [];
+  const contractOverheadValues = [...new Set(contractOverheadRecords.map(
+    (record) => record.exactContractOverheadTokens,
+  ))];
+  if (
+    contractOverheadRecords.length === 0 ||
+    contractOverheadRecords.some((record) => record.contextMatched !== true) ||
+    contractOverheadValues.length !== 1 ||
+    !Number.isInteger(contractOverheadValues[0])
+  ) {
+    throw new Error("Final report has inconsistent provider-reported contract overhead.");
+  }
+  return {
+    schemaVersion: "shared-prefix-v12-analysis/1",
+    sourceReport: "shared-prefix-v12-final-v1.json",
+    final: {
+      status: "final v1",
+      validWarmPairs: report.eligibleGroup?.tokenInterval?.n ?? 0,
+      exclusions: Array.isArray(report.exclusions) ? report.exclusions.length : 0,
+    },
+    unsupportedClaims: { count: report.unsupportedClaims ?? 0 },
+    cache: {
+      exclusionCount: Array.isArray(report.exclusions) ? report.exclusions.length : 0,
+      exclusions: report.exclusions ?? [],
+      measuredFirstTurnReads: (report.attempts ?? []).map((record) => ({
+        taskId: record.taskId,
+        arm: record.arm,
+        nodeId: record.nodeId,
+        firstTurnCacheReadTokens: record.firstTurnCacheReadTokens,
+      })),
+      supportFirstTurnReads: (report.supportAttempts ?? []).map((record) => ({
+        taskId: record.taskId,
+        arm: record.arm,
+        nodeId: record.nodeId,
+        firstTurnCacheReadTokens: record.firstTurnCacheReadTokens,
+      })),
+    },
+    processAccounting: report.paidProcessAccounting,
+    gates: report.gates,
+    eligible: {
+      completeProduct: {
+        pairedIntervals: {
+          tokens: report.eligibleGroup.tokenInterval,
+          latency: report.eligibleGroup.latencyInterval,
+        },
+      },
+      isolatedSharedPrefix: {
+        pairedIntervals: {
+          tokens: report.isolatedFinalizerComparison?.tokenInterval ?? null,
+          outputTokens: report.isolatedFinalizerComparison?.outputTokenInterval ?? null,
+          latency: report.isolatedFinalizerComparison?.latencyInterval ?? null,
+        },
+      },
+      taskSuccess: {
+        normalOffPassed: report.eligibleGroup.offSuccessCount,
+        candidatePassed: report.eligibleGroup.candidateSuccessCount,
+        taskCount: report.eligibleGroup.taskCount,
+      },
+      criticalFinalizerLosses: report.eligibleGroup.criticalFinalizerLosses,
+      contractOverhead: {
+        exactTokens: contractOverheadValues[0],
+        records: contractOverheadRecords,
+      },
+    },
+    protected: { bypass: report.protectedGroup },
+    mode: { default: report.defaultMode, passed: report.passed === true, rule: "Every failed gate keeps mode off." },
+    preflights: preflightReports.map(analysisPreflight).sort((a, b) => a.version - b.version),
+  };
+}
+
+export function renderSharedPrefixV12FinalAnalysisMarkdown(analysis) {
+  const signed = (value) => `${value >= 0 ? "+" : ""}${value.toFixed(1)}`;
+  const intervalRow = (label, interval) =>
+    `| ${label} | ${interval.n} | ${signed(interval.mean)} | ${signed(interval.upperBound)} |`;
+  const complete = analysis.eligible.completeProduct.pairedIntervals;
+  const isolated = analysis.eligible.isolatedSharedPrefix.pairedIntervals;
+  const bypass = analysis.protected.bypass;
+  const actual = analysis.processAccounting.actual;
+  const gates = Object.entries(analysis.gates ?? {})
+    .map(([name, passed]) => `| ${name} | ${passed ? "PASS" : "FAIL"} |`)
+    .join("\n");
+  const preflights = (analysis.preflights ?? []).map((entry) => `- ${entry.note}`).join("\n");
+  return [
+    "# Shared-prefix v12 final analysis",
+    "",
+    `Source report: \`${analysis.sourceReport}\``,
+    "",
+    `Final v1 contains ${analysis.final.validWarmPairs} valid warm pairs and ${analysis.final.exclusions} exclusions.`,
+    `The default mode remains \`${analysis.mode.default}\`. Every failed gate keeps mode off.`,
+    "",
+    "## Preflights",
+    "",
+    preflights,
+    "",
+    "## Eligible group",
+    "",
+    "Complete-product results compare normal off with the routed candidate. They include the extra finalizer request.",
+    "",
+    "Isolated results compare both finalizers from one locked source context. Only the candidate contract differs.",
+    "",
+    "| Comparison | Pairs | Mean delta | Upper 95% |",
+    "| --- | ---: | ---: | ---: |",
+    intervalRow("Complete-product tokens", complete.tokens),
+    intervalRow("Complete-product latency ms", complete.latency),
+    intervalRow("Isolated finalizer tokens", isolated.tokens),
+    intervalRow("Isolated output tokens", isolated.outputTokens),
+    intervalRow("Isolated finalizer latency ms", isolated.latency),
+    "",
+    `The minimal candidate contract adds exactly ${analysis.eligible.contractOverhead.exactTokens} provider-reported tokens under matched context.`,
+    "",
+    "| Eligible outcome | Count |",
+    "| --- | ---: |",
+    `| Tasks | ${analysis.eligible.taskSuccess.taskCount} |`,
+    `| Normal-off tasks passed | ${analysis.eligible.taskSuccess.normalOffPassed} |`,
+    `| Candidate tasks passed | ${analysis.eligible.taskSuccess.candidatePassed} |`,
+    `| Critical candidate losses | ${analysis.eligible.criticalFinalizerLosses} |`,
+    `| Unsupported candidate claims | ${analysis.unsupportedClaims.count} |`,
+    `| Cache exclusions | ${analysis.cache.exclusionCount} |`,
+    "",
+    "The isolated finalizer comparison improves tokens and latency. The complete product still adds substantial tokens and latency.",
+    "Task success does not pass the strict gate. One critical loss and two unsupported claims also keep release blocked.",
+    "",
+    "## Protected group",
+    "",
+    "Protected tasks bypass candidate prompt construction and every extra finalizer call.",
+    "Routed candidate responses reuse the normal-off response bytes.",
+    "",
+    "| Protected outcome | Value |",
+    "| --- | ---: |",
+    `| Tasks | ${bypass.taskCount} |`,
+    `| Candidate injections | ${bypass.candidateInjectionCount} |`,
+    `| Candidate prompt tokens | ${bypass.providerCandidatePromptTokens} |`,
+    `| Extra finalizer calls | ${bypass.extraFinalizerCallsIncludingSetup} |`,
+    `| Response hashes match | ${bypass.responseHashEqualsNormalOff ? "yes" : "no"} |`,
+    `| Task success matches | ${bypass.successEqual ? "yes" : "no"} |`,
+    `| Protected content complete | ${bypass.contentComplete ? "yes" : "no"} |`,
+    "",
+    "Routing works, but protected content is incomplete in the normal-off outputs. That gate fails.",
+    "",
+    "## Process accounting",
+    "",
+    "| Process group | Count |",
+    "| --- | ---: |",
+    `| Planned total | ${analysis.processAccounting.plannedTotal} |`,
+    `| Base | ${actual.base} |`,
+    `| Finalizer | ${actual.finalizer} |`,
+    `| Judge | ${actual.judge} |`,
+    `| Overrun | ${analysis.processAccounting.overrun ? "yes" : "no"} |`,
+    "",
+    "Judge usage remains outside primary token and latency totals.",
+    "",
+    "## Release gates",
+    "",
+    "| Gate | Outcome |",
+    "| --- | --- |",
+    gates,
+    "",
+    "Final decision: keep mode `off`. Do not enable or release shared-prefix v12.",
+    "",
+  ].join("\n");
+}
+
 export function createSharedPrefixV12OfflineReport(fixtures = loadSharedPrefixV12Fixtures()) {
   const normalized = normalizeFixtures(fixtures);
   const eligibleTasks = normalized.tasks.filter(

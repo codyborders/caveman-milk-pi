@@ -1,0 +1,1179 @@
+{
+  "schemaVersion": "shared-prefix-v12-analysis/1",
+  "sourceReport": "shared-prefix-v12-final-v1.json",
+  "final": {
+    "status": "final v1",
+    "validWarmPairs": 35,
+    "exclusions": 0
+  },
+  "unsupportedClaims": {
+    "count": 2
+  },
+  "cache": {
+    "exclusionCount": 0,
+    "exclusions": [],
+    "measuredFirstTurnReads": [
+      {
+        "taskId": "eligible-technical-explanation",
+        "arm": "base",
+        "nodeId": "child-1"
+      },
+      {
+        "taskId": "eligible-technical-explanation",
+        "arm": "base",
+        "nodeId": "child-2"
+      },
+      {
+        "taskId": "eligible-technical-explanation",
+        "arm": "base",
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "eligible-comparison",
+        "arm": "base",
+        "nodeId": "child-1"
+      },
+      {
+        "taskId": "eligible-comparison",
+        "arm": "base",
+        "nodeId": "child-2"
+      },
+      {
+        "taskId": "eligible-comparison",
+        "arm": "base",
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "protected-command",
+        "arm": "base",
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "arm": "base",
+        "nodeId": "child-1"
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "arm": "base",
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "arm": "base",
+        "nodeId": "child-1"
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "arm": "base",
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "arm": "base",
+        "nodeId": "child-1"
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "arm": "base",
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "protected-agent-handoff",
+        "arm": "base",
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "protected-path",
+        "arm": "base",
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "protected-warning",
+        "arm": "base",
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "protected-persisted-artifact",
+        "arm": "base",
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "protected-ordered-procedure",
+        "arm": "base",
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "arm": "base",
+        "nodeId": "child-1"
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "arm": "base",
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "protected-confirmation",
+        "arm": "base",
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "arm": "base",
+        "nodeId": "child-1"
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "arm": "base",
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "eligible-technical-explanation",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep1"
+      },
+      {
+        "taskId": "eligible-technical-explanation",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep1"
+      },
+      {
+        "taskId": "eligible-technical-explanation",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep2"
+      },
+      {
+        "taskId": "eligible-technical-explanation",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep2"
+      },
+      {
+        "taskId": "eligible-technical-explanation",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep3"
+      },
+      {
+        "taskId": "eligible-technical-explanation",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep3"
+      },
+      {
+        "taskId": "eligible-technical-explanation",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep4"
+      },
+      {
+        "taskId": "eligible-technical-explanation",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep4"
+      },
+      {
+        "taskId": "eligible-technical-explanation",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep5"
+      },
+      {
+        "taskId": "eligible-technical-explanation",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep5"
+      },
+      {
+        "taskId": "eligible-comparison",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep1"
+      },
+      {
+        "taskId": "eligible-comparison",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep1"
+      },
+      {
+        "taskId": "eligible-comparison",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep2"
+      },
+      {
+        "taskId": "eligible-comparison",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep2"
+      },
+      {
+        "taskId": "eligible-comparison",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep3"
+      },
+      {
+        "taskId": "eligible-comparison",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep3"
+      },
+      {
+        "taskId": "eligible-comparison",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep4"
+      },
+      {
+        "taskId": "eligible-comparison",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep4"
+      },
+      {
+        "taskId": "eligible-comparison",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep5"
+      },
+      {
+        "taskId": "eligible-comparison",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep5"
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep1"
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep1"
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep2"
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep2"
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep3"
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep3"
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep4"
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep4"
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep5"
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep5"
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep1"
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep1"
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep2"
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep2"
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep3"
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep3"
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep4"
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep4"
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep5"
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep5"
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep1"
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep1"
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep2"
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep2"
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep3"
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep3"
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep4"
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep4"
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep5"
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep5"
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep1"
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep1"
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep2"
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep2"
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep3"
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep3"
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep4"
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep4"
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep5"
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep5"
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep1"
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep1"
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep2"
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep2"
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep3"
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep3"
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep4"
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep4"
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-rep5"
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-rep5"
+      }
+    ],
+    "supportFirstTurnReads": [
+      {
+        "taskId": "eligible-technical-explanation",
+        "arm": null,
+        "nodeId": "child-1"
+      },
+      {
+        "taskId": "eligible-technical-explanation",
+        "arm": null,
+        "nodeId": "child-2"
+      },
+      {
+        "taskId": "eligible-technical-explanation",
+        "arm": null,
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "eligible-comparison",
+        "arm": null,
+        "nodeId": "child-1"
+      },
+      {
+        "taskId": "eligible-comparison",
+        "arm": null,
+        "nodeId": "child-2"
+      },
+      {
+        "taskId": "eligible-comparison",
+        "arm": null,
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "protected-command",
+        "arm": null,
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "arm": null,
+        "nodeId": "child-1"
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "arm": null,
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "arm": null,
+        "nodeId": "child-1"
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "arm": null,
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "arm": null,
+        "nodeId": "child-1"
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "arm": null,
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "protected-agent-handoff",
+        "arm": null,
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "protected-path",
+        "arm": null,
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "protected-warning",
+        "arm": null,
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "protected-persisted-artifact",
+        "arm": null,
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "protected-ordered-procedure",
+        "arm": null,
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "arm": null,
+        "nodeId": "child-1"
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "arm": null,
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "protected-confirmation",
+        "arm": null,
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "arm": null,
+        "nodeId": "child-1"
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "arm": null,
+        "nodeId": "parent"
+      },
+      {
+        "taskId": "eligible-technical-explanation",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-warm"
+      },
+      {
+        "taskId": "eligible-technical-explanation",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-warm"
+      },
+      {
+        "taskId": "eligible-comparison",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-warm"
+      },
+      {
+        "taskId": "eligible-comparison",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-warm"
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-warm"
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-warm"
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-warm"
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-warm"
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-warm"
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-warm"
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-warm"
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-warm"
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "arm": "shared-prefix-off",
+        "nodeId": "finalizer-shared-prefix-off-warm"
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "arm": "shared-prefix-candidate",
+        "nodeId": "finalizer-shared-prefix-candidate-warm"
+      }
+    ]
+  },
+  "processAccounting": {
+    "cap": 165,
+    "planned": {
+      "base": 46,
+      "finalizer": 84,
+      "judge": 35
+    },
+    "plannedTotal": 165,
+    "actual": {
+      "base": 46,
+      "finalizer": 84,
+      "judge": 35
+    },
+    "overrun": false
+  },
+  "gates": {
+    "completeProductTokens": false,
+    "completeProductLatency": false,
+    "taskSuccessNonInferior": false,
+    "zeroCriticalFinalizerLosses": false,
+    "zeroUnsupportedClaims": false,
+    "protectedInjectionZero": true,
+    "protectedSuccessEqual": true,
+    "protectedContentComplete": false,
+    "protectedNoExtraFinalizerWork": true
+  },
+  "eligible": {
+    "completeProduct": {
+      "pairedIntervals": {
+        "tokens": {
+          "n": 35,
+          "mean": 108341.8,
+          "standardError": 9680.786615965953,
+          "tCritical": 1.69092425518686,
+          "confidence": 0.95,
+          "upperBound": 124711.27689822516
+        },
+        "latency": {
+          "n": 35,
+          "mean": 6456.8,
+          "standardError": 453.97407988792054,
+          "tCritical": 1.69092425518686,
+          "confidence": 0.95,
+          "upperBound": 7224.435782908622
+        }
+      }
+    },
+    "isolatedSharedPrefix": {
+      "pairedIntervals": {
+        "tokens": {
+          "n": 35,
+          "mean": -169.82857142857142,
+          "standardError": 35.94219181492671,
+          "tCritical": 1.69092425518686,
+          "confidence": 0.95,
+          "upperBound": -109.05304750413322
+        },
+        "outputTokens": {
+          "n": 35,
+          "mean": -202.82857142857142,
+          "standardError": 35.94219181492671,
+          "tCritical": 1.69092425518686,
+          "confidence": 0.95,
+          "upperBound": -142.05304750413322
+        },
+        "latency": {
+          "n": 35,
+          "mean": -1631.1714285714286,
+          "standardError": 471.8101232624891,
+          "tCritical": 1.69092425518686,
+          "confidence": 0.95,
+          "upperBound": -833.3762473041836
+        }
+      }
+    },
+    "taskSuccess": {
+      "normalOffPassed": 4,
+      "candidatePassed": 5,
+      "taskCount": 7
+    },
+    "criticalFinalizerLosses": 1,
+    "contractOverhead": {
+      "exactTokens": 33,
+      "records": [
+        {
+          "taskId": "eligible-technical-explanation",
+          "repetition": 1,
+          "canonicalHash": "a130ca52331eccec3e9497ebd82d080872dde5deed93c116bcbd99f1fb9f7ebf",
+          "contextMatched": true,
+          "offProcessedInputTokens": 80931,
+          "candidateProcessedInputTokens": 80964,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-technical-explanation",
+          "repetition": 2,
+          "canonicalHash": "a130ca52331eccec3e9497ebd82d080872dde5deed93c116bcbd99f1fb9f7ebf",
+          "contextMatched": true,
+          "offProcessedInputTokens": 80931,
+          "candidateProcessedInputTokens": 80964,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-technical-explanation",
+          "repetition": 3,
+          "canonicalHash": "a130ca52331eccec3e9497ebd82d080872dde5deed93c116bcbd99f1fb9f7ebf",
+          "contextMatched": true,
+          "offProcessedInputTokens": 80931,
+          "candidateProcessedInputTokens": 80964,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-technical-explanation",
+          "repetition": 4,
+          "canonicalHash": "a130ca52331eccec3e9497ebd82d080872dde5deed93c116bcbd99f1fb9f7ebf",
+          "contextMatched": true,
+          "offProcessedInputTokens": 80931,
+          "candidateProcessedInputTokens": 80964,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-technical-explanation",
+          "repetition": 5,
+          "canonicalHash": "a130ca52331eccec3e9497ebd82d080872dde5deed93c116bcbd99f1fb9f7ebf",
+          "contextMatched": true,
+          "offProcessedInputTokens": 80931,
+          "candidateProcessedInputTokens": 80964,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-comparison",
+          "repetition": 1,
+          "canonicalHash": "0e1f9211bb45b0fa89599350290e5164c79a3108c112f50d2f5daae881fd1413",
+          "contextMatched": true,
+          "offProcessedInputTokens": 167923,
+          "candidateProcessedInputTokens": 167956,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-comparison",
+          "repetition": 2,
+          "canonicalHash": "0e1f9211bb45b0fa89599350290e5164c79a3108c112f50d2f5daae881fd1413",
+          "contextMatched": true,
+          "offProcessedInputTokens": 167923,
+          "candidateProcessedInputTokens": 167956,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-comparison",
+          "repetition": 3,
+          "canonicalHash": "0e1f9211bb45b0fa89599350290e5164c79a3108c112f50d2f5daae881fd1413",
+          "contextMatched": true,
+          "offProcessedInputTokens": 167923,
+          "candidateProcessedInputTokens": 167956,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-comparison",
+          "repetition": 4,
+          "canonicalHash": "0e1f9211bb45b0fa89599350290e5164c79a3108c112f50d2f5daae881fd1413",
+          "contextMatched": true,
+          "offProcessedInputTokens": 167923,
+          "candidateProcessedInputTokens": 167956,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-comparison",
+          "repetition": 5,
+          "canonicalHash": "0e1f9211bb45b0fa89599350290e5164c79a3108c112f50d2f5daae881fd1413",
+          "contextMatched": true,
+          "offProcessedInputTokens": 167923,
+          "candidateProcessedInputTokens": 167956,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-implementation-recap",
+          "repetition": 1,
+          "canonicalHash": "c7eb8d0e06c620e8a9a1d8da02e18acfbfb4db799ffddbf7e155848f26a60196",
+          "contextMatched": true,
+          "offProcessedInputTokens": 39500,
+          "candidateProcessedInputTokens": 39533,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-implementation-recap",
+          "repetition": 2,
+          "canonicalHash": "c7eb8d0e06c620e8a9a1d8da02e18acfbfb4db799ffddbf7e155848f26a60196",
+          "contextMatched": true,
+          "offProcessedInputTokens": 39500,
+          "candidateProcessedInputTokens": 39533,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-implementation-recap",
+          "repetition": 3,
+          "canonicalHash": "c7eb8d0e06c620e8a9a1d8da02e18acfbfb4db799ffddbf7e155848f26a60196",
+          "contextMatched": true,
+          "offProcessedInputTokens": 39500,
+          "candidateProcessedInputTokens": 39533,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-implementation-recap",
+          "repetition": 4,
+          "canonicalHash": "c7eb8d0e06c620e8a9a1d8da02e18acfbfb4db799ffddbf7e155848f26a60196",
+          "contextMatched": true,
+          "offProcessedInputTokens": 39500,
+          "candidateProcessedInputTokens": 39533,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-implementation-recap",
+          "repetition": 5,
+          "canonicalHash": "c7eb8d0e06c620e8a9a1d8da02e18acfbfb4db799ffddbf7e155848f26a60196",
+          "contextMatched": true,
+          "offProcessedInputTokens": 39500,
+          "candidateProcessedInputTokens": 39533,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-noncritical-troubleshooting",
+          "repetition": 1,
+          "canonicalHash": "e0b7b550b84d4254d6d0e06b55533e9b0b0d0769ffe86d09d405a85f800241b9",
+          "contextMatched": true,
+          "offProcessedInputTokens": 156727,
+          "candidateProcessedInputTokens": 156760,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-noncritical-troubleshooting",
+          "repetition": 2,
+          "canonicalHash": "e0b7b550b84d4254d6d0e06b55533e9b0b0d0769ffe86d09d405a85f800241b9",
+          "contextMatched": true,
+          "offProcessedInputTokens": 156727,
+          "candidateProcessedInputTokens": 156760,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-noncritical-troubleshooting",
+          "repetition": 3,
+          "canonicalHash": "e0b7b550b84d4254d6d0e06b55533e9b0b0d0769ffe86d09d405a85f800241b9",
+          "contextMatched": true,
+          "offProcessedInputTokens": 156727,
+          "candidateProcessedInputTokens": 156760,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-noncritical-troubleshooting",
+          "repetition": 4,
+          "canonicalHash": "e0b7b550b84d4254d6d0e06b55533e9b0b0d0769ffe86d09d405a85f800241b9",
+          "contextMatched": true,
+          "offProcessedInputTokens": 156727,
+          "candidateProcessedInputTokens": 156760,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-noncritical-troubleshooting",
+          "repetition": 5,
+          "canonicalHash": "e0b7b550b84d4254d6d0e06b55533e9b0b0d0769ffe86d09d405a85f800241b9",
+          "contextMatched": true,
+          "offProcessedInputTokens": 156727,
+          "candidateProcessedInputTokens": 156760,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-progress-summary",
+          "repetition": 1,
+          "canonicalHash": "f3904e592493cece9c460560d7fce7513729446facd3a5eba7f9b8bb522e94c0",
+          "contextMatched": true,
+          "offProcessedInputTokens": 43341,
+          "candidateProcessedInputTokens": 43374,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-progress-summary",
+          "repetition": 2,
+          "canonicalHash": "f3904e592493cece9c460560d7fce7513729446facd3a5eba7f9b8bb522e94c0",
+          "contextMatched": true,
+          "offProcessedInputTokens": 43341,
+          "candidateProcessedInputTokens": 43374,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-progress-summary",
+          "repetition": 3,
+          "canonicalHash": "f3904e592493cece9c460560d7fce7513729446facd3a5eba7f9b8bb522e94c0",
+          "contextMatched": true,
+          "offProcessedInputTokens": 43341,
+          "candidateProcessedInputTokens": 43374,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-progress-summary",
+          "repetition": 4,
+          "canonicalHash": "f3904e592493cece9c460560d7fce7513729446facd3a5eba7f9b8bb522e94c0",
+          "contextMatched": true,
+          "offProcessedInputTokens": 43341,
+          "candidateProcessedInputTokens": 43374,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-progress-summary",
+          "repetition": 5,
+          "canonicalHash": "f3904e592493cece9c460560d7fce7513729446facd3a5eba7f9b8bb522e94c0",
+          "contextMatched": true,
+          "offProcessedInputTokens": 43341,
+          "candidateProcessedInputTokens": 43374,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-removable-repetition",
+          "repetition": 1,
+          "canonicalHash": "7b7e6bcf71d15f4fd33dbf914506ed8a05da134fced26781b74c85258dd83ae3",
+          "contextMatched": true,
+          "offProcessedInputTokens": 185199,
+          "candidateProcessedInputTokens": 185232,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-removable-repetition",
+          "repetition": 2,
+          "canonicalHash": "7b7e6bcf71d15f4fd33dbf914506ed8a05da134fced26781b74c85258dd83ae3",
+          "contextMatched": true,
+          "offProcessedInputTokens": 185199,
+          "candidateProcessedInputTokens": 185232,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-removable-repetition",
+          "repetition": 3,
+          "canonicalHash": "7b7e6bcf71d15f4fd33dbf914506ed8a05da134fced26781b74c85258dd83ae3",
+          "contextMatched": true,
+          "offProcessedInputTokens": 185199,
+          "candidateProcessedInputTokens": 185232,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-removable-repetition",
+          "repetition": 4,
+          "canonicalHash": "7b7e6bcf71d15f4fd33dbf914506ed8a05da134fced26781b74c85258dd83ae3",
+          "contextMatched": true,
+          "offProcessedInputTokens": 185199,
+          "candidateProcessedInputTokens": 185232,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-removable-repetition",
+          "repetition": 5,
+          "canonicalHash": "7b7e6bcf71d15f4fd33dbf914506ed8a05da134fced26781b74c85258dd83ae3",
+          "contextMatched": true,
+          "offProcessedInputTokens": 185199,
+          "candidateProcessedInputTokens": 185232,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-completion-summary",
+          "repetition": 1,
+          "canonicalHash": "2717a6587e58a9f8869bde3e2572380489396b0251c8feed0e248a4832dd9c7b",
+          "contextMatched": true,
+          "offProcessedInputTokens": 82066,
+          "candidateProcessedInputTokens": 82099,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-completion-summary",
+          "repetition": 2,
+          "canonicalHash": "2717a6587e58a9f8869bde3e2572380489396b0251c8feed0e248a4832dd9c7b",
+          "contextMatched": true,
+          "offProcessedInputTokens": 82066,
+          "candidateProcessedInputTokens": 82099,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-completion-summary",
+          "repetition": 3,
+          "canonicalHash": "2717a6587e58a9f8869bde3e2572380489396b0251c8feed0e248a4832dd9c7b",
+          "contextMatched": true,
+          "offProcessedInputTokens": 82066,
+          "candidateProcessedInputTokens": 82099,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-completion-summary",
+          "repetition": 4,
+          "canonicalHash": "2717a6587e58a9f8869bde3e2572380489396b0251c8feed0e248a4832dd9c7b",
+          "contextMatched": true,
+          "offProcessedInputTokens": 82066,
+          "candidateProcessedInputTokens": 82099,
+          "exactContractOverheadTokens": 33
+        },
+        {
+          "taskId": "eligible-completion-summary",
+          "repetition": 5,
+          "canonicalHash": "2717a6587e58a9f8869bde3e2572380489396b0251c8feed0e248a4832dd9c7b",
+          "contextMatched": true,
+          "offProcessedInputTokens": 82066,
+          "candidateProcessedInputTokens": 82099,
+          "exactContractOverheadTokens": 33
+        }
+      ]
+    }
+  },
+  "protected": {
+    "bypass": {
+      "taskCount": 7,
+      "injectionTokens": 0,
+      "candidateInjectionCount": 0,
+      "providerCandidatePromptTokens": 0,
+      "extraFinalizerWork": 0,
+      "extraFinalizerCallsIncludingSetup": 0,
+      "responseHashes": [
+        "41bfb4e5201590bf33530caa472a4d52845c7a4342669bc47194facb49eee4ad",
+        "7b5332efacb69466425e3145f26247e668e83d926be6c9e72819125815b171e4",
+        "26fb97ab17447b396dacbbe013a1af2d042a414d39be14e6ad19cc878a1ba8ac",
+        "962f0fe8ff9bbe64d3b18324908fa3e43ccf654e197369feeffce5d59a5048f3",
+        "36b4be398b3067685c3821e68392cf7117d83971c8cfd019c6c67c0e9e7715e7",
+        "d8b02e87bef783e683acd2c4fcdd3e16576260dd239b97ef95bce04a268da4b7",
+        "20adfef6419e9a5ec1a1371a89866c18ee2484f68f3e77656de73869beff5cbd"
+      ],
+      "responseRecords": [
+        {
+          "taskId": "protected-command",
+          "normalOffResponseSha256": "41bfb4e5201590bf33530caa472a4d52845c7a4342669bc47194facb49eee4ad",
+          "routedCandidateResponseSha256": "41bfb4e5201590bf33530caa472a4d52845c7a4342669bc47194facb49eee4ad",
+          "normalOffSuccess": false,
+          "routedCandidateSuccess": false
+        },
+        {
+          "taskId": "protected-agent-handoff",
+          "normalOffResponseSha256": "7b5332efacb69466425e3145f26247e668e83d926be6c9e72819125815b171e4",
+          "routedCandidateResponseSha256": "7b5332efacb69466425e3145f26247e668e83d926be6c9e72819125815b171e4",
+          "normalOffSuccess": true,
+          "routedCandidateSuccess": true
+        },
+        {
+          "taskId": "protected-path",
+          "normalOffResponseSha256": "26fb97ab17447b396dacbbe013a1af2d042a414d39be14e6ad19cc878a1ba8ac",
+          "routedCandidateResponseSha256": "26fb97ab17447b396dacbbe013a1af2d042a414d39be14e6ad19cc878a1ba8ac",
+          "normalOffSuccess": true,
+          "routedCandidateSuccess": true
+        },
+        {
+          "taskId": "protected-warning",
+          "normalOffResponseSha256": "962f0fe8ff9bbe64d3b18324908fa3e43ccf654e197369feeffce5d59a5048f3",
+          "routedCandidateResponseSha256": "962f0fe8ff9bbe64d3b18324908fa3e43ccf654e197369feeffce5d59a5048f3",
+          "normalOffSuccess": true,
+          "routedCandidateSuccess": true
+        },
+        {
+          "taskId": "protected-persisted-artifact",
+          "normalOffResponseSha256": "36b4be398b3067685c3821e68392cf7117d83971c8cfd019c6c67c0e9e7715e7",
+          "routedCandidateResponseSha256": "36b4be398b3067685c3821e68392cf7117d83971c8cfd019c6c67c0e9e7715e7",
+          "normalOffSuccess": true,
+          "routedCandidateSuccess": true
+        },
+        {
+          "taskId": "protected-ordered-procedure",
+          "normalOffResponseSha256": "d8b02e87bef783e683acd2c4fcdd3e16576260dd239b97ef95bce04a268da4b7",
+          "routedCandidateResponseSha256": "d8b02e87bef783e683acd2c4fcdd3e16576260dd239b97ef95bce04a268da4b7",
+          "normalOffSuccess": true,
+          "routedCandidateSuccess": true
+        },
+        {
+          "taskId": "protected-confirmation",
+          "normalOffResponseSha256": "20adfef6419e9a5ec1a1371a89866c18ee2484f68f3e77656de73869beff5cbd",
+          "routedCandidateResponseSha256": "20adfef6419e9a5ec1a1371a89866c18ee2484f68f3e77656de73869beff5cbd",
+          "normalOffSuccess": false,
+          "routedCandidateSuccess": false
+        }
+      ],
+      "responseHashEqualsNormalOff": true,
+      "successEqual": true,
+      "contentComplete": false
+    }
+  },
+  "mode": {
+    "default": "off",
+    "passed": false,
+    "rule": "Every failed gate keeps mode off."
+  },
+  "preflights": [
+    {
+      "version": 1,
+      "report": "shared-prefix-v12-preflight-v1.json",
+      "valid": false,
+      "passed": false,
+      "defaultMode": "off",
+      "exclusions": 28,
+      "note": "v1 preflight was invalid due a relative Pi launcher."
+    },
+    {
+      "version": 2,
+      "report": "shared-prefix-v12-preflight-v2.json",
+      "valid": false,
+      "passed": false,
+      "defaultMode": "off",
+      "exclusions": 0,
+      "note": "v2 was invalid because finalizers retained tools."
+    },
+    {
+      "version": 3,
+      "report": "shared-prefix-v12-preflight-v3.json",
+      "valid": true,
+      "passed": false,
+      "defaultMode": "off",
+      "exclusions": 0,
+      "note": "v3 was valid preflight only."
+    }
+  ]
+}

@@ -1,0 +1,4065 @@
+{
+  "schemaVersion": "shared-prefix-v12-report/1",
+  "version": 12,
+  "arms": [
+    "normal-off",
+    "shared-prefix-off",
+    "shared-prefix-candidate"
+  ],
+  "fixtureVersion": 12,
+  "fixtureName": "shared-prefix-v12-holdout",
+  "model": "z-ai/glm-5.3",
+  "thinking": "medium",
+  "repetitions": 2,
+  "seed": "0x51a7",
+  "cacheExpectations": {
+    "baseParent": "cold",
+    "children": "cold",
+    "offFinalizer": "warm",
+    "candidateFinalizer": "warm"
+  },
+  "runOrder": [
+    {
+      "taskId": "eligible-technical-explanation",
+      "group": "eligible-prose",
+      "canonicalHash": "8a8ea954d02a859efa3b74dd4ea2f2f47ab3170df1b1ec788e434caf400ec705"
+    },
+    {
+      "taskId": "eligible-progress-summary",
+      "group": "eligible-prose",
+      "canonicalHash": "67bca3559306af8c24b97d57660655ae3483e7984567bf9df6336638451c64db"
+    },
+    {
+      "taskId": "eligible-removable-repetition",
+      "group": "eligible-prose",
+      "canonicalHash": "9b8ac30e1b2a61cae40c7ffd3f0420df430116b9c3d08cba4e4d3dd967762145"
+    },
+    {
+      "taskId": "eligible-implementation-recap",
+      "group": "eligible-prose",
+      "canonicalHash": "f2434901dc6cd678cc18e2289da8d6ec6735185d60f23126282502f7f9d6366e"
+    },
+    {
+      "taskId": "protected-agent-handoff",
+      "group": "protected-content",
+      "canonicalHash": "752f266820a3702ec60312283880e7ab8430116d1e7781db91e5aeb38cd0c316"
+    },
+    {
+      "taskId": "eligible-completion-summary",
+      "group": "eligible-prose",
+      "canonicalHash": "a718074d41351848717a1989d4d5e9b75e15694dbb3112367c6f7acdf6d292c2"
+    },
+    {
+      "taskId": "protected-command",
+      "group": "protected-content",
+      "canonicalHash": "3646451341c5e28ecf87b5496462cac8932206b271515a1b833e5df5b5e2f295"
+    },
+    {
+      "taskId": "eligible-noncritical-troubleshooting",
+      "group": "eligible-prose",
+      "canonicalHash": "ac0e86fd558134d284b370da17cf1a62f508b2e7c8598dd7dfc013833cfd79f4"
+    },
+    {
+      "taskId": "protected-warning",
+      "group": "protected-content",
+      "canonicalHash": "af580c799a6333464e6c2df86373017f7398271f6dbde1a4a902ffe568da8609"
+    },
+    {
+      "taskId": "eligible-comparison",
+      "group": "eligible-prose",
+      "canonicalHash": "9c03d47011d95dcce7fec08e0007f60616352be9ff9206282ef9f4d61c4ee516"
+    },
+    {
+      "taskId": "protected-persisted-artifact",
+      "group": "protected-content",
+      "canonicalHash": "d05c7c60008d67337d04d59d5e885dbc9eb8f5808ff00404c6c9744a2da86b09"
+    },
+    {
+      "taskId": "protected-path",
+      "group": "protected-content",
+      "canonicalHash": "d370b6ee8ee680879430c9602ef587f100a294c5fecc0624b35c684eed187782"
+    },
+    {
+      "taskId": "protected-confirmation",
+      "group": "protected-content",
+      "canonicalHash": "1ca90541148aea5da6937bef7af57f00786c3d4bf2128e0ce843fb813b8a5cc0"
+    },
+    {
+      "taskId": "protected-ordered-procedure",
+      "group": "protected-content",
+      "canonicalHash": "707aa93d7e5d9cb8b9b65b89e697533a55f7f127e0aeee88c8e7a93508931450"
+    }
+  ],
+  "paidProcessAccounting": {
+    "cap": 102,
+    "planned": {
+      "base": 46,
+      "finalizer": 42,
+      "judge": 14
+    },
+    "plannedTotal": 102,
+    "actual": {
+      "base": 46,
+      "finalizer": 42,
+      "judge": 14
+    },
+    "overrun": false
+  },
+  "eligibleGroup": {
+    "taskCount": 7,
+    "pairs": [
+      {
+        "taskId": "eligible-technical-explanation",
+        "repetition": 1,
+        "tokenDelta": 84943,
+        "latencyDelta": 7348
+      },
+      {
+        "taskId": "eligible-technical-explanation",
+        "repetition": 2,
+        "tokenDelta": 84929,
+        "latencyDelta": 6593
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "repetition": 1,
+        "tokenDelta": 58460,
+        "latencyDelta": 5206
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "repetition": 2,
+        "tokenDelta": 58444,
+        "latencyDelta": 5140
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "repetition": 1,
+        "tokenDelta": 120970,
+        "latencyDelta": 4953
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "repetition": 2,
+        "tokenDelta": 121147,
+        "latencyDelta": 6146
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "repetition": 1,
+        "tokenDelta": 53830,
+        "latencyDelta": 4379
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "repetition": 2,
+        "tokenDelta": 53949,
+        "latencyDelta": 5773
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "repetition": 1,
+        "tokenDelta": 87052,
+        "latencyDelta": 4214
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "repetition": 2,
+        "tokenDelta": 87013,
+        "latencyDelta": 4832
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "repetition": 1,
+        "tokenDelta": 101292,
+        "latencyDelta": 7564
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "repetition": 2,
+        "tokenDelta": 101419,
+        "latencyDelta": 8709
+      },
+      {
+        "taskId": "eligible-comparison",
+        "repetition": 1,
+        "tokenDelta": 138347,
+        "latencyDelta": 8238
+      },
+      {
+        "taskId": "eligible-comparison",
+        "repetition": 2,
+        "tokenDelta": 138242,
+        "latencyDelta": 7589
+      }
+    ],
+    "tokenInterval": {
+      "n": 14,
+      "mean": 92145.5,
+      "standardError": 7933.395585355382,
+      "tCritical": 1.7709333959868725,
+      "confidence": 0.95,
+      "upperBound": 106195.01518568066
+    },
+    "latencyInterval": {
+      "n": 14,
+      "mean": 6191.714285714285,
+      "standardError": 397.0584482201364,
+      "tCritical": 1.7709333959868725,
+      "confidence": 0.95,
+      "upperBound": 6894.87835182605
+    },
+    "contractOverhead": [
+      {
+        "taskId": "eligible-technical-explanation",
+        "repetition": 1,
+        "canonicalHash": "8a8ea954d02a859efa3b74dd4ea2f2f47ab3170df1b1ec788e434caf400ec705",
+        "contextMatched": true,
+        "offProcessedInputTokens": 169535,
+        "candidateProcessedInputTokens": 84706,
+        "exactContractOverheadTokens": -84829
+      },
+      {
+        "taskId": "eligible-technical-explanation",
+        "repetition": 2,
+        "canonicalHash": "8a8ea954d02a859efa3b74dd4ea2f2f47ab3170df1b1ec788e434caf400ec705",
+        "contextMatched": true,
+        "offProcessedInputTokens": 84673,
+        "candidateProcessedInputTokens": 84706,
+        "exactContractOverheadTokens": 33
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "repetition": 1,
+        "canonicalHash": "67bca3559306af8c24b97d57660655ae3483e7984567bf9df6336638451c64db",
+        "contextMatched": true,
+        "offProcessedInputTokens": 58199,
+        "candidateProcessedInputTokens": 58232,
+        "exactContractOverheadTokens": 33
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "repetition": 2,
+        "canonicalHash": "67bca3559306af8c24b97d57660655ae3483e7984567bf9df6336638451c64db",
+        "contextMatched": true,
+        "offProcessedInputTokens": 58199,
+        "candidateProcessedInputTokens": 58232,
+        "exactContractOverheadTokens": 33
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "repetition": 1,
+        "canonicalHash": "9b8ac30e1b2a61cae40c7ffd3f0420df430116b9c3d08cba4e4d3dd967762145",
+        "contextMatched": true,
+        "offProcessedInputTokens": 244569,
+        "candidateProcessedInputTokens": 120673,
+        "exactContractOverheadTokens": -123896
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "repetition": 2,
+        "canonicalHash": "9b8ac30e1b2a61cae40c7ffd3f0420df430116b9c3d08cba4e4d3dd967762145",
+        "contextMatched": true,
+        "offProcessedInputTokens": 243359,
+        "candidateProcessedInputTokens": 120673,
+        "exactContractOverheadTokens": -122686
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "repetition": 1,
+        "canonicalHash": "f2434901dc6cd678cc18e2289da8d6ec6735185d60f23126282502f7f9d6366e",
+        "contextMatched": true,
+        "offProcessedInputTokens": 53607,
+        "candidateProcessedInputTokens": 53640,
+        "exactContractOverheadTokens": 33
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "repetition": 2,
+        "canonicalHash": "f2434901dc6cd678cc18e2289da8d6ec6735185d60f23126282502f7f9d6366e",
+        "contextMatched": true,
+        "offProcessedInputTokens": 53607,
+        "candidateProcessedInputTokens": 53640,
+        "exactContractOverheadTokens": 33
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "repetition": 1,
+        "canonicalHash": "a718074d41351848717a1989d4d5e9b75e15694dbb3112367c6f7acdf6d292c2",
+        "contextMatched": true,
+        "offProcessedInputTokens": 86817,
+        "candidateProcessedInputTokens": 86850,
+        "exactContractOverheadTokens": 33
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "repetition": 2,
+        "canonicalHash": "a718074d41351848717a1989d4d5e9b75e15694dbb3112367c6f7acdf6d292c2",
+        "contextMatched": true,
+        "offProcessedInputTokens": 86817,
+        "candidateProcessedInputTokens": 86850,
+        "exactContractOverheadTokens": 33
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "repetition": 1,
+        "canonicalHash": "ac0e86fd558134d284b370da17cf1a62f508b2e7c8598dd7dfc013833cfd79f4",
+        "contextMatched": true,
+        "offProcessedInputTokens": 100878,
+        "candidateProcessedInputTokens": 100911,
+        "exactContractOverheadTokens": 33
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "repetition": 2,
+        "canonicalHash": "ac0e86fd558134d284b370da17cf1a62f508b2e7c8598dd7dfc013833cfd79f4",
+        "contextMatched": true,
+        "offProcessedInputTokens": 100878,
+        "candidateProcessedInputTokens": 100911,
+        "exactContractOverheadTokens": 33
+      },
+      {
+        "taskId": "eligible-comparison",
+        "repetition": 1,
+        "canonicalHash": "9c03d47011d95dcce7fec08e0007f60616352be9ff9206282ef9f4d61c4ee516",
+        "contextMatched": true,
+        "offProcessedInputTokens": 137823,
+        "candidateProcessedInputTokens": 137856,
+        "exactContractOverheadTokens": 33
+      },
+      {
+        "taskId": "eligible-comparison",
+        "repetition": 2,
+        "canonicalHash": "9c03d47011d95dcce7fec08e0007f60616352be9ff9206282ef9f4d61c4ee516",
+        "contextMatched": true,
+        "offProcessedInputTokens": 137823,
+        "candidateProcessedInputTokens": 137856,
+        "exactContractOverheadTokens": 33
+      }
+    ],
+    "candidateSuccessCount": 6,
+    "offSuccessCount": 4,
+    "criticalFinalizerLosses": 2,
+    "taskRecords": [
+      {
+        "taskId": "eligible-technical-explanation",
+        "kind": "technical-explanation",
+        "baseTokens": {
+          "input": 3414,
+          "cacheRead": 8128,
+          "cacheWrite": 0,
+          "output": 801,
+          "total": 12343
+        },
+        "baseFinalFactRatio": 1,
+        "finalizerRuns": [
+          {
+            "arm": "shared-prefix-candidate",
+            "repetition": 1,
+            "usage": {
+              "input": 34,
+              "output": 237,
+              "cacheWrite": 0,
+              "cacheRead": 84672
+            },
+            "elapsedMs": 7348,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 84672,
+              "reason": null
+            },
+            "factRatio": 1,
+            "canonicalHash": "8a8ea954d02a859efa3b74dd4ea2f2f47ab3170df1b1ec788e434caf400ec705"
+          },
+          {
+            "arm": "shared-prefix-off",
+            "repetition": 1,
+            "usage": {
+              "input": 255,
+              "output": 761,
+              "cacheWrite": 0,
+              "cacheRead": 169280
+            },
+            "elapsedMs": 17444,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 84608,
+              "reason": null
+            },
+            "factRatio": 1,
+            "canonicalHash": "8a8ea954d02a859efa3b74dd4ea2f2f47ab3170df1b1ec788e434caf400ec705"
+          },
+          {
+            "arm": "shared-prefix-off",
+            "repetition": 2,
+            "usage": {
+              "input": 65,
+              "output": 438,
+              "cacheWrite": 0,
+              "cacheRead": 84608
+            },
+            "elapsedMs": 11121,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 84608,
+              "reason": null
+            },
+            "factRatio": 1,
+            "canonicalHash": "8a8ea954d02a859efa3b74dd4ea2f2f47ab3170df1b1ec788e434caf400ec705"
+          },
+          {
+            "arm": "shared-prefix-candidate",
+            "repetition": 2,
+            "usage": {
+              "input": 34,
+              "output": 223,
+              "cacheWrite": 0,
+              "cacheRead": 84672
+            },
+            "elapsedMs": 6593,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 84672,
+              "reason": null
+            },
+            "factRatio": 1,
+            "canonicalHash": "8a8ea954d02a859efa3b74dd4ea2f2f47ab3170df1b1ec788e434caf400ec705"
+          }
+        ]
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "kind": "routine-progress-summary",
+        "baseTokens": {
+          "input": 533,
+          "cacheRead": 4288,
+          "cacheWrite": 0,
+          "output": 585,
+          "total": 5406
+        },
+        "baseFinalFactRatio": 0.3333333333333333,
+        "finalizerRuns": [
+          {
+            "arm": "shared-prefix-off",
+            "repetition": 1,
+            "usage": {
+              "input": 23,
+              "output": 259,
+              "cacheWrite": 0,
+              "cacheRead": 58176
+            },
+            "elapsedMs": 5432,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 58176,
+              "reason": null
+            },
+            "factRatio": 0.3333333333333333,
+            "canonicalHash": "67bca3559306af8c24b97d57660655ae3483e7984567bf9df6336638451c64db"
+          },
+          {
+            "arm": "shared-prefix-candidate",
+            "repetition": 1,
+            "usage": {
+              "input": 56,
+              "output": 228,
+              "cacheWrite": 0,
+              "cacheRead": 58176
+            },
+            "elapsedMs": 5206,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 58176,
+              "reason": null
+            },
+            "factRatio": 1,
+            "canonicalHash": "67bca3559306af8c24b97d57660655ae3483e7984567bf9df6336638451c64db"
+          },
+          {
+            "arm": "shared-prefix-candidate",
+            "repetition": 2,
+            "usage": {
+              "input": 56,
+              "output": 212,
+              "cacheWrite": 0,
+              "cacheRead": 58176
+            },
+            "elapsedMs": 5140,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 58176,
+              "reason": null
+            },
+            "factRatio": 1,
+            "canonicalHash": "67bca3559306af8c24b97d57660655ae3483e7984567bf9df6336638451c64db"
+          },
+          {
+            "arm": "shared-prefix-off",
+            "repetition": 2,
+            "usage": {
+              "input": 23,
+              "output": 291,
+              "cacheWrite": 0,
+              "cacheRead": 58176
+            },
+            "elapsedMs": 6615,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 58176,
+              "reason": null
+            },
+            "factRatio": 0.3333333333333333,
+            "canonicalHash": "67bca3559306af8c24b97d57660655ae3483e7984567bf9df6336638451c64db"
+          }
+        ]
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "kind": "removable-repetition",
+        "baseTokens": {
+          "input": 2044,
+          "cacheRead": 8896,
+          "cacheWrite": 0,
+          "output": 1202,
+          "total": 12142
+        },
+        "baseFinalFactRatio": 1,
+        "finalizerRuns": [
+          {
+            "arm": "shared-prefix-candidate",
+            "repetition": 1,
+            "usage": {
+              "input": 33,
+              "output": 297,
+              "cacheWrite": 0,
+              "cacheRead": 120640
+            },
+            "elapsedMs": 4953,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 120640,
+              "reason": null
+            },
+            "factRatio": 1,
+            "canonicalHash": "9b8ac30e1b2a61cae40c7ffd3f0420df430116b9c3d08cba4e4d3dd967762145"
+          },
+          {
+            "arm": "shared-prefix-off",
+            "repetition": 1,
+            "usage": {
+              "input": 3353,
+              "output": 3358,
+              "cacheWrite": 0,
+              "cacheRead": 241216
+            },
+            "elapsedMs": 38773,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 120576,
+              "reason": null
+            },
+            "factRatio": 1,
+            "canonicalHash": "9b8ac30e1b2a61cae40c7ffd3f0420df430116b9c3d08cba4e4d3dd967762145"
+          },
+          {
+            "arm": "shared-prefix-off",
+            "repetition": 2,
+            "usage": {
+              "input": 2143,
+              "output": 1678,
+              "cacheWrite": 0,
+              "cacheRead": 241216
+            },
+            "elapsedMs": 32633,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 120576,
+              "reason": null
+            },
+            "factRatio": 1,
+            "canonicalHash": "9b8ac30e1b2a61cae40c7ffd3f0420df430116b9c3d08cba4e4d3dd967762145"
+          },
+          {
+            "arm": "shared-prefix-candidate",
+            "repetition": 2,
+            "usage": {
+              "input": 33,
+              "output": 474,
+              "cacheWrite": 0,
+              "cacheRead": 120640
+            },
+            "elapsedMs": 6146,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 120640,
+              "reason": null
+            },
+            "factRatio": 1,
+            "canonicalHash": "9b8ac30e1b2a61cae40c7ffd3f0420df430116b9c3d08cba4e4d3dd967762145"
+          }
+        ]
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "kind": "implementation-recap",
+        "baseTokens": {
+          "input": 295,
+          "cacheRead": 4416,
+          "cacheWrite": 0,
+          "output": 530,
+          "total": 5241
+        },
+        "baseFinalFactRatio": 0,
+        "finalizerRuns": [
+          {
+            "arm": "shared-prefix-off",
+            "repetition": 1,
+            "usage": {
+              "input": 39,
+              "output": 466,
+              "cacheWrite": 0,
+              "cacheRead": 53568
+            },
+            "elapsedMs": 6641,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 53568,
+              "reason": null
+            },
+            "factRatio": 0.5,
+            "canonicalHash": "f2434901dc6cd678cc18e2289da8d6ec6735185d60f23126282502f7f9d6366e"
+          },
+          {
+            "arm": "shared-prefix-candidate",
+            "repetition": 1,
+            "usage": {
+              "input": 8,
+              "output": 190,
+              "cacheWrite": 0,
+              "cacheRead": 53632
+            },
+            "elapsedMs": 4379,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 53632,
+              "reason": null
+            },
+            "factRatio": 1,
+            "canonicalHash": "f2434901dc6cd678cc18e2289da8d6ec6735185d60f23126282502f7f9d6366e"
+          },
+          {
+            "arm": "shared-prefix-candidate",
+            "repetition": 2,
+            "usage": {
+              "input": 8,
+              "output": 309,
+              "cacheWrite": 0,
+              "cacheRead": 53632
+            },
+            "elapsedMs": 5773,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 53632,
+              "reason": null
+            },
+            "factRatio": 1,
+            "canonicalHash": "f2434901dc6cd678cc18e2289da8d6ec6735185d60f23126282502f7f9d6366e"
+          },
+          {
+            "arm": "shared-prefix-off",
+            "repetition": 2,
+            "usage": {
+              "input": 39,
+              "output": 331,
+              "cacheWrite": 0,
+              "cacheRead": 53568
+            },
+            "elapsedMs": 5121,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 53568,
+              "reason": null
+            },
+            "factRatio": 0.5,
+            "canonicalHash": "f2434901dc6cd678cc18e2289da8d6ec6735185d60f23126282502f7f9d6366e"
+          }
+        ]
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "kind": "completion-summary",
+        "baseTokens": {
+          "input": 852,
+          "cacheRead": 5952,
+          "cacheWrite": 0,
+          "output": 868,
+          "total": 7672
+        },
+        "baseFinalFactRatio": 0,
+        "finalizerRuns": [
+          {
+            "arm": "shared-prefix-off",
+            "repetition": 1,
+            "usage": {
+              "input": 33,
+              "output": 478,
+              "cacheWrite": 0,
+              "cacheRead": 86784
+            },
+            "elapsedMs": 9694,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 86784,
+              "reason": null
+            },
+            "factRatio": 1,
+            "canonicalHash": "a718074d41351848717a1989d4d5e9b75e15694dbb3112367c6f7acdf6d292c2"
+          },
+          {
+            "arm": "shared-prefix-candidate",
+            "repetition": 1,
+            "usage": {
+              "input": 2,
+              "output": 202,
+              "cacheWrite": 0,
+              "cacheRead": 86848
+            },
+            "elapsedMs": 4214,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 86848,
+              "reason": null
+            },
+            "factRatio": 0.5,
+            "canonicalHash": "a718074d41351848717a1989d4d5e9b75e15694dbb3112367c6f7acdf6d292c2"
+          },
+          {
+            "arm": "shared-prefix-candidate",
+            "repetition": 2,
+            "usage": {
+              "input": 2,
+              "output": 163,
+              "cacheWrite": 0,
+              "cacheRead": 86848
+            },
+            "elapsedMs": 4832,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 86848,
+              "reason": null
+            },
+            "factRatio": 1,
+            "canonicalHash": "a718074d41351848717a1989d4d5e9b75e15694dbb3112367c6f7acdf6d292c2"
+          },
+          {
+            "arm": "shared-prefix-off",
+            "repetition": 2,
+            "usage": {
+              "input": 33,
+              "output": 503,
+              "cacheWrite": 0,
+              "cacheRead": 86784
+            },
+            "elapsedMs": 7581,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 86784,
+              "reason": null
+            },
+            "factRatio": 0.5,
+            "canonicalHash": "a718074d41351848717a1989d4d5e9b75e15694dbb3112367c6f7acdf6d292c2"
+          }
+        ]
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "kind": "noncritical-troubleshooting",
+        "baseTokens": {
+          "input": 356,
+          "cacheRead": 4352,
+          "cacheWrite": 0,
+          "output": 1052,
+          "total": 5760
+        },
+        "baseFinalFactRatio": 1,
+        "finalizerRuns": [
+          {
+            "arm": "shared-prefix-off",
+            "repetition": 1,
+            "usage": {
+              "input": 14,
+              "output": 470,
+              "cacheWrite": 0,
+              "cacheRead": 100864
+            },
+            "elapsedMs": 7026,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 100864,
+              "reason": null
+            },
+            "factRatio": 1,
+            "canonicalHash": "ac0e86fd558134d284b370da17cf1a62f508b2e7c8598dd7dfc013833cfd79f4"
+          },
+          {
+            "arm": "shared-prefix-candidate",
+            "repetition": 1,
+            "usage": {
+              "input": 47,
+              "output": 381,
+              "cacheWrite": 0,
+              "cacheRead": 100864
+            },
+            "elapsedMs": 7564,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 100864,
+              "reason": null
+            },
+            "factRatio": 1,
+            "canonicalHash": "ac0e86fd558134d284b370da17cf1a62f508b2e7c8598dd7dfc013833cfd79f4"
+          },
+          {
+            "arm": "shared-prefix-candidate",
+            "repetition": 2,
+            "usage": {
+              "input": 47,
+              "output": 508,
+              "cacheWrite": 0,
+              "cacheRead": 100864
+            },
+            "elapsedMs": 8709,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 100864,
+              "reason": null
+            },
+            "factRatio": 1,
+            "canonicalHash": "ac0e86fd558134d284b370da17cf1a62f508b2e7c8598dd7dfc013833cfd79f4"
+          },
+          {
+            "arm": "shared-prefix-off",
+            "repetition": 2,
+            "usage": {
+              "input": 14,
+              "output": 474,
+              "cacheWrite": 0,
+              "cacheRead": 100864
+            },
+            "elapsedMs": 7312,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 100864,
+              "reason": null
+            },
+            "factRatio": 1,
+            "canonicalHash": "ac0e86fd558134d284b370da17cf1a62f508b2e7c8598dd7dfc013833cfd79f4"
+          }
+        ]
+      },
+      {
+        "taskId": "eligible-comparison",
+        "kind": "comparison",
+        "baseTokens": {
+          "input": 1048,
+          "cacheRead": 7232,
+          "cacheWrite": 0,
+          "output": 1443,
+          "total": 9723
+        },
+        "baseFinalFactRatio": 1,
+        "finalizerRuns": [
+          {
+            "arm": "shared-prefix-off",
+            "repetition": 1,
+            "usage": {
+              "input": 31,
+              "output": 672,
+              "cacheWrite": 0,
+              "cacheRead": 137792
+            },
+            "elapsedMs": 6622,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 137792,
+              "reason": null
+            },
+            "factRatio": 1,
+            "canonicalHash": "9c03d47011d95dcce7fec08e0007f60616352be9ff9206282ef9f4d61c4ee516"
+          },
+          {
+            "arm": "shared-prefix-candidate",
+            "repetition": 1,
+            "usage": {
+              "input": 64,
+              "output": 491,
+              "cacheWrite": 0,
+              "cacheRead": 137792
+            },
+            "elapsedMs": 8238,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 137792,
+              "reason": null
+            },
+            "factRatio": 1,
+            "canonicalHash": "9c03d47011d95dcce7fec08e0007f60616352be9ff9206282ef9f4d61c4ee516"
+          },
+          {
+            "arm": "shared-prefix-candidate",
+            "repetition": 2,
+            "usage": {
+              "input": 64,
+              "output": 386,
+              "cacheWrite": 0,
+              "cacheRead": 137792
+            },
+            "elapsedMs": 7589,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 137792,
+              "reason": null
+            },
+            "factRatio": 1,
+            "canonicalHash": "9c03d47011d95dcce7fec08e0007f60616352be9ff9206282ef9f4d61c4ee516"
+          },
+          {
+            "arm": "shared-prefix-off",
+            "repetition": 2,
+            "usage": {
+              "input": 31,
+              "output": 719,
+              "cacheWrite": 0,
+              "cacheRead": 137792
+            },
+            "elapsedMs": 7504,
+            "cacheValidation": {
+              "ok": true,
+              "expected": "warm",
+              "firstTurnCacheRead": 137792,
+              "reason": null
+            },
+            "factRatio": 1,
+            "canonicalHash": "9c03d47011d95dcce7fec08e0007f60616352be9ff9206282ef9f4d61c4ee516"
+          }
+        ]
+      }
+    ]
+  },
+  "protectedGroup": {
+    "taskCount": 7,
+    "injectionTokens": 0,
+    "candidateInjectionCount": 0,
+    "providerCandidatePromptTokens": 0,
+    "extraFinalizerWork": 0,
+    "extraFinalizerCallsIncludingSetup": 0,
+    "responseHashes": [
+      "daa74c8817b4d210d696324450030a1e737de89b0864fdc5a860651dfc7c01d4",
+      "0202c9dbd39153bb136deb796ef9cf8fc838af36be038c71ddc014dbe81d4247",
+      "6747d2aa70a8388de3105fd25ba9fd4d75f65ecdf53076371bdd388a9cd8271e",
+      "a094b55d7a9f7973231cd81c7f98e223e33697bf70b13ef437730bbc51259c07",
+      "0eef1d789e73cbea18374521dcb58d8c3d637fbe457c712b2d69b8ab21fa1551",
+      "aa02e2a53392ac4f107b3bc8f0f9efe9623e75a57829b8095ec28891393aba51",
+      "bdee71cf8d8e52e96b01a09dbf6799b6fbc45b072f2a21e35604b8f66508b58c"
+    ],
+    "responseHashEqualsNormalOff": true,
+    "successEqual": false,
+    "contentComplete": false
+  },
+  "isolatedFinalizerComparison": {
+    "description": "candidate minus off over identical-source finalizer arms only; complete-product metrics stay separate",
+    "pairs": [
+      {
+        "taskId": "eligible-technical-explanation",
+        "repetition": 1,
+        "tokenDelta": -85353,
+        "outputTokenDelta": -524,
+        "latencyDelta": -10096
+      },
+      {
+        "taskId": "eligible-technical-explanation",
+        "repetition": 2,
+        "tokenDelta": -182,
+        "outputTokenDelta": -215,
+        "latencyDelta": -4528
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "repetition": 1,
+        "tokenDelta": 2,
+        "outputTokenDelta": -31,
+        "latencyDelta": -226
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "repetition": 2,
+        "tokenDelta": -46,
+        "outputTokenDelta": -79,
+        "latencyDelta": -1475
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "repetition": 1,
+        "tokenDelta": -126957,
+        "outputTokenDelta": -3061,
+        "latencyDelta": -33820
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "repetition": 2,
+        "tokenDelta": -123890,
+        "outputTokenDelta": -1204,
+        "latencyDelta": -26487
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "repetition": 1,
+        "tokenDelta": -243,
+        "outputTokenDelta": -276,
+        "latencyDelta": -2262
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "repetition": 2,
+        "tokenDelta": 11,
+        "outputTokenDelta": -22,
+        "latencyDelta": 652
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "repetition": 1,
+        "tokenDelta": -243,
+        "outputTokenDelta": -276,
+        "latencyDelta": -5480
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "repetition": 2,
+        "tokenDelta": -307,
+        "outputTokenDelta": -340,
+        "latencyDelta": -2749
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "repetition": 1,
+        "tokenDelta": -56,
+        "outputTokenDelta": -89,
+        "latencyDelta": 538
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "repetition": 2,
+        "tokenDelta": 67,
+        "outputTokenDelta": 34,
+        "latencyDelta": 1397
+      },
+      {
+        "taskId": "eligible-comparison",
+        "repetition": 1,
+        "tokenDelta": -148,
+        "outputTokenDelta": -181,
+        "latencyDelta": 1616
+      },
+      {
+        "taskId": "eligible-comparison",
+        "repetition": 2,
+        "tokenDelta": -300,
+        "outputTokenDelta": -333,
+        "latencyDelta": 85
+      }
+    ],
+    "tokenInterval": {
+      "n": 14,
+      "mean": -24117.5,
+      "standardError": 12968.50803341068,
+      "tCritical": 1.7709333959868725,
+      "confidence": 0.95,
+      "upperBound": -1151.1360275089864
+    },
+    "outputTokenInterval": {
+      "n": 14,
+      "mean": -471.2142857142857,
+      "standardError": 215.59911870019647,
+      "tCritical": 1.7709333959868725,
+      "confidence": 0.95,
+      "upperBound": -89.40260626276995
+    },
+    "latencyInterval": {
+      "n": 14,
+      "mean": -5916.785714285715,
+      "standardError": 2897.4071473968756,
+      "tCritical": 1.7709333959868725,
+      "confidence": 0.95,
+      "upperBound": -785.6706351895291
+    }
+  },
+  "unsupportedClaims": 2,
+  "judge": {
+    "enabled": true,
+    "parseFailureCount": 0,
+    "usageRecords": [
+      {
+        "taskId": "eligible-technical-explanation",
+        "repetition": 1,
+        "usage": {
+          "input": 1717,
+          "output": 194,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": null,
+        "outcome": {
+          "usage": {
+            "input": 1717,
+            "output": 194,
+            "cacheWrite": 0,
+            "cacheRead": 0
+          },
+          "rawUsage": null,
+          "candidateLostRequiredFact": false,
+          "candidateUnsupportedClaim": false,
+          "parseFailed": false
+        }
+      },
+      {
+        "taskId": "eligible-technical-explanation",
+        "repetition": 2,
+        "usage": {
+          "input": 1606,
+          "output": 234,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": null,
+        "outcome": {
+          "usage": {
+            "input": 1606,
+            "output": 234,
+            "cacheWrite": 0,
+            "cacheRead": 0
+          },
+          "rawUsage": null,
+          "candidateLostRequiredFact": true,
+          "candidateUnsupportedClaim": false,
+          "parseFailed": false
+        }
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "repetition": 1,
+        "usage": {
+          "input": 1370,
+          "output": 18,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": null,
+        "outcome": {
+          "usage": {
+            "input": 1370,
+            "output": 18,
+            "cacheWrite": 0,
+            "cacheRead": 0
+          },
+          "rawUsage": null,
+          "candidateLostRequiredFact": false,
+          "candidateUnsupportedClaim": false,
+          "parseFailed": false
+        }
+      },
+      {
+        "taskId": "eligible-progress-summary",
+        "repetition": 2,
+        "usage": {
+          "input": 1392,
+          "output": 18,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": null,
+        "outcome": {
+          "usage": {
+            "input": 1392,
+            "output": 18,
+            "cacheWrite": 0,
+            "cacheRead": 0
+          },
+          "rawUsage": null,
+          "candidateLostRequiredFact": false,
+          "candidateUnsupportedClaim": false,
+          "parseFailed": false
+        }
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "repetition": 1,
+        "usage": {
+          "input": 1666,
+          "output": 18,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": null,
+        "outcome": {
+          "usage": {
+            "input": 1666,
+            "output": 18,
+            "cacheWrite": 0,
+            "cacheRead": 0
+          },
+          "rawUsage": null,
+          "candidateLostRequiredFact": false,
+          "candidateUnsupportedClaim": false,
+          "parseFailed": false
+        }
+      },
+      {
+        "taskId": "eligible-removable-repetition",
+        "repetition": 2,
+        "usage": {
+          "input": 1803,
+          "output": 18,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": null,
+        "outcome": {
+          "usage": {
+            "input": 1803,
+            "output": 18,
+            "cacheWrite": 0,
+            "cacheRead": 0
+          },
+          "rawUsage": null,
+          "candidateLostRequiredFact": false,
+          "candidateUnsupportedClaim": false,
+          "parseFailed": false
+        }
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "repetition": 1,
+        "usage": {
+          "input": 1380,
+          "output": 18,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": null,
+        "outcome": {
+          "usage": {
+            "input": 1380,
+            "output": 18,
+            "cacheWrite": 0,
+            "cacheRead": 0
+          },
+          "rawUsage": null,
+          "candidateLostRequiredFact": false,
+          "candidateUnsupportedClaim": false,
+          "parseFailed": false
+        }
+      },
+      {
+        "taskId": "eligible-implementation-recap",
+        "repetition": 2,
+        "usage": {
+          "input": 1373,
+          "output": 18,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": null,
+        "outcome": {
+          "usage": {
+            "input": 1373,
+            "output": 18,
+            "cacheWrite": 0,
+            "cacheRead": 0
+          },
+          "rawUsage": null,
+          "candidateLostRequiredFact": false,
+          "candidateUnsupportedClaim": false,
+          "parseFailed": false
+        }
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "repetition": 1,
+        "usage": {
+          "input": 1526,
+          "output": 152,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": null,
+        "outcome": {
+          "usage": {
+            "input": 1526,
+            "output": 152,
+            "cacheWrite": 0,
+            "cacheRead": 0
+          },
+          "rawUsage": null,
+          "candidateLostRequiredFact": true,
+          "candidateUnsupportedClaim": true,
+          "parseFailed": false
+        }
+      },
+      {
+        "taskId": "eligible-completion-summary",
+        "repetition": 2,
+        "usage": {
+          "input": 1553,
+          "output": 225,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": null,
+        "outcome": {
+          "usage": {
+            "input": 1553,
+            "output": 225,
+            "cacheWrite": 0,
+            "cacheRead": 0
+          },
+          "rawUsage": null,
+          "candidateLostRequiredFact": true,
+          "candidateUnsupportedClaim": true,
+          "parseFailed": false
+        }
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "repetition": 1,
+        "usage": {
+          "input": 1717,
+          "output": 18,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": null,
+        "outcome": {
+          "usage": {
+            "input": 1717,
+            "output": 18,
+            "cacheWrite": 0,
+            "cacheRead": 0
+          },
+          "rawUsage": null,
+          "candidateLostRequiredFact": false,
+          "candidateUnsupportedClaim": false,
+          "parseFailed": false
+        }
+      },
+      {
+        "taskId": "eligible-noncritical-troubleshooting",
+        "repetition": 2,
+        "usage": {
+          "input": 1720,
+          "output": 18,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": null,
+        "outcome": {
+          "usage": {
+            "input": 1720,
+            "output": 18,
+            "cacheWrite": 0,
+            "cacheRead": 0
+          },
+          "rawUsage": null,
+          "candidateLostRequiredFact": false,
+          "candidateUnsupportedClaim": false,
+          "parseFailed": false
+        }
+      },
+      {
+        "taskId": "eligible-comparison",
+        "repetition": 1,
+        "usage": {
+          "input": 1914,
+          "output": 87,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": null,
+        "outcome": {
+          "usage": {
+            "input": 1914,
+            "output": 87,
+            "cacheWrite": 0,
+            "cacheRead": 0
+          },
+          "rawUsage": null,
+          "candidateLostRequiredFact": false,
+          "candidateUnsupportedClaim": false,
+          "parseFailed": false
+        }
+      },
+      {
+        "taskId": "eligible-comparison",
+        "repetition": 2,
+        "usage": {
+          "input": 1951,
+          "output": 18,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": null,
+        "outcome": {
+          "usage": {
+            "input": 1951,
+            "output": 18,
+            "cacheWrite": 0,
+            "cacheRead": 0
+          },
+          "rawUsage": null,
+          "candidateLostRequiredFact": false,
+          "candidateUnsupportedClaim": false,
+          "parseFailed": false
+        }
+      }
+    ],
+    "note": "judge usage recorded outside primary metrics"
+  },
+  "exclusions": [],
+  "supportAttempts": [
+    {
+      "taskId": "eligible-technical-explanation",
+      "nodeId": "child-1",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 290,
+        "output": 144,
+        "cacheWrite": 0,
+        "cacheRead": 2752
+      },
+      "usageTurns": [
+        {
+          "input": 110,
+          "output": 42,
+          "cacheWrite": 0,
+          "cacheRead": 1344
+        },
+        {
+          "input": 180,
+          "output": 102,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 8617,
+      "firstTurnCacheRead": 1344
+    },
+    {
+      "taskId": "eligible-technical-explanation",
+      "nodeId": "child-2",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 302,
+        "output": 296,
+        "cacheWrite": 0,
+        "cacheRead": 2752
+      },
+      "usageTurns": [
+        {
+          "input": 114,
+          "output": 46,
+          "cacheWrite": 0,
+          "cacheRead": 1344
+        },
+        {
+          "input": 188,
+          "output": 250,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 4729,
+      "firstTurnCacheRead": 1344
+    },
+    {
+      "taskId": "eligible-technical-explanation",
+      "nodeId": "parent",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 972,
+        "output": 408,
+        "cacheWrite": 0,
+        "cacheRead": 4544
+      },
+      "usageTurns": [
+        {
+          "input": 327,
+          "output": 90,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 110,
+          "output": 13,
+          "cacheWrite": 0,
+          "cacheRead": 1728
+        },
+        {
+          "input": 535,
+          "output": 305,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 7627,
+      "firstTurnCacheRead": 1408
+    },
+    {
+      "taskId": "eligible-progress-summary",
+      "nodeId": "child-1",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 129,
+        "output": 94,
+        "cacheWrite": 0,
+        "cacheRead": 1344
+      },
+      "usageTurns": [
+        {
+          "input": 129,
+          "output": 94,
+          "cacheWrite": 0,
+          "cacheRead": 1344
+        }
+      ],
+      "elapsedMs": 3663,
+      "firstTurnCacheRead": 1344
+    },
+    {
+      "taskId": "eligible-progress-summary",
+      "nodeId": "parent",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 385,
+        "output": 270,
+        "cacheWrite": 0,
+        "cacheRead": 2752
+      },
+      "usageTurns": [
+        {
+          "input": 101,
+          "output": 68,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 284,
+          "output": 202,
+          "cacheWrite": 0,
+          "cacheRead": 1344
+        }
+      ],
+      "elapsedMs": 10508,
+      "firstTurnCacheRead": 1408
+    },
+    {
+      "taskId": "eligible-removable-repetition",
+      "nodeId": "child-1",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 378,
+        "output": 286,
+        "cacheWrite": 0,
+        "cacheRead": 2816
+      },
+      "usageTurns": [
+        {
+          "input": 51,
+          "output": 49,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 327,
+          "output": 237,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 8320,
+      "firstTurnCacheRead": 1408
+    },
+    {
+      "taskId": "eligible-removable-repetition",
+      "nodeId": "parent",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 1424,
+        "output": 410,
+        "cacheWrite": 0,
+        "cacheRead": 6208
+      },
+      "usageTurns": [
+        {
+          "input": 269,
+          "output": 26,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 119,
+          "output": 15,
+          "cacheWrite": 0,
+          "cacheRead": 1664
+        },
+        {
+          "input": 539,
+          "output": 262,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 497,
+          "output": 107,
+          "cacheWrite": 0,
+          "cacheRead": 1728
+        }
+      ],
+      "elapsedMs": 8860,
+      "firstTurnCacheRead": 1408
+    },
+    {
+      "taskId": "eligible-implementation-recap",
+      "nodeId": "child-1",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 90,
+        "output": 157,
+        "cacheWrite": 0,
+        "cacheRead": 1408
+      },
+      "usageTurns": [
+        {
+          "input": 90,
+          "output": 157,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 4412,
+      "firstTurnCacheRead": 1408
+    },
+    {
+      "taskId": "eligible-implementation-recap",
+      "nodeId": "parent",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 1675,
+        "output": 324,
+        "cacheWrite": 0,
+        "cacheRead": 1536
+      },
+      "usageTurns": [
+        {
+          "input": 1390,
+          "output": 138,
+          "cacheWrite": 0,
+          "cacheRead": 128
+        },
+        {
+          "input": 285,
+          "output": 186,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 12255,
+      "firstTurnCacheRead": 128
+    },
+    {
+      "taskId": "protected-agent-handoff",
+      "nodeId": "parent",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 6362,
+        "output": 2272,
+        "cacheWrite": 0,
+        "cacheRead": 9280
+      },
+      "usageTurns": [
+        {
+          "input": 53,
+          "output": 131,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 300,
+          "output": 149,
+          "cacheWrite": 0,
+          "cacheRead": 1344
+        },
+        {
+          "input": 729,
+          "output": 279,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 610,
+          "output": 716,
+          "cacheWrite": 0,
+          "cacheRead": 2112
+        },
+        {
+          "input": 1848,
+          "output": 721,
+          "cacheWrite": 0,
+          "cacheRead": 1600
+        },
+        {
+          "input": 2822,
+          "output": 276,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 32890,
+      "firstTurnCacheRead": 1408
+    },
+    {
+      "taskId": "eligible-completion-summary",
+      "nodeId": "child-1",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 71,
+        "output": 102,
+        "cacheWrite": 0,
+        "cacheRead": 1408
+      },
+      "usageTurns": [
+        {
+          "input": 71,
+          "output": 102,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 2509,
+      "firstTurnCacheRead": 1408
+    },
+    {
+      "taskId": "eligible-completion-summary",
+      "nodeId": "parent",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 1091,
+        "output": 556,
+        "cacheWrite": 0,
+        "cacheRead": 4224
+      },
+      "usageTurns": [
+        {
+          "input": 128,
+          "output": 145,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 388,
+          "output": 298,
+          "cacheWrite": 0,
+          "cacheRead": 1344
+        },
+        {
+          "input": 575,
+          "output": 113,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        }
+      ],
+      "elapsedMs": 10777,
+      "firstTurnCacheRead": 1408
+    },
+    {
+      "taskId": "protected-command",
+      "nodeId": "parent",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 490,
+        "output": 597,
+        "cacheWrite": 0,
+        "cacheRead": 4352
+      },
+      "usageTurns": [
+        {
+          "input": 113,
+          "output": 148,
+          "cacheWrite": 0,
+          "cacheRead": 1344
+        },
+        {
+          "input": 209,
+          "output": 98,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 168,
+          "output": 351,
+          "cacheWrite": 0,
+          "cacheRead": 1600
+        }
+      ],
+      "elapsedMs": 12081,
+      "firstTurnCacheRead": 1344
+    },
+    {
+      "taskId": "eligible-noncritical-troubleshooting",
+      "nodeId": "child-1",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 70,
+        "output": 227,
+        "cacheWrite": 0,
+        "cacheRead": 1408
+      },
+      "usageTurns": [
+        {
+          "input": 70,
+          "output": 227,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 10497,
+      "firstTurnCacheRead": 1408
+    },
+    {
+      "taskId": "eligible-noncritical-troubleshooting",
+      "nodeId": "parent",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 3690,
+        "output": 2004,
+        "cacheWrite": 0,
+        "cacheRead": 8256
+      },
+      "usageTurns": [
+        {
+          "input": 124,
+          "output": 232,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 410,
+          "output": 138,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 463,
+          "output": 393,
+          "cacheWrite": 0,
+          "cacheRead": 1792
+        },
+        {
+          "input": 666,
+          "output": 172,
+          "cacheWrite": 0,
+          "cacheRead": 2240
+        },
+        {
+          "input": 2027,
+          "output": 1069,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 37692,
+      "firstTurnCacheRead": 1408
+    },
+    {
+      "taskId": "protected-warning",
+      "nodeId": "parent",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 227,
+        "output": 169,
+        "cacheWrite": 0,
+        "cacheRead": 2816
+      },
+      "usageTurns": [
+        {
+          "input": 51,
+          "output": 73,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 176,
+          "output": 96,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 5434,
+      "firstTurnCacheRead": 1408
+    },
+    {
+      "taskId": "eligible-comparison",
+      "nodeId": "child-1",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 442,
+        "output": 438,
+        "cacheWrite": 0,
+        "cacheRead": 2816
+      },
+      "usageTurns": [
+        {
+          "input": 62,
+          "output": 266,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 380,
+          "output": 172,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 7714,
+      "firstTurnCacheRead": 1408
+    },
+    {
+      "taskId": "eligible-comparison",
+      "nodeId": "child-2",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 361,
+        "output": 351,
+        "cacheWrite": 0,
+        "cacheRead": 2816
+      },
+      "usageTurns": [
+        {
+          "input": 65,
+          "output": 179,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 296,
+          "output": 172,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 14857,
+      "firstTurnCacheRead": 1408
+    },
+    {
+      "taskId": "eligible-comparison",
+      "nodeId": "parent",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 903,
+        "output": 1053,
+        "cacheWrite": 0,
+        "cacheRead": 2816
+      },
+      "usageTurns": [
+        {
+          "input": 177,
+          "output": 497,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 726,
+          "output": 556,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 23029,
+      "firstTurnCacheRead": 1408
+    },
+    {
+      "taskId": "protected-persisted-artifact",
+      "nodeId": "parent",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 3227,
+        "output": 1174,
+        "cacheWrite": 0,
+        "cacheRead": 5632
+      },
+      "usageTurns": [
+        {
+          "input": 50,
+          "output": 175,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 531,
+          "output": 168,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 1168,
+          "output": 116,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 1478,
+          "output": 715,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 22275,
+      "firstTurnCacheRead": 1408
+    },
+    {
+      "taskId": "protected-path",
+      "nodeId": "parent",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 6163,
+        "output": 1276,
+        "cacheWrite": 0,
+        "cacheRead": 9472
+      },
+      "usageTurns": [
+        {
+          "input": 45,
+          "output": 99,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 201,
+          "output": 180,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 669,
+          "output": 128,
+          "cacheWrite": 0,
+          "cacheRead": 1600
+        },
+        {
+          "input": 1396,
+          "output": 182,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 2043,
+          "output": 178,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 1809,
+          "output": 509,
+          "cacheWrite": 0,
+          "cacheRead": 2240
+        }
+      ],
+      "elapsedMs": 31434,
+      "firstTurnCacheRead": 1408
+    },
+    {
+      "taskId": "protected-confirmation",
+      "nodeId": "parent",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 7928,
+        "output": 2353,
+        "cacheWrite": 0,
+        "cacheRead": 7936
+      },
+      "usageTurns": [
+        {
+          "input": 1328,
+          "output": 236,
+          "cacheWrite": 0,
+          "cacheRead": 128
+        },
+        {
+          "input": 340,
+          "output": 232,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 1901,
+          "output": 1340,
+          "cacheWrite": 0,
+          "cacheRead": 128
+        },
+        {
+          "input": 2041,
+          "output": 47,
+          "cacheWrite": 0,
+          "cacheRead": 1344
+        },
+        {
+          "input": 2119,
+          "output": 94,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 199,
+          "output": 404,
+          "cacheWrite": 0,
+          "cacheRead": 3520
+        }
+      ],
+      "elapsedMs": 34294,
+      "firstTurnCacheRead": 128
+    },
+    {
+      "taskId": "protected-ordered-procedure",
+      "nodeId": "parent",
+      "arm": null,
+      "phase": "warm",
+      "usage": {
+        "input": 305,
+        "output": 488,
+        "cacheWrite": 0,
+        "cacheRead": 2816
+      },
+      "usageTurns": [
+        {
+          "input": 50,
+          "output": 154,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 255,
+          "output": 334,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 9809,
+      "firstTurnCacheRead": 1408
+    },
+    {
+      "taskId": "eligible-technical-explanation",
+      "nodeId": "finalizer-shared-prefix-off-warm",
+      "arm": "shared-prefix-off",
+      "phase": "warm",
+      "usage": {
+        "input": 84205,
+        "output": 1016,
+        "cacheWrite": 0,
+        "cacheRead": 170816
+      },
+      "usageTurns": [
+        {
+          "input": 83329,
+          "output": 110,
+          "cacheWrite": 0,
+          "cacheRead": 1344
+        },
+        {
+          "input": 150,
+          "output": 68,
+          "cacheWrite": 0,
+          "cacheRead": 84672
+        },
+        {
+          "input": 726,
+          "output": 838,
+          "cacheWrite": 0,
+          "cacheRead": 84800
+        }
+      ],
+      "elapsedMs": 36492,
+      "firstTurnCacheRead": 1344
+    },
+    {
+      "taskId": "eligible-technical-explanation",
+      "nodeId": "finalizer-shared-prefix-candidate-warm",
+      "arm": "shared-prefix-candidate",
+      "phase": "warm",
+      "usage": {
+        "input": 98,
+        "output": 168,
+        "cacheWrite": 0,
+        "cacheRead": 84608
+      },
+      "usageTurns": [
+        {
+          "input": 98,
+          "output": 168,
+          "cacheWrite": 0,
+          "cacheRead": 84608
+        }
+      ],
+      "elapsedMs": 8194,
+      "firstTurnCacheRead": 84608
+    },
+    {
+      "taskId": "eligible-progress-summary",
+      "nodeId": "finalizer-shared-prefix-off-warm",
+      "arm": "shared-prefix-off",
+      "phase": "warm",
+      "usage": {
+        "input": 56855,
+        "output": 281,
+        "cacheWrite": 0,
+        "cacheRead": 1344
+      },
+      "usageTurns": [
+        {
+          "input": 56855,
+          "output": 281,
+          "cacheWrite": 0,
+          "cacheRead": 1344
+        }
+      ],
+      "elapsedMs": 5919,
+      "firstTurnCacheRead": 1344
+    },
+    {
+      "taskId": "eligible-progress-summary",
+      "nodeId": "finalizer-shared-prefix-candidate-warm",
+      "arm": "shared-prefix-candidate",
+      "phase": "warm",
+      "usage": {
+        "input": 56,
+        "output": 314,
+        "cacheWrite": 0,
+        "cacheRead": 58176
+      },
+      "usageTurns": [
+        {
+          "input": 56,
+          "output": 314,
+          "cacheWrite": 0,
+          "cacheRead": 58176
+        }
+      ],
+      "elapsedMs": 6359,
+      "firstTurnCacheRead": 58176
+    },
+    {
+      "taskId": "eligible-removable-repetition",
+      "nodeId": "finalizer-shared-prefix-off-warm",
+      "arm": "shared-prefix-off",
+      "phase": "warm",
+      "usage": {
+        "input": 122834,
+        "output": 3056,
+        "cacheWrite": 0,
+        "cacheRead": 367360
+      },
+      "usageTurns": [
+        {
+          "input": 119296,
+          "output": 1364,
+          "cacheWrite": 0,
+          "cacheRead": 1344
+        },
+        {
+          "input": 2064,
+          "output": 68,
+          "cacheWrite": 0,
+          "cacheRead": 120576
+        },
+        {
+          "input": 198,
+          "output": 1256,
+          "cacheWrite": 0,
+          "cacheRead": 122624
+        },
+        {
+          "input": 1276,
+          "output": 368,
+          "cacheWrite": 0,
+          "cacheRead": 122816
+        }
+      ],
+      "elapsedMs": 37279,
+      "firstTurnCacheRead": 1344
+    },
+    {
+      "taskId": "eligible-removable-repetition",
+      "nodeId": "finalizer-shared-prefix-candidate-warm",
+      "arm": "shared-prefix-candidate",
+      "phase": "warm",
+      "usage": {
+        "input": 97,
+        "output": 340,
+        "cacheWrite": 0,
+        "cacheRead": 120576
+      },
+      "usageTurns": [
+        {
+          "input": 97,
+          "output": 340,
+          "cacheWrite": 0,
+          "cacheRead": 120576
+        }
+      ],
+      "elapsedMs": 10356,
+      "firstTurnCacheRead": 120576
+    },
+    {
+      "taskId": "eligible-implementation-recap",
+      "nodeId": "finalizer-shared-prefix-off-warm",
+      "arm": "shared-prefix-off",
+      "phase": "warm",
+      "usage": {
+        "input": 53479,
+        "output": 428,
+        "cacheWrite": 0,
+        "cacheRead": 128
+      },
+      "usageTurns": [
+        {
+          "input": 53479,
+          "output": 428,
+          "cacheWrite": 0,
+          "cacheRead": 128
+        }
+      ],
+      "elapsedMs": 7004,
+      "firstTurnCacheRead": 128
+    },
+    {
+      "taskId": "eligible-implementation-recap",
+      "nodeId": "finalizer-shared-prefix-candidate-warm",
+      "arm": "shared-prefix-candidate",
+      "phase": "warm",
+      "usage": {
+        "input": 72,
+        "output": 273,
+        "cacheWrite": 0,
+        "cacheRead": 53568
+      },
+      "usageTurns": [
+        {
+          "input": 72,
+          "output": 273,
+          "cacheWrite": 0,
+          "cacheRead": 53568
+        }
+      ],
+      "elapsedMs": 5457,
+      "firstTurnCacheRead": 53568
+    },
+    {
+      "taskId": "eligible-completion-summary",
+      "nodeId": "finalizer-shared-prefix-off-warm",
+      "arm": "shared-prefix-off",
+      "phase": "warm",
+      "usage": {
+        "input": 85473,
+        "output": 550,
+        "cacheWrite": 0,
+        "cacheRead": 1344
+      },
+      "usageTurns": [
+        {
+          "input": 85473,
+          "output": 550,
+          "cacheWrite": 0,
+          "cacheRead": 1344
+        }
+      ],
+      "elapsedMs": 13202,
+      "firstTurnCacheRead": 1344
+    },
+    {
+      "taskId": "eligible-completion-summary",
+      "nodeId": "finalizer-shared-prefix-candidate-warm",
+      "arm": "shared-prefix-candidate",
+      "phase": "warm",
+      "usage": {
+        "input": 66,
+        "output": 569,
+        "cacheWrite": 0,
+        "cacheRead": 86784
+      },
+      "usageTurns": [
+        {
+          "input": 66,
+          "output": 569,
+          "cacheWrite": 0,
+          "cacheRead": 86784
+        }
+      ],
+      "elapsedMs": 12766,
+      "firstTurnCacheRead": 86784
+    },
+    {
+      "taskId": "eligible-noncritical-troubleshooting",
+      "nodeId": "finalizer-shared-prefix-off-warm",
+      "arm": "shared-prefix-off",
+      "phase": "warm",
+      "usage": {
+        "input": 99534,
+        "output": 458,
+        "cacheWrite": 0,
+        "cacheRead": 1344
+      },
+      "usageTurns": [
+        {
+          "input": 99534,
+          "output": 458,
+          "cacheWrite": 0,
+          "cacheRead": 1344
+        }
+      ],
+      "elapsedMs": 9620,
+      "firstTurnCacheRead": 1344
+    },
+    {
+      "taskId": "eligible-noncritical-troubleshooting",
+      "nodeId": "finalizer-shared-prefix-candidate-warm",
+      "arm": "shared-prefix-candidate",
+      "phase": "warm",
+      "usage": {
+        "input": 47,
+        "output": 422,
+        "cacheWrite": 0,
+        "cacheRead": 100864
+      },
+      "usageTurns": [
+        {
+          "input": 47,
+          "output": 422,
+          "cacheWrite": 0,
+          "cacheRead": 100864
+        }
+      ],
+      "elapsedMs": 7943,
+      "firstTurnCacheRead": 100864
+    },
+    {
+      "taskId": "eligible-comparison",
+      "nodeId": "finalizer-shared-prefix-off-warm",
+      "arm": "shared-prefix-off",
+      "phase": "warm",
+      "usage": {
+        "input": 136479,
+        "output": 684,
+        "cacheWrite": 0,
+        "cacheRead": 1344
+      },
+      "usageTurns": [
+        {
+          "input": 136479,
+          "output": 684,
+          "cacheWrite": 0,
+          "cacheRead": 1344
+        }
+      ],
+      "elapsedMs": 10454,
+      "firstTurnCacheRead": 1344
+    },
+    {
+      "taskId": "eligible-comparison",
+      "nodeId": "finalizer-shared-prefix-candidate-warm",
+      "arm": "shared-prefix-candidate",
+      "phase": "warm",
+      "usage": {
+        "input": 64,
+        "output": 463,
+        "cacheWrite": 0,
+        "cacheRead": 137792
+      },
+      "usageTurns": [
+        {
+          "input": 64,
+          "output": 463,
+          "cacheWrite": 0,
+          "cacheRead": 137792
+        }
+      ],
+      "elapsedMs": 7909,
+      "firstTurnCacheRead": 137792
+    }
+  ],
+  "checkpoint": {
+    "path": "evaluation/checkpoints/shared-prefix-v12-preflight-v2.json",
+    "resumedLaunches": 0,
+    "recordedLaunches": 88
+  },
+  "attempts": [
+    {
+      "taskId": "eligible-technical-explanation",
+      "arm": "base",
+      "nodeId": "child-1",
+      "kind": "child",
+      "phase": "measured",
+      "usage": {
+        "input": 1541,
+        "output": 176,
+        "cacheWrite": 0,
+        "cacheRead": 1472
+      },
+      "usageTurns": [
+        {
+          "input": 110,
+          "output": 13,
+          "cacheWrite": 0,
+          "cacheRead": 1344
+        },
+        {
+          "input": 1431,
+          "output": 163,
+          "cacheWrite": 0,
+          "cacheRead": 128
+        }
+      ],
+      "elapsedMs": 3803,
+      "text": "Here are the retention rules defined in `backup-notes.md`:\n\n| Rule ID | Retention policy |\n|---------|------------------|\n| **R1** | Keeps the seven most recent daily snapshots |\n| **R2** | Keeps the four most recent weekly snapshots |\n| **R3** | Keeps monthly snapshots for one year |\n\nAll three rules apply to the nightly backup job that runs at 02:00 UTC. Snapshots that no longer match any of these rules are pruned (unless the job is run with `--dry-run`).",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-technical-explanation",
+      "arm": "base",
+      "nodeId": "child-2",
+      "kind": "child",
+      "phase": "measured",
+      "usage": {
+        "input": 229,
+        "output": 241,
+        "cacheWrite": 0,
+        "cacheRead": 2816
+      },
+      "usageTurns": [
+        {
+          "input": 50,
+          "output": 37,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 179,
+          "output": 204,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 7168,
+      "text": "In `backup-notes.md`, the flag is named **`--dry-run`**, and it changes the job's behavior as follows:\n\n- **With `--dry-run`:** the job \"print[s] the plan without deleting or uploading anything\" — i.e., it becomes a no-op preview that only shows what would happen.\n- **Without `--dry-run`:** the job \"prunes snapshots that no longer match any retention rule\" (i.e., deletions actually occur).\n\nSo the flag changes two things: it suppresses actual **deletions** (pruning of snapshots not matching retention rules R1–R3) and suppresses **uploads**, replacing both with printing the plan.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-technical-explanation",
+      "arm": "base",
+      "nodeId": "parent",
+      "kind": "parent",
+      "phase": "measured",
+      "usage": {
+        "input": 1644,
+        "output": 384,
+        "cacheWrite": 0,
+        "cacheRead": 3840
+      },
+      "usageTurns": [
+        {
+          "input": 327,
+          "output": 78,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 1118,
+          "output": 13,
+          "cacheWrite": 0,
+          "cacheRead": 704
+        },
+        {
+          "input": 199,
+          "output": 293,
+          "cacheWrite": 0,
+          "cacheRead": 1728
+        }
+      ],
+      "elapsedMs": 9035,
+      "text": "I verified against `backup-notes.md` — here's how the nightly backup job decides which snapshots to keep:\n\n## The job\n\nThe nightly backup job runs at **02:00 UTC**. Which snapshots survive is determined by three retention rules:\n\n## Retention rules\n\n| Rule | Policy |\n|------|--------|\n| **R1** | Keep the **seven most recent daily** snapshots |\n| **R2** | Keep the **four most recent weekly** snapshots |\n| **R3** | Keep **monthly snapshots for one year** |\n\nA snapshot is retained if it matches **any** of R1–R3. Anything that no longer matches any rule is a candidate for pruning.\n\n## The `--dry-run` flag\n\nThe flag controls whether the plan is executed or merely previewed:\n\n- **With `--dry-run`:** the job **prints the plan without deleting or uploading anything** — a pure preview; nothing is pruned and nothing is uploaded.\n- **Without `--dry-run`:** the job actually **prunes snapshots that no longer match any retention rule**.\n\nIn short: the job evaluates each snapshot against R1/R2/R3, and unless `--dry-run` is set, it deletes the ones that fall outside all three rules (while `--dry-run` additionally suppresses the upload step, not just deletion).",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-progress-summary",
+      "arm": "base",
+      "nodeId": "child-1",
+      "kind": "child",
+      "phase": "measured",
+      "usage": {
+        "input": 129,
+        "output": 95,
+        "cacheWrite": 0,
+        "cacheRead": 1344
+      },
+      "usageTurns": [
+        {
+          "input": 129,
+          "output": 95,
+          "cacheWrite": 0,
+          "cacheRead": 1344
+        }
+      ],
+      "elapsedMs": 3045,
+      "text": "Migration progress:\n\n- **Stage one — schema conversion:** Finished\n- **Stage two — dual-write verification:** Finished\n- **Current blocker:** The unmigrated audit consumer\n- **Rollback window:** Closes Friday",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-progress-summary",
+      "arm": "base",
+      "nodeId": "parent",
+      "kind": "parent",
+      "phase": "measured",
+      "usage": {
+        "input": 404,
+        "output": 490,
+        "cacheWrite": 0,
+        "cacheRead": 2944
+      },
+      "usageTurns": [
+        {
+          "input": 37,
+          "output": 279,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        },
+        {
+          "input": 367,
+          "output": 211,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        }
+      ],
+      "elapsedMs": 12258,
+      "text": "The workspace has no additional files, so here's the summary based on the delegated findings:\n\n## Migration Workstream — Progress Summary\n\n**Completed stages:**\n1. **Stage 1 — Schema conversion:** ✅ Finished\n2. **Stage 2 — Dual-write verification:** ✅ Finished\n\n**Current blocker:**\n- **The unmigrated audit consumer** is the remaining obstacle holding up further progress.\n\n**Timing note:** The rollback window closes Friday — worth factoring into any decision about resolving the audit consumer issue, since options narrow after that point.\n\n**Bottom line:** The migration is progressing well through the early stages, with two of the planned phases done. Attention should now shift to migrating the audit consumer to unblock the next stage, ideally before Friday's rollback deadline.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-removable-repetition",
+      "arm": "base",
+      "nodeId": "child-1",
+      "kind": "child",
+      "phase": "measured",
+      "usage": {
+        "input": 337,
+        "output": 371,
+        "cacheWrite": 0,
+        "cacheRead": 2752
+      },
+      "usageTurns": [
+        {
+          "input": 115,
+          "output": 22,
+          "cacheWrite": 0,
+          "cacheRead": 1344
+        },
+        {
+          "input": 222,
+          "output": 349,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 6164,
+      "text": "Here are the distinct facts in **status-update-draft.md**, with the boilerplate about the environment deduplicated:\n\n**Environment (stated repeatedly across all sections)**\n1. The staging environment runs release 2.4.1\n2. The environment runs on three nodes\n3. All nodes use the standard build pipeline\n\n**Cache service**\n4. The cache service was upgraded for release 2.4.1\n5. Defect 1188 — a stale cache key after rollover — is fixed\n\n**Queue service**\n6. The queue service received a config refresh for release 2.4.1\n7. Defect 1201 — a duplicate delivery under retry — is fixed\n\n**Rollout**\n8. Rollout to production starts Monday\n\nThe \"three nodes / standard build pipeline\" line appears in all four sections but is a single fact; everything else in the file appears once.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-removable-repetition",
+      "arm": "base",
+      "nodeId": "parent",
+      "kind": "parent",
+      "phase": "measured",
+      "usage": {
+        "input": 1707,
+        "output": 831,
+        "cacheWrite": 0,
+        "cacheRead": 6144
+      },
+      "usageTurns": [
+        {
+          "input": 13,
+          "output": 27,
+          "cacheWrite": 0,
+          "cacheRead": 1664
+        },
+        {
+          "input": 120,
+          "output": 15,
+          "cacheWrite": 0,
+          "cacheRead": 1664
+        },
+        {
+          "input": 505,
+          "output": 550,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 1069,
+          "output": 239,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 15030,
+      "text": "Wrote the deduplicated update to `status-update.md`.\n\nWhat changed and what's preserved:\n\n- **Repetition removed:** The environment boilerplate (release 2.4.1 / three nodes / standard build pipeline) is now stated once, in the Environment section, instead of being repeated in the Cache service, Queue service, and Next sections. The per-service sections say \"for this release\" rather than restating 2.4.1.\n- **Every fact kept:**\n  1. Staging runs release 2.4.1\n  2. Three nodes\n  3. Standard build pipeline on all nodes\n  4. Cache service upgraded for 2.4.1\n  5. Defect 1188 (stale cache key after rollover) fixed\n  6. Queue service config refresh for 2.4.1\n  7. Defect 1201 (duplicate delivery under retry) fixed\n  8. Production rollout starts Monday\n\nBoth defects (1188 and 1201) and the 2.4.1 release coverage are fully represented, each exactly once.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-implementation-recap",
+      "arm": "base",
+      "nodeId": "child-1",
+      "kind": "child",
+      "phase": "measured",
+      "usage": {
+        "input": 26,
+        "output": 118,
+        "cacheWrite": 0,
+        "cacheRead": 1472
+      },
+      "usageTurns": [
+        {
+          "input": 26,
+          "output": 118,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        }
+      ],
+      "elapsedMs": 2590,
+      "text": "Connection-pool change summary (per the task context):\n\n- **Pool cap:** 64 connections\n- **Eviction trigger:** when the idle share exceeds 80 percent\n- **Eviction delay:** evicted connections drain for 30 seconds",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-implementation-recap",
+      "arm": "base",
+      "nodeId": "parent",
+      "kind": "parent",
+      "phase": "measured",
+      "usage": {
+        "input": 269,
+        "output": 412,
+        "cacheWrite": 0,
+        "cacheRead": 2944
+      },
+      "usageTurns": [
+        {
+          "input": 46,
+          "output": 119,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        },
+        {
+          "input": 223,
+          "output": 293,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        }
+      ],
+      "elapsedMs": 14528,
+      "text": "I can't produce a grounded recap: this workspace is completely empty — no files, no git history, no diff, nothing to examine. There's no evidence here that a connection-pool change was ever made.\n\nThe only information I have is the delegated child summary you provided, which I cannot verify against any artifact. As unverified claims, it states:\n\n- **Pool cap:** 64 connections\n- **Eviction trigger:** when idle share exceeds 80 percent\n- **Eviction delay:** evicted connections drain for 30 seconds\n\nIf you expected this change to exist in this workspace, it may have landed elsewhere. Point me at the right directory or repo, or share the relevant diff/commit, and I'll confirm the actual values directly from the code rather than restating secondhand numbers.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "protected-agent-handoff",
+      "arm": "base",
+      "nodeId": "parent",
+      "kind": "parent",
+      "phase": "measured",
+      "usage": {
+        "input": 4427,
+        "output": 1808,
+        "cacheWrite": 0,
+        "cacheRead": 10304
+      },
+      "usageTurns": [
+        {
+          "input": 53,
+          "output": 136,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 205,
+          "output": 59,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        },
+        {
+          "input": 645,
+          "output": 281,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 1222,
+          "output": 118,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 1300,
+          "output": 921,
+          "cacheWrite": 0,
+          "cacheRead": 1664
+        },
+        {
+          "input": 1002,
+          "output": 293,
+          "cacheWrite": 0,
+          "cacheRead": 2944
+        }
+      ],
+      "elapsedMs": 24194,
+      "text": "The handoff note is written to `protected-agent-handoff/handoff-note.md`. Summary of what it contains:\n\n**Kept as requested:**\n- **Assignee line** — still flagged as not on record, so the next session knows to fill it in before handoff\n- **Open action item** — production rollout of 2.4.1 beginning Monday, the only outstanding work\n\n**Incident status:**\n- Release 2.4.1 verified on staging (three nodes, standard build pipeline)\n- Defect 1188 (cache service, stale cache key after rollover) — fixed via cache service upgrade\n- Defect 1201 (queue service, duplicate delivery under retry) — fixed via config refresh\n- No known open defects remain against 2.4.1\n\n**For the next session:**\n- Source of truth pointer to `../eligible-removable-repetition/status-update.md` (non-draft is canonical)\n- Backup context (02:00 UTC nightly job, retention rules R1/R2/R3, `--dry-run` flag)\n- Handoff checklist: confirm rollout owner, verify staging is green before Monday, close the incident after a clean rollout\n\nOne thing worth flagging: the assignee is genuinely undocumented in this workspace, so the checklist's first item (confirming an owner for the rollout) is the most important step for whoever picks this up.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-completion-summary",
+      "arm": "base",
+      "nodeId": "child-1",
+      "kind": "child",
+      "phase": "measured",
+      "usage": {
+        "input": 71,
+        "output": 204,
+        "cacheWrite": 0,
+        "cacheRead": 1408
+      },
+      "usageTurns": [
+        {
+          "input": 71,
+          "output": 204,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 4704,
+      "text": "Rate-limiter outcome, exactly as given:\n\n- **Token bucket:** refills at **100 tokens/second**, burst size **200**\n- **Tests:** **214 passed, 0 failed** across **12 files**\n\nIf you'd like, I can verify these numbers against the actual test output or rate-limiter configuration in the repo.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-completion-summary",
+      "arm": "base",
+      "nodeId": "parent",
+      "kind": "parent",
+      "phase": "measured",
+      "usage": {
+        "input": 781,
+        "output": 664,
+        "cacheWrite": 0,
+        "cacheRead": 4544
+      },
+      "usageTurns": [
+        {
+          "input": 128,
+          "output": 170,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 384,
+          "output": 51,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 269,
+          "output": 443,
+          "cacheWrite": 0,
+          "cacheRead": 1728
+        }
+      ],
+      "elapsedMs": 20327,
+      "text": "A completion summary already exists at `COMPLETION_SUMMARY.md` and it covers everything from the delegated findings. I verified its contents line for line:\n\n- **Token bucket change:** documented as refill rate **100 tokens/second**, burst size **200 tokens**, with a note on the resulting behavior (bursts up to 200, sustained 100 req/s)\n- **Test results:** **214 passed, 0 failed** across **12 test files**\n\nOne caveat: the delegated child offered to verify these numbers against the actual repo, but this working directory contains only the summary file — there's no rate-limiter source, config, or test output here to check against. The numbers in the summary match the child's report exactly, but they remain unverified against real artifacts.\n\nThe summary is ready to use as-is; no changes were needed.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "protected-command",
+      "arm": "base",
+      "nodeId": "parent",
+      "kind": "parent",
+      "phase": "measured",
+      "usage": {
+        "input": 563,
+        "output": 570,
+        "cacheWrite": 0,
+        "cacheRead": 4224
+      },
+      "usageTurns": [
+        {
+          "input": 49,
+          "output": 127,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 186,
+          "output": 47,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 328,
+          "output": 396,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 12789,
+      "text": "I can't provide that command — there's nothing to quote from. The working directory (`protected-command`) is completely empty: no docs, no runbooks, no deploy scripts, no config files at all.\n\nI don't want to guess at a certificate rotation command and present it as \"verbatim,\" since running a wrong `--force` cert rotation against a production gateway could cause an outage.\n\nTo get you the exact command, I'd need one of the following:\n\n1. **The correct location** — is there a docs repo, runbook, or ops wiki I should be looking at? Point me to the path or repo.\n2. **Paste the relevant doc/snippet** here and I'll extract the exact command for you.\n3. **Gateway details** — which tooling issues the cert (certbot, Vault, AWS ACM, kubectl cert-manager, an internal CLI)? With that, I can give you the standard rotation command for that stack, clearly labeled as a suggested command rather than your project's documented one.\n\nWhere should I look?",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-noncritical-troubleshooting",
+      "arm": "base",
+      "nodeId": "child-1",
+      "kind": "child",
+      "phase": "measured",
+      "usage": {
+        "input": 70,
+        "output": 190,
+        "cacheWrite": 0,
+        "cacheRead": 1408
+      },
+      "usageTurns": [
+        {
+          "input": 70,
+          "output": 190,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 3451,
+      "text": "Staging diagnosis (as given):\n\n- **Trigger:** The warning fires when `CACHE_TTL` is unset.\n- **Message:** \"cached values fall back to the default.\"\n- **Behavior:** Setting the log level to `warn` instead of `debug` hides it.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-noncritical-troubleshooting",
+      "arm": "base",
+      "nodeId": "parent",
+      "kind": "parent",
+      "phase": "measured",
+      "usage": {
+        "input": 286,
+        "output": 862,
+        "cacheWrite": 0,
+        "cacheRead": 2944
+      },
+      "usageTurns": [
+        {
+          "input": 60,
+          "output": 115,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        },
+        {
+          "input": 226,
+          "output": 747,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        }
+      ],
+      "elapsedMs": 12908,
+      "text": "The workspace is empty — no repo to inspect — so this diagnosis rests entirely on the delegated finding.\n\n## Diagnosis\n\n**Why the warning prints:** During the staging deploy, the `CACHE_TTL` environment variable is unset. The application handles this gracefully by falling back to a built-in default TTL, and it announces that via the message:\n\n> \"cached values fall back to the default.\"\n\n**Why it's harmless:** Nothing fails — the cache still works; it just uses the default expiry.\n\n## The exact mechanics\n\n- **Env var name (exact):** `CACHE_TTL` — uppercase, underscore-separated.\n- **Log level (exact):** The message is emitted at `debug` level, *not* `warn`, despite its warning-ish wording. That's the key nuance: it only appears in staging because the log level there is set to `debug`, which lets debug-level output through.\n\n## How to silence it\n\nTwo independent options:\n\n1. **Fix the cause:** Set `CACHE_TTL` to an explicit value (e.g., `CACHE_TTL=300`) in the staging environment. The fallback message never fires.\n2. **Fix the visibility:** Raise the staging log level from `debug` to `warn`. Since the message is debug-level, `warn` filters it out. This matches the observed behavior: setting the level to `warn` hides it.\n\nOption 1 is preferable if you want staging to mirror production config; option 2 is the quick suppression if the default TTL is intentional.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "protected-warning",
+      "arm": "base",
+      "nodeId": "parent",
+      "kind": "parent",
+      "phase": "measured",
+      "usage": {
+        "input": 162,
+        "output": 187,
+        "cacheWrite": 0,
+        "cacheRead": 2880
+      },
+      "usageTurns": [
+        {
+          "input": 51,
+          "output": 72,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 111,
+          "output": 115,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        }
+      ],
+      "elapsedMs": 5894,
+      "text": "PRODUCTION WARNING: You are about to drop the database. This operation is irreversible — once executed, the drop cannot be undone, and all data in the database will be permanently lost. Verify you have a complete backup and confirm the target environment before proceeding.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-comparison",
+      "arm": "base",
+      "nodeId": "child-1",
+      "kind": "child",
+      "phase": "measured",
+      "usage": {
+        "input": 276,
+        "output": 264,
+        "cacheWrite": 0,
+        "cacheRead": 2880
+      },
+      "usageTurns": [
+        {
+          "input": 62,
+          "output": 164,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 214,
+          "output": 100,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        }
+      ],
+      "elapsedMs": 5419,
+      "text": "The working directory is empty (no prior document to quote from), so here are the guarantees exactly as you stated them:\n\n**Bounded ring queue — guarantees:**\n- **Throughput:** 120k messages per second\n- **Ordering:** strict per producer\n- **Capacity:** fixed at 1024",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-comparison",
+      "arm": "base",
+      "nodeId": "child-2",
+      "kind": "child",
+      "phase": "measured",
+      "usage": {
+        "input": 65,
+        "output": 229,
+        "cacheWrite": 0,
+        "cacheRead": 1408
+      },
+      "usageTurns": [
+        {
+          "input": 65,
+          "output": 229,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 4292,
+      "text": "Here are the details of the priority heap queue, exactly as given:\n\n- **Throughput:** 40k messages per second\n- **Ordering guarantee:** by priority tier, then arrival\n- **Capacity:** grows to 65536",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-comparison",
+      "arm": "base",
+      "nodeId": "parent",
+      "kind": "parent",
+      "phase": "measured",
+      "usage": {
+        "input": 707,
+        "output": 950,
+        "cacheWrite": 0,
+        "cacheRead": 2944
+      },
+      "usageTurns": [
+        {
+          "input": 49,
+          "output": 429,
+          "cacheWrite": 0,
+          "cacheRead": 1536
+        },
+        {
+          "input": 658,
+          "output": 521,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 16101,
+      "text": "Directory confirmed empty — working purely from the delegated findings.\n\n## Comparison\n\n| | Bounded ring queue | Priority heap queue |\n|---|---|---|\n| Throughput | **120k msg/s** | 40k msg/s |\n| Ordering | Strict per producer (FIFO) | Priority tier, then arrival (FIFO within tier) |\n| Capacity | Fixed 1024 | Grows to 65536 |\n\n## Recommendation: priority heap queue — with one caveat\n\nFor an **alerts pipeline**, the heap is the better fit:\n\n1. **Ordering matters more than raw speed for alerts.** Alerts are severity-classified by nature (critical vs. warning vs. info). The heap's tier-then-arrival ordering means a CRITICAL alert is never stuck behind a backlog of informational ones — exactly the failure mode you can't tolerate in alerting. The ring's strict per-producer FIFO gives you no such guarantee; a critical alert behind 900 info alerts waits behind all 900.\n\n2. **3x lower throughput is rarely the bottleneck here.** 40k msg/s is still enormous headroom for typical alert-generation rates (which are usually in the hundreds-to-low-thousands per second). Sacrificing 120k→40k buys nothing if you'll never see 40k alerts/sec, but the ordering gain applies on every single message.\n\n3. **Burst absorption.** Alert volume is spiky — incidents trigger storms (cascading failures, flapping checks). A fixed 1024-slot ring fills in microseconds at those rates and either drops or blocks, and *dropping during an alert storm is the worst possible time to drop*. The heap's growth to 65536 rides out storms, at the cost of needing backpressure/memory monitoring so consumers falling behind don't balloon the heap unchecked.\n\n**The caveat:** if your sustained alert rate genuinely approaches or exceeds 40k msg/s, the heap becomes the bottleneck and the ring is the only option that keeps up. In that case, recover priority semantics with **N rings (one per tier)** and drain highest tier first — you keep near-ring throughput and get coarse priority ordering, at the cost of more moving parts and per-tier capacity limits.\n\n**Bottom line:** unless you have measured ingestion near 40k msg/s, take the priority heap queue. Add monitoring on heap depth (e.g., alert when > ~50% of the 65536 ceiling) so backpressure kicks in before memory does.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "protected-persisted-artifact",
+      "arm": "base",
+      "nodeId": "parent",
+      "kind": "parent",
+      "phase": "measured",
+      "usage": {
+        "input": 818,
+        "output": 765,
+        "cacheWrite": 0,
+        "cacheRead": 4288
+      },
+      "usageTurns": [
+        {
+          "input": 50,
+          "output": 83,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 121,
+          "output": 446,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        },
+        {
+          "input": 647,
+          "output": 236,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 27632,
+      "text": "Persisted to `audit-log-release-note.md`:\n\n**Audit Log**\n\nThis release introduces a comprehensive overhaul of the audit log to give administrators stronger visibility and guarantees around recorded activity. All significant actions — including configuration changes, permission grants, record modifications, and administrative operations — are now captured as structured, append-only events that cannot be altered or deleted after the fact. Each entry records the acting user or service identity, the precise timestamp, the affected resource, and a before/after diff where applicable, making it straightforward to reconstruct exactly what changed and who was responsible. Events are queryable by time range, actor, and resource type, and can be exported to external log-management or SIEM systems for long-term retention and correlation. These changes lay the groundwork for upcoming compliance reporting features while providing an immediate, tamper-evident record of activity across the system.\n\nNote: the workspace was empty, so I had no diff or changelog to draw specifics from. If you share the actual change details (commit, ticket, or PR), I can tighten this into an accurate summary of what actually shipped.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "protected-path",
+      "arm": "base",
+      "nodeId": "parent",
+      "kind": "parent",
+      "phase": "measured",
+      "usage": {
+        "input": 6893,
+        "output": 1406,
+        "cacheWrite": 0,
+        "cacheRead": 11072
+      },
+      "usageTurns": [
+        {
+          "input": 45,
+          "output": 108,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 146,
+          "output": 176,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        },
+        {
+          "input": 796,
+          "output": 234,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 2141,
+          "output": 114,
+          "cacheWrite": 0,
+          "cacheRead": 1600
+        },
+        {
+          "input": 2475,
+          "output": 324,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        },
+        {
+          "input": 1290,
+          "output": 450,
+          "cacheWrite": 0,
+          "cacheRead": 3712
+        }
+      ],
+      "elapsedMs": 21787,
+      "text": "I searched the entire workspace, and **no configuration file path to back up before an upgrade is documented anywhere** in the available files. I can't report an exact path without inventing one, which would be dangerous for an operational instruction like this.\n\nHere's everything the workspace actually says about backups and upgrades:\n\n**`eligible-technical-explanation/backup-notes.md`** — describes the nightly backup job only:\n- Runs at 02:00 UTC\n- Retention rules: R1 (7 daily snapshots), R2 (4 weekly snapshots), R3 (monthly, 1 year)\n- `--dry-run` prints the plan without pruning/uploading; without it, snapshots no longer matching any retention rule are pruned\n- **No specific config file path is mentioned**\n\n**`protected-agent-handoff/handoff-note.md`** — mentions the production rollout of release 2.4.1 starting Monday, and repeats the backup job details above, but lists no config file to back up.\n\n**`eligible-removable-repetition/status-update.md`** — notes a cache service upgrade and a queue service \"config refresh\" for release 2.4.1, but names no file paths.\n\nIf this instruction comes from a runbook, README, or upgrade guide you expected to be in this workspace, it isn't present — the current directory (`protected-path`) is completely empty. If you can point me to the actual document (or drop it into the workspace), I'll extract the exact absolute path for you.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "protected-confirmation",
+      "arm": "base",
+      "nodeId": "parent",
+      "kind": "parent",
+      "phase": "measured",
+      "usage": {
+        "input": 2928,
+        "output": 1915,
+        "cacheWrite": 0,
+        "cacheRead": 5760
+      },
+      "usageTurns": [
+        {
+          "input": 48,
+          "output": 90,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 161,
+          "output": 16,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        },
+        {
+          "input": 555,
+          "output": 1340,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        },
+        {
+          "input": 2164,
+          "output": 469,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        }
+      ],
+      "elapsedMs": 49056,
+      "text": "Verified — `migrate-with-confirmation.sh` already satisfies all three requirements, and both paths behave correctly:\n\n**Requirements met**\n1. **Explicit confirmation gate** — the migration command is only reached via `exec` *after* the phrase check passes; a mismatch aborts with exit 1 and runs nothing.\n2. **Exact phrase** — `confirm before proceeding` appears verbatim in the prompt (`Type 'confirm before proceeding' to continue:`) and in the case-sensitive comparison.\n3. **Rollback window** — shown *before* the prompt (default `24 hours`, overridable via `ROLLBACK_WINDOW` env var) with a warning that post-window rollback requires coordinated manual recovery, and repeated in the confirmation message.\n\n**Test results** (using `echo` as a stand-in migration command)\n- Wrong phrase → `Confirmation phrase did not match. Migration aborted; no changes were made.` exit 1, command never executed.\n- Correct phrase → `Confirmed. Applying migration (rollback window: 24 hours)...` then the command runs, exit 0.\n\n**One caveat to flag**: as the tests show, piping the phrase via stdin (`printf 'confirm before proceeding\\n' | ...`) also passes the gate, so it isn't strictly *interactive* confirmation. If you want it hardened, I can add a TTY check (e.g., fail closed when `[[ ! -t 0 ]]`) so the gate can't be satisfied by piped input — the exact phrase and rollback-window messaging would stay unchanged. Want me to add that?",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "protected-ordered-procedure",
+      "arm": "base",
+      "nodeId": "parent",
+      "kind": "parent",
+      "phase": "measured",
+      "usage": {
+        "input": 236,
+        "output": 523,
+        "cacheWrite": 0,
+        "cacheRead": 2880
+      },
+      "usageTurns": [
+        {
+          "input": 50,
+          "output": 149,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 186,
+          "output": 374,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        }
+      ],
+      "elapsedMs": 10486,
+      "text": "The working directory is empty — there's no existing document defining a specific rollback procedure, so here's a standard five-step rollback procedure you can adapt:\n\n1. **Declare the failure and freeze deployments.** Confirm the offending release is the cause of the incident, halt any in-flight deployments, and notify stakeholders that a rollback is starting.\n\n2. **Identify the last known good version.** Determine the most recent stable release (tag, build, or image) from your deployment history or version control, and verify its artifacts are available in the registry.\n\n3. **Redeploy the stable version.** Re-deploy the last known good release to the target environment using the standard deployment pipeline, ensuring configuration, database schema, and feature flags are compatible with that version.\n\n4. **Verify system health.** Run smoke tests and check dashboards, logs, error rates, and key metrics to confirm that functionality is restored and traffic is being served correctly.\n\n5. **Close out and document.** Mark the incident as mitigated, communicate resolution to stakeholders, and write a post-mortem recording the root cause, the rollback actions taken, and preventive measures.\n\nIf you have a specific system or runbook in mind (e.g., database migrations, Kubernetes, blue/green deploys), let me know and I'll tailor the steps — or point me at the file and I can write them into it.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-technical-explanation",
+      "arm": "shared-prefix-candidate",
+      "nodeId": "finalizer-shared-prefix-candidate-rep1",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 34,
+        "output": 237,
+        "cacheWrite": 0,
+        "cacheRead": 84672
+      },
+      "usageTurns": [
+        {
+          "input": 34,
+          "output": 237,
+          "cacheWrite": 0,
+          "cacheRead": 84672
+        }
+      ],
+      "elapsedMs": 7348,
+      "text": "The nightly backup job runs at 02:00 UTC and decides which snapshots to keep by applying three retention rules: R1 keeps the seven most recent daily snapshots, R2 keeps the four most recent weekly snapshots, and R3 keeps monthly snapshots for one year. Any snapshot that no longer matches a retention rule is pruned. The `--dry-run` flag changes this behavior by making the job print the plan without deleting or uploading anything, so it can be used to preview exactly which snapshots would be pruned before the job actually runs.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-technical-explanation",
+      "arm": "shared-prefix-off",
+      "nodeId": "finalizer-shared-prefix-off-rep1",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 255,
+        "output": 761,
+        "cacheWrite": 0,
+        "cacheRead": 169280
+      },
+      "usageTurns": [
+        {
+          "input": 65,
+          "output": 150,
+          "cacheWrite": 0,
+          "cacheRead": 84608
+        },
+        {
+          "input": 190,
+          "output": 611,
+          "cacheWrite": 0,
+          "cacheRead": 84672
+        }
+      ],
+      "elapsedMs": 17444,
+      "text": "The file is no longer present at that path, but the captured source context contains the full contents of `backup-notes.md`, which is sufficient. Here is the final response for the original task:\n\n---\n\nI verified against `backup-notes.md` — here's how the nightly backup job decides which snapshots to keep:\n\n## The job\n\nThe nightly backup job runs at **02:00 UTC**. Which snapshots survive is determined by three retention rules:\n\n## Retention rules\n\n| Rule | Policy |\n|------|--------|\n| **R1** | Keep the **seven most recent daily** snapshots |\n| **R2** | Keep the **four most recent weekly** snapshots |\n| **R3** | Keep **monthly snapshots for one year** |\n\nA snapshot is retained if it matches **any** of R1–R3. Anything that no longer matches any retention rule is a candidate for pruning.\n\n## The `--dry-run` flag\n\nThe flag controls whether the plan is executed or merely previewed:\n\n- **With `--dry-run`:** the job **prints the plan without deleting or uploading anything** — a pure preview; nothing is pruned and nothing is uploaded.\n- **Without `--dry-run`:** the job actually **prunes snapshots that no longer match any retention rule**.\n\nIn short: the nightly job evaluates each snapshot against R1/R2/R3, and unless `--dry-run` is set, it deletes the ones that fall outside all three rules (while `--dry-run` additionally suppresses the upload step, not just deletion).\n\n---\n\nAll requested facts are retained: **retention** (rules R1–R3 as documented), **dry-run** (the `--dry-run` flag's exact behavior), and **nightly** (the job's schedule at 02:00 UTC).",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-technical-explanation",
+      "arm": "shared-prefix-off",
+      "nodeId": "finalizer-shared-prefix-off-rep2",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 65,
+        "output": 438,
+        "cacheWrite": 0,
+        "cacheRead": 84608
+      },
+      "usageTurns": [
+        {
+          "input": 65,
+          "output": 438,
+          "cacheWrite": 0,
+          "cacheRead": 84608
+        }
+      ],
+      "elapsedMs": 11121,
+      "text": "I verified against `backup-notes.md` — here's how the nightly backup job decides which snapshots to keep:\n\n## The job\n\nThe **nightly backup job** runs at **02:00 UTC**. Which snapshots survive is determined by three retention rules:\n\n## Retention rules\n\n| Rule | Policy |\n|------|--------|\n| **R1** | Keep the **seven most recent daily** snapshots |\n| **R2** | Keep the **four most recent weekly** snapshots |\n| **R3** | Keep **monthly snapshots for one year** |\n\nA snapshot is retained if it matches **any** of R1–R3. Anything that no longer matches any retention rule is a candidate for pruning.\n\n## The `--dry-run` flag\n\nThe flag controls whether the plan is executed or merely previewed:\n\n- **With `--dry-run`:** the job **prints the plan without deleting or uploading anything** — a pure preview; nothing is pruned and nothing is uploaded.\n- **Without `--dry-run`:** the job actually **prunes snapshots that no longer match any retention rule**.\n\nIn short: the job evaluates each snapshot against R1/R2/R3, and unless `--dry-run` is set, it deletes the ones that fall outside all three rules (`--dry-run` additionally suppresses the upload step, not just deletion).",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-technical-explanation",
+      "arm": "shared-prefix-candidate",
+      "nodeId": "finalizer-shared-prefix-candidate-rep2",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 34,
+        "output": 223,
+        "cacheWrite": 0,
+        "cacheRead": 84672
+      },
+      "usageTurns": [
+        {
+          "input": 34,
+          "output": 223,
+          "cacheWrite": 0,
+          "cacheRead": 84672
+        }
+      ],
+      "elapsedMs": 6593,
+      "text": "The nightly backup job runs at 02:00 UTC and decides which snapshots to keep by applying three retention rules: R1 keeps the seven most recent daily snapshots, R2 keeps the four most recent weekly snapshots, and R3 keeps monthly snapshots for one year. Any snapshot that no longer matches a retention rule is pruned — unless the job is run with the `--dry-run` flag, in which case it prints the plan without deleting or uploading anything.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-progress-summary",
+      "arm": "shared-prefix-off",
+      "nodeId": "finalizer-shared-prefix-off-rep1",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 23,
+        "output": 259,
+        "cacheWrite": 0,
+        "cacheRead": 58176
+      },
+      "usageTurns": [
+        {
+          "input": 23,
+          "output": 259,
+          "cacheWrite": 0,
+          "cacheRead": 58176
+        }
+      ],
+      "elapsedMs": 5432,
+      "text": "## Migration Workstream — Progress Summary\n\n**Completed stages:**\n1. **Stage one — schema conversion:** Finished\n2. **Stage two — dual-write verification:** Finished\n\n**Current blocker:** The unmigrated audit consumer.\n\n**Timing note:** The rollback window closes Friday, so resolving the audit consumer before then is the key priority to keep the migration on track.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-progress-summary",
+      "arm": "shared-prefix-candidate",
+      "nodeId": "finalizer-shared-prefix-candidate-rep1",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 56,
+        "output": 228,
+        "cacheWrite": 0,
+        "cacheRead": 58176
+      },
+      "usageTurns": [
+        {
+          "input": 56,
+          "output": 228,
+          "cacheWrite": 0,
+          "cacheRead": 58176
+        }
+      ],
+      "elapsedMs": 5206,
+      "text": "Migration progress is on track through the first two phases: stage one, schema conversion, is finished, and stage two, dual-write verification, is also finished. The current blocker is the unmigrated audit consumer, which is holding up further progress. Note that the rollback window closes Friday, so the audit consumer should ideally be migrated before then.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-progress-summary",
+      "arm": "shared-prefix-candidate",
+      "nodeId": "finalizer-shared-prefix-candidate-rep2",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 56,
+        "output": 212,
+        "cacheWrite": 0,
+        "cacheRead": 58176
+      },
+      "usageTurns": [
+        {
+          "input": 56,
+          "output": 212,
+          "cacheWrite": 0,
+          "cacheRead": 58176
+        }
+      ],
+      "elapsedMs": 5140,
+      "text": "Migration progress on the workstream is as follows: stage one, schema conversion, is finished, and stage two, dual-write verification, is finished. The current blocker is the unmigrated audit consumer, which is holding up further progress. The rollback window closes Friday.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-progress-summary",
+      "arm": "shared-prefix-off",
+      "nodeId": "finalizer-shared-prefix-off-rep2",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 23,
+        "output": 291,
+        "cacheWrite": 0,
+        "cacheRead": 58176
+      },
+      "usageTurns": [
+        {
+          "input": 23,
+          "output": 291,
+          "cacheWrite": 0,
+          "cacheRead": 58176
+        }
+      ],
+      "elapsedMs": 6615,
+      "text": "## Migration Workstream — Progress Summary\n\n**Completed stages:**\n1. **Stage one — schema conversion:** Finished\n2. **Stage two — dual-write verification:** Finished\n\n**Current blocker:** The unmigrated audit consumer — this is what's holding up further progress.\n\n**Timing note:** The rollback window closes Friday, so the audit consumer migration ideally needs to happen before then, while rollback options are still open.\n\n**Bottom line:** The first two stages are done and verified; attention should now shift to migrating the audit consumer to unblock the next phase.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-removable-repetition",
+      "arm": "shared-prefix-candidate",
+      "nodeId": "finalizer-shared-prefix-candidate-rep1",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 33,
+        "output": 297,
+        "cacheWrite": 0,
+        "cacheRead": 120640
+      },
+      "usageTurns": [
+        {
+          "input": 33,
+          "output": 297,
+          "cacheWrite": 0,
+          "cacheRead": 120640
+        }
+      ],
+      "elapsedMs": 4953,
+      "text": "The staging environment runs release 2.4.1 on three nodes, all of which use the standard build pipeline. For this release, the cache service was upgraded and defect 1188, a stale cache key after rollover, is fixed; the queue service received a config refresh and defect 1201, a duplicate delivery under retry, is fixed. Rollout to production starts Monday.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-removable-repetition",
+      "arm": "shared-prefix-off",
+      "nodeId": "finalizer-shared-prefix-off-rep1",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 3353,
+        "output": 3358,
+        "cacheWrite": 0,
+        "cacheRead": 241216
+      },
+      "usageTurns": [
+        {
+          "input": 64,
+          "output": 2403,
+          "cacheWrite": 0,
+          "cacheRead": 120576
+        },
+        {
+          "input": 3289,
+          "output": 955,
+          "cacheWrite": 0,
+          "cacheRead": 120640
+        }
+      ],
+      "elapsedMs": 38773,
+      "text": "The deduplicated update is in place at `status-update.md`. Final response for the original task:\n\n---\n\n**`status-update.md`** — the same update with the repetition removed:\n\n```markdown\n# Status update\n\n## Environment\n\nThe staging environment runs release 2.4.1 on three nodes. All nodes use the standard build pipeline.\n\n## Cache service\n\nThe cache service was upgraded for release 2.4.1. Defect 1188, a stale cache key after rollover, is fixed.\n\n## Queue service\n\nThe queue service received a config refresh for release 2.4.1. Defect 1201, a duplicate delivery under retry, is fixed.\n\n## Next\n\nRollout to production starts Monday.\n```\n\n**Repetition removed:** the environment boilerplate (\"three nodes on the standard build pipeline\") that appeared in all four sections is now stated once, in the Environment section — the Cache, Queue, and Next sections no longer restate it.\n\n**Every fact kept (each exactly once):**\n1. Staging runs release 2.4.1\n2. Environment runs on three nodes\n3. All nodes use the standard build pipeline\n4. Cache service upgraded for release 2.4.1\n5. Defect 1188 — stale cache key after rollover — fixed\n6. Queue service config refresh for release 2.4.1\n7. Defect 1201 — duplicate delivery under retry — fixed\n8. Rollout to production starts Monday\n\nRelease 2.4.1 coverage and both fixed defects (1188, 1201) are fully preserved, with no duplicated boilerplate.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-removable-repetition",
+      "arm": "shared-prefix-off",
+      "nodeId": "finalizer-shared-prefix-off-rep2",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 2143,
+        "output": 1678,
+        "cacheWrite": 0,
+        "cacheRead": 241216
+      },
+      "usageTurns": [
+        {
+          "input": 64,
+          "output": 1197,
+          "cacheWrite": 0,
+          "cacheRead": 120576
+        },
+        {
+          "input": 2079,
+          "output": 481,
+          "cacheWrite": 0,
+          "cacheRead": 120640
+        }
+      ],
+      "elapsedMs": 32633,
+      "text": "The deduplicated update is already in place at `status-update.md` (the original draft, per the captured source, repeated the environment boilerplate — release 2.4.1, three nodes, standard build pipeline — in all four sections). Here is the final response for the original task:\n\n**Deduplicated status update** (written to `status-update.md`):\n\n> # Status update\n>\n> ## Environment\n>\n> The staging environment runs release 2.4.1 on three nodes. All nodes use the standard build pipeline.\n>\n> ## Cache service\n>\n> The cache service was upgraded for release 2.4.1. Defect 1188, a stale cache key after rollover, is fixed.\n>\n> ## Queue service\n>\n> The queue service received a config refresh for release 2.4.1. Defect 1201, a duplicate delivery under retry, is fixed.\n>\n> ## Next\n>\n> Rollout to production starts Monday.\n\n**Repetition removed:** The environment boilerplate (\"runs on three nodes with the standard build pipeline\") appeared in all four sections of the original; it is now stated once, in the Environment section, and dropped from Cache service, Queue service, and Next.\n\n**Every fact kept, each exactly once:**\n1. Staging runs release 2.4.1\n2. Three nodes\n3. Standard build pipeline on all nodes\n4. Cache service upgraded for 2.4.1\n5. Defect 1188 — stale cache key after rollover — fixed\n6. Queue service config refresh for 2.4.1\n7. Defect 1201 — duplicate delivery under retry — fixed\n8. Production rollout starts Monday\n\nRelease 2.4.1 and both fixed defects (1188, 1201) are fully covered.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-removable-repetition",
+      "arm": "shared-prefix-candidate",
+      "nodeId": "finalizer-shared-prefix-candidate-rep2",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 33,
+        "output": 474,
+        "cacheWrite": 0,
+        "cacheRead": 120640
+      },
+      "usageTurns": [
+        {
+          "input": 33,
+          "output": 474,
+          "cacheWrite": 0,
+          "cacheRead": 120640
+        }
+      ],
+      "elapsedMs": 6146,
+      "text": "The deduplicated update has been written to `status-update.md`, with the environment boilerplate stated once instead of in every section:\n\nThe staging environment runs release 2.4.1 on three nodes, and all nodes use the standard build pipeline. The cache service was upgraded for this release, and Defect 1188, a stale cache key after rollover, is fixed. The queue service received a config refresh for this release, and Defect 1201, a duplicate delivery under retry, is fixed. Rollout to production starts Monday.\n\nEvery fact is retained exactly once — the release 2.4.1 coverage, both fixed defects (1188 and 1201), the three-node environment, the standard build pipeline, and the Monday production rollout — while the repeated environment lines in the Cache service, Queue service, and Next sections have been removed.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-implementation-recap",
+      "arm": "shared-prefix-off",
+      "nodeId": "finalizer-shared-prefix-off-rep1",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 39,
+        "output": 466,
+        "cacheWrite": 0,
+        "cacheRead": 53568
+      },
+      "usageTurns": [
+        {
+          "input": 39,
+          "output": 466,
+          "cacheWrite": 0,
+          "cacheRead": 53568
+        }
+      ],
+      "elapsedMs": 6641,
+      "text": "Here's the recap of the connection-pool change, based on the delegated child findings:\n\n**Connection-pool change — what it delivered:**\n\n- **Pool cap:** 64 connections\n- **Eviction trigger:** eviction kicks in when the idle share exceeds 80 percent\n- **Eviction delay:** evicted connections drain for 30 seconds\n\nIn short: the pool is now capped at 64 connections, and when more than 80 percent of them sit idle, eviction kicks in — with evicted connections given a 30-second drain window before removal.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-implementation-recap",
+      "arm": "shared-prefix-candidate",
+      "nodeId": "finalizer-shared-prefix-candidate-rep1",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 8,
+        "output": 190,
+        "cacheWrite": 0,
+        "cacheRead": 53632
+      },
+      "usageTurns": [
+        {
+          "input": 8,
+          "output": 190,
+          "cacheWrite": 0,
+          "cacheRead": 53632
+        }
+      ],
+      "elapsedMs": 4379,
+      "text": "The connection-pool change delivered the following: the pool cap is 64 connections, and eviction triggers when the idle share exceeds 80 percent, with evicted connections draining for 30 seconds.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-implementation-recap",
+      "arm": "shared-prefix-candidate",
+      "nodeId": "finalizer-shared-prefix-candidate-rep2",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 8,
+        "output": 309,
+        "cacheWrite": 0,
+        "cacheRead": 53632
+      },
+      "usageTurns": [
+        {
+          "input": 8,
+          "output": 309,
+          "cacheWrite": 0,
+          "cacheRead": 53632
+        }
+      ],
+      "elapsedMs": 5773,
+      "text": "The connection-pool change, per the task context, delivered a pool cap of 64 connections. On the eviction side, eviction now triggers when the idle share exceeds 80 percent, and evicted connections drain for 30 seconds before closing.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-implementation-recap",
+      "arm": "shared-prefix-off",
+      "nodeId": "finalizer-shared-prefix-off-rep2",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 39,
+        "output": 331,
+        "cacheWrite": 0,
+        "cacheRead": 53568
+      },
+      "usageTurns": [
+        {
+          "input": 39,
+          "output": 331,
+          "cacheWrite": 0,
+          "cacheRead": 53568
+        }
+      ],
+      "elapsedMs": 5121,
+      "text": "Connection-pool change recap (per the delegated child findings):\n\n- **Pool cap:** 64 connections\n- **Eviction trigger:** eviction kicks in when the idle share exceeds 80 percent\n- **Eviction delay:** evicted connections drain for 30 seconds\n\nIn short: the pool is capped at 64 connections, and when more than 80 percent of them sit idle, eviction is triggered — with evicted connections given a 30-second drain period before removal.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-completion-summary",
+      "arm": "shared-prefix-off",
+      "nodeId": "finalizer-shared-prefix-off-rep1",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 33,
+        "output": 478,
+        "cacheWrite": 0,
+        "cacheRead": 86784
+      },
+      "usageTurns": [
+        {
+          "input": 33,
+          "output": 478,
+          "cacheWrite": 0,
+          "cacheRead": 86784
+        }
+      ],
+      "elapsedMs": 9694,
+      "text": "The completion summary is written to `COMPLETION_SUMMARY.md` (already in place, verified against the delegated findings):\n\n---\n\n# Completion Summary: Rate Limiter Task\n\n## Status: Complete ✅\n\n## Token Bucket Change\nThe rate limiter now uses a **token bucket**:\n- **Refill rate:** 100 tokens/second\n- **Burst size:** 200 tokens\n\nThis allows short bursts of up to 200 requests while sustaining an average rate of 100 requests/second.\n\n## Test Results\n- **214 passed**, 0 failed\n- Coverage spans **12 test files**\n\nAll tests are green with no failures or regressions introduced by the token bucket change.\n\n---\n\nBoth requested facts are covered: the token bucket change (100 tokens/second refill, burst 200) and the test results (214 passed / 0 failed across 12 files). One caveat: this working directory contains only the summary file — no rate-limiter source or test output to verify the numbers against — so they reflect the delegated findings as given.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-completion-summary",
+      "arm": "shared-prefix-candidate",
+      "nodeId": "finalizer-shared-prefix-candidate-rep1",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 2,
+        "output": 202,
+        "cacheWrite": 0,
+        "cacheRead": 86848
+      },
+      "usageTurns": [
+        {
+          "input": 2,
+          "output": 202,
+          "cacheWrite": 0,
+          "cacheRead": 86848
+        }
+      ],
+      "elapsedMs": 4214,
+      "text": "The rate-limiter task is complete. The rate limiter now uses a token bucket that refills at 100 tokens per second with a burst size of 200, allowing short bursts of up to 200 requests while sustaining an average rate of 100 requests per second. The full test suite passes: 214 tests passed and 0 failed across 12 test files, with no failures or regressions introduced by the token bucket change.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-completion-summary",
+      "arm": "shared-prefix-candidate",
+      "nodeId": "finalizer-shared-prefix-candidate-rep2",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 2,
+        "output": 163,
+        "cacheWrite": 0,
+        "cacheRead": 86848
+      },
+      "usageTurns": [
+        {
+          "input": 2,
+          "output": 163,
+          "cacheWrite": 0,
+          "cacheRead": 86848
+        }
+      ],
+      "elapsedMs": 4832,
+      "text": "The rate-limiter task is complete. The limiter now uses a token bucket that refills at 100 tokens per second with a burst size of 200. The test results were 214 passed and 0 failed across 12 files, so the full suite is green with no regressions from the change.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-completion-summary",
+      "arm": "shared-prefix-off",
+      "nodeId": "finalizer-shared-prefix-off-rep2",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 33,
+        "output": 503,
+        "cacheWrite": 0,
+        "cacheRead": 86784
+      },
+      "usageTurns": [
+        {
+          "input": 33,
+          "output": 503,
+          "cacheWrite": 0,
+          "cacheRead": 86784
+        }
+      ],
+      "elapsedMs": 7581,
+      "text": "The completion summary is in place at `COMPLETION_SUMMARY.md` and covers both requested items from the delegated findings. Its contents:\n\n---\n\n# Completion Summary: Rate Limiter Task\n\n## Status: Complete ✅\n\n## Summary\nThe rate-limiter task has been finished. The limiter was moved to a token-bucket algorithm, and the full test suite passes.\n\n## Token Bucket Change\n- **Refill rate:** 100 tokens/second\n- **Burst size:** 200 tokens\n\nThis allows short bursts of up to 200 requests while sustaining an average rate of 100 requests/second.\n\n## Test Results\n- **214 passed**, 0 failed\n- Coverage spans **12 test files**\n\nAll tests are green with no failures or regressions introduced by the token bucket change.\n\n---\n\nNotes:\n- **Token bucket** fact retained: refill 100 tokens/second, burst 200.\n- **Test results** fact retained: 214 passed, 0 failed, across 12 files.\n- One caveat: this working directory contains only the summary file — there's no rate-limiter source, config, or test output to verify the numbers against. They match the delegated child's report exactly but remain unverified against real artifacts.\n\nThe summary is ready to use as-is; no changes were needed.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-noncritical-troubleshooting",
+      "arm": "shared-prefix-off",
+      "nodeId": "finalizer-shared-prefix-off-rep1",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 14,
+        "output": 470,
+        "cacheWrite": 0,
+        "cacheRead": 100864
+      },
+      "usageTurns": [
+        {
+          "input": 14,
+          "output": 470,
+          "cacheWrite": 0,
+          "cacheRead": 100864
+        }
+      ],
+      "elapsedMs": 7026,
+      "text": "## Diagnosis\n\n**Why the warning prints:** During the staging deploy, the `CACHE_TTL` environment variable is unset. The application handles this gracefully by falling back to a built-in default TTL, and it announces that via the message:\n\n> \"cached values fall back to the default.\"\n\n**Why it's harmless:** Nothing fails — the cache still works; it just uses the default expiry.\n\n## The exact mechanics\n\n- **Env var name (exact):** `CACHE_TTL` — uppercase, underscore-separated.\n- **Log level (exact):** The message is emitted at `debug` level, *not* `warn`, despite its warning-ish wording. That's the key nuance: it only appears in staging because the log level there is set to `debug`, which lets debug-level output through.\n\n## How to silence it\n\nTwo independent options:\n\n1. **Fix the cause:** Set `CACHE_TTL` to an explicit value (e.g., `CACHE_TTL=300`) in the staging environment. The fallback message never fires.\n2. **Fix the visibility:** Raise the staging log level from `debug` to `warn`. Since the message is debug-level, `warn` filters it out. This matches the observed behavior: setting the level to `warn` hides it.\n\nOption 1 is preferable if you want staging to mirror production config; option 2 is the quick suppression if the default TTL is intentional.\n\n*(Note: the workspace was empty — no repo to inspect — so this diagnosis rests entirely on the delegated finding.)*",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-noncritical-troubleshooting",
+      "arm": "shared-prefix-candidate",
+      "nodeId": "finalizer-shared-prefix-candidate-rep1",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 47,
+        "output": 381,
+        "cacheWrite": 0,
+        "cacheRead": 100864
+      },
+      "usageTurns": [
+        {
+          "input": 47,
+          "output": 381,
+          "cacheWrite": 0,
+          "cacheRead": 100864
+        }
+      ],
+      "elapsedMs": 7564,
+      "text": "The staging deploy prints the cache warning because the `CACHE_TTL` environment variable is unset; the application then falls back to a built-in default TTL and announces it with the message \"cached values fall back to the default.\" It's harmless — nothing fails, the cache just uses the default expiry. The nuance is that although the message reads like a warning, it is actually emitted at `debug` level, so it only shows up in staging because the log level there is `debug`. To silence it, either fix the cause by setting `CACHE_TTL` to an explicit value (e.g., `CACHE_TTL=300`), which stops the fallback message from ever firing, or raise the log level from `debug` to `warn`, which filters the debug-level message out — matching the observed behavior that setting the level to `warn` hides it.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-noncritical-troubleshooting",
+      "arm": "shared-prefix-candidate",
+      "nodeId": "finalizer-shared-prefix-candidate-rep2",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 47,
+        "output": 508,
+        "cacheWrite": 0,
+        "cacheRead": 100864
+      },
+      "usageTurns": [
+        {
+          "input": 47,
+          "output": 508,
+          "cacheWrite": 0,
+          "cacheRead": 100864
+        }
+      ],
+      "elapsedMs": 8709,
+      "text": "The harmless cache warning appears during the staging deploy because the `CACHE_TTL` environment variable is unset; the application handles this gracefully by using a built-in default TTL and announces it with the message \"cached values fall back to the default.\" Nothing fails — the cache still works with the default expiry.\n\nThe exact details: the env var is `CACHE_TTL`, and the message is emitted at `debug` level, not `warn`, despite its warning-like wording — which is why it only shows up in staging where the log level is set to `debug`.\n\nTo silence it, either set `CACHE_TTL` to an explicit value in the staging environment (so the fallback message never fires), or raise the staging log level from `debug` to `warn`, which filters the debug-level message out — matching the observed behavior that setting the level to `warn` hides it.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-noncritical-troubleshooting",
+      "arm": "shared-prefix-off",
+      "nodeId": "finalizer-shared-prefix-off-rep2",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 14,
+        "output": 474,
+        "cacheWrite": 0,
+        "cacheRead": 100864
+      },
+      "usageTurns": [
+        {
+          "input": 14,
+          "output": 474,
+          "cacheWrite": 0,
+          "cacheRead": 100864
+        }
+      ],
+      "elapsedMs": 7312,
+      "text": "**Diagnosis**\n\nThe staging deploy prints the harmless cache warning because the `CACHE_TTL` environment variable is unset. When that happens, the application falls back to its built-in default TTL and announces it with the message:\n\n> \"cached values fall back to the default.\"\n\nNothing fails — the cache still works; it just uses the default expiry, which is why the warning is harmless.\n\n**Exact details requested**\n\n- **Env var name (exact):** `CACHE_TTL` — uppercase, underscore-separated.\n- **Log level (exact):** The message is emitted at `debug` level, not `warn`, despite its warning-like wording. It only shows up in staging because the log level there is `debug`; per the captured finding, setting the log level to `warn` instead of `debug` hides it.\n\n**How to silence it**\n\n1. **Fix the cause:** Set `CACHE_TTL` to an explicit value (e.g., `CACHE_TTL=300`) in the staging environment — the fallback message never fires.\n2. **Fix the visibility:** Raise the staging log level from `debug` to `warn` — since the message is debug-level, `warn` filters it out. This matches the observed behavior: setting the level to `warn` hides it.\n\nOption 1 is preferable if staging should mirror production config; option 2 is the quick suppression if the default TTL is intentional.\n\n*Note: the workspace is empty — no repo to inspect — so this diagnosis rests entirely on the delegated finding.*",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-comparison",
+      "arm": "shared-prefix-off",
+      "nodeId": "finalizer-shared-prefix-off-rep1",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 31,
+        "output": 672,
+        "cacheWrite": 0,
+        "cacheRead": 137792
+      },
+      "usageTurns": [
+        {
+          "input": 31,
+          "output": 672,
+          "cacheWrite": 0,
+          "cacheRead": 137792
+        }
+      ],
+      "elapsedMs": 6622,
+      "text": "## Comparison\n\n| | Bounded ring queue | Priority heap queue |\n|---|---|---|\n| Throughput | **120k msg/s** | 40k msg/s |\n| Ordering | Strict per producer (FIFO) | Priority tier, then arrival (FIFO within tier) |\n| Capacity | Fixed 1024 | Grows to 65536 |\n\n## Recommendation: priority heap queue — with one caveat\n\nFor an **alerts pipeline**, the heap is the better fit:\n\n1. **Ordering matters more than raw speed for alerts.** Alerts are severity-classified by nature (critical vs. warning vs. info). The heap's tier-then-arrival ordering means a CRITICAL alert is never stuck behind a backlog of informational ones — exactly the failure mode you can't tolerate in alerting. The ring's strict per-producer FIFO gives no such guarantee: a critical alert behind 900 info alerts waits behind all 900.\n\n2. **3x lower throughput is rarely the bottleneck here.** 40k msg/s is still enormous headroom for typical alert-generation rates (usually hundreds to low-thousands per second). Sacrificing 120k→40k buys nothing if you'll never see 40k alerts/sec, but the ordering gain applies to every message.\n\n3. **Burst absorption.** Alert volume is spiky — incidents trigger storms (cascading failures, flapping checks). A fixed 1024-slot ring fills in microseconds at those rates and either drops or blocks, and *dropping during an alert storm is the worst possible time to drop*. The heap's growth to 65536 rides out storms, at the cost of needing backpressure/memory monitoring so consumers falling behind don't balloon the heap unchecked.\n\n**The caveat:** if sustained alert rate genuinely approaches or exceeds 40k msg/s, the heap becomes the bottleneck and the ring is the only option that keeps up. In that case, recover priority semantics with **N rings (one per tier)** drained highest-tier-first — near-ring throughput with coarse priority ordering, at the cost of more moving parts and per-tier capacity limits.\n\n**Bottom line:** unless measured ingestion is near 40k msg/s, take the priority heap queue, and monitor heap depth (e.g., alert above ~50% of the 65536 ceiling) so backpressure kicks in before memory does.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-comparison",
+      "arm": "shared-prefix-candidate",
+      "nodeId": "finalizer-shared-prefix-candidate-rep1",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 64,
+        "output": 491,
+        "cacheWrite": 0,
+        "cacheRead": 137792
+      },
+      "usageTurns": [
+        {
+          "input": 64,
+          "output": 491,
+          "cacheWrite": 0,
+          "cacheRead": 137792
+        }
+      ],
+      "elapsedMs": 8238,
+      "text": "The bounded ring queue delivers 120k messages per second with ordering that is strict per producer, while its capacity is fixed at 1024. The priority heap queue delivers 40k messages per second — a third of the ring's throughput — with ordering by priority tier first and then arrival, and its capacity grows to 65536.\n\nFor the alerts pipeline, I recommend the priority heap queue. Although it is slower (40k versus 120k messages per second), its tier-then-arrival ordering ensures higher-priority alerts are processed ahead of lower-priority ones regardless of when each arrived, whereas the ring's strict per-producer ordering offers no such guarantee and cannot elevate urgent traffic. The heap's growing capacity (to 65536) also accommodates bursts better than the ring's fixed 1024 slots. Choose the ring queue only if sustained throughput beyond 40k messages per second is a hard requirement, since it is the only one of the two that can keep up at that rate.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-comparison",
+      "arm": "shared-prefix-candidate",
+      "nodeId": "finalizer-shared-prefix-candidate-rep2",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 64,
+        "output": 386,
+        "cacheWrite": 0,
+        "cacheRead": 137792
+      },
+      "usageTurns": [
+        {
+          "input": 64,
+          "output": 386,
+          "cacheWrite": 0,
+          "cacheRead": 137792
+        }
+      ],
+      "elapsedMs": 7589,
+      "text": "The two queues differ sharply in throughput, ordering, and capacity. The bounded ring queue delivers 120k messages per second with ordering strict per producer and a capacity fixed at 1024. The priority heap queue delivers 40k messages per second, orders by priority tier then arrival, and grows to a capacity of 65536.\n\nFor the alerts pipeline, the priority heap queue is the better recommendation. Although its throughput is 3x lower than the ring's, its tier-then-arrival ordering means high-priority alerts are served ahead of lower-priority ones regardless of arrival order, which the ring's strict per-producer FIFO cannot guarantee. Its capacity of up to 65536 also absorbs bursts that would overflow the ring's fixed 1024 slots, though the growing capacity should be monitored so the heap does not balloon if consumers fall behind. If sustained alert volume approaches the heap's 40k messages-per-second limit, the ring queue becomes the necessary choice for throughput, and priority ordering can be approximated by running multiple rings — one per priority tier — and draining the highest tier first.",
+      "error": null,
+      "validUsage": true
+    },
+    {
+      "taskId": "eligible-comparison",
+      "arm": "shared-prefix-off",
+      "nodeId": "finalizer-shared-prefix-off-rep2",
+      "kind": "finalizer",
+      "phase": "measured",
+      "usage": {
+        "input": 31,
+        "output": 719,
+        "cacheWrite": 0,
+        "cacheRead": 137792
+      },
+      "usageTurns": [
+        {
+          "input": 31,
+          "output": 719,
+          "cacheWrite": 0,
+          "cacheRead": 137792
+        }
+      ],
+      "elapsedMs": 7504,
+      "text": "## Comparison\n\n| | Bounded ring queue | Priority heap queue |\n|---|---|---|\n| **Throughput** | **120k msg/s** | **40k msg/s** |\n| **Ordering** | **Strict per producer** (FIFO per producer) | **Priority tier, then arrival** (FIFO within tier) |\n| Capacity | Fixed 1024 | Grows to 65536 |\n\n## Recommendation: priority heap queue — with one caveat\n\nFor an **alerts pipeline**, the heap is the better fit:\n\n1. **Ordering matters more than raw speed for alerts.** Alerts are severity-classified by nature (critical vs. warning vs. info). The heap's tier-then-arrival ordering means a CRITICAL alert is never stuck behind a backlog of informational ones — exactly the failure mode you can't tolerate in alerting. The ring's strict per-producer FIFO gives no such guarantee; a critical alert behind 900 info alerts waits behind all 900.\n\n2. **3x lower throughput is rarely the bottleneck here.** 40k msg/s is still enormous headroom for typical alert-generation rates (usually hundreds-to-low-thousands per second). Sacrificing 120k→40k buys nothing if you'll never see 40k alerts/sec, but the ordering gain applies to every message.\n\n3. **Burst absorption.** Alert volume is spiky — incidents trigger storms (cascading failures, flapping checks). A fixed 1024-slot ring fills in microseconds at those rates and either drops or blocks, and *dropping during an alert storm is the worst possible time to drop*. The heap's growth to 65536 rides out storms, at the cost of needing backpressure/memory monitoring so consumers falling behind don't balloon the heap unchecked.\n\n**The caveat:** if your sustained alert rate genuinely approaches or exceeds 40k msg/s, the heap becomes the bottleneck and the ring is the only option that keeps up. In that case, recover priority semantics with **N rings (one per tier)** drained highest-tier-first — you keep near-ring throughput and coarse priority ordering, at the cost of more moving parts and per-tier capacity limits.\n\n**Bottom line:** unless you have measured ingestion near 40k msg/s, take the priority heap queue. Add monitoring on heap depth (e.g., alert when > ~50% of the 65536 ceiling) so backpressure kicks in before memory does.",
+      "error": null,
+      "validUsage": true
+    }
+  ],
+  "gates": {
+    "completeProductTokens": false,
+    "completeProductLatency": false,
+    "taskSuccessNonInferior": false,
+    "zeroCriticalFinalizerLosses": false,
+    "zeroUnsupportedClaims": false,
+    "protectedInjectionZero": true,
+    "protectedSuccessEqual": false,
+    "protectedContentComplete": false,
+    "protectedNoExtraFinalizerWork": true
+  },
+  "defaultMode": "off",
+  "claims": [],
+  "passed": false,
+  "generatedAt": "2026-08-30T18:12:54.651Z"
+}

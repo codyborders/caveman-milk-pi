@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "shared-prefix-v12-artifacts/1",
+  "fixtureSha256": "641bbb383211257153cd0948bca4692838f7d7b3c10f89f8dca8ce26ffdf73c9",
+  "artifacts": [
+    {
+      "path": "evaluation/captures/shared-prefix-v12-final-v1.tar.gz",
+      "sha256": "f77aaf381e7b8f275405899a19476894e8ab93587438a65e70633091b733f40d",
+      "bytes": 586905
+    },
+    {
+      "path": "evaluation/captures/shared-prefix-v12-preflight-v1.tar.gz",
+      "sha256": "ba6711778ea60855ec7bba2b26eb6ed34c3b0de5f56936f0d93803d5d57e4027",
+      "bytes": 6277
+    },
+    {
+      "path": "evaluation/captures/shared-prefix-v12-preflight-v2.tar.gz",
+      "sha256": "4f0b0a0d7e6be041fe01a0c6e78bd87c606dbb06ae0092fea30af9bf510ac259",
+      "bytes": 379310
+    },
+    {
+      "path": "evaluation/captures/shared-prefix-v12-preflight-v3.tar.gz",
+      "sha256": "6d55a92c0e1452aa21f07659f650591ae957b1a26b4e3a207940b18d18f2bcb7",
+      "bytes": 358773
+    },
+    {
+      "path": "evaluation/checkpoints/shared-prefix-v12-final-v1.json",
+      "sha256": "8aab646142939c5f65731ffb0d7f8e757b0a8853155da430fc99762e9e3f802d",
+      "bytes": 26382067
+    },
+    {
+      "path": "evaluation/checkpoints/shared-prefix-v12-preflight-v1.json",
+      "sha256": "ae71d05ca6a71f8c36aa7c2fdcadf2a6525780c8966f8fcc128c8df4ad0d6c1f",
+      "bytes": 7089441
+    },
+    {
+      "path": "evaluation/checkpoints/shared-prefix-v12-preflight-v2.json",
+      "sha256": "f2df671aa30adb9a04cc157571558a1d865380f7691e7af5cb714f4a2b9eab4c",
+      "bytes": 19392314
+    },
+    {
+      "path": "evaluation/checkpoints/shared-prefix-v12-preflight-v3.json",
+      "sha256": "c0a834049b2261b896275380c5926c5642aa8b031abe18e421462ace89e93520",
+      "bytes": 16924721
+    },
+    {
+      "path": "evaluation/results/shared-prefix-v12-analysis-v1.json",
+      "sha256": "b51d603bbc1568772c3e474dc2306100a74828a49e552773de02cd842b304f1e",
+      "bytes": 38645
+    },
+    {
+      "path": "evaluation/results/shared-prefix-v12-analysis-v1.md",
+      "sha256": "4f3de51a1140c7650a62c51db3f4131f9e3b73975e99cdb1db3a63c3d04cc81b",
+      "bytes": 2697
+    },
+    {
+      "path": "evaluation/results/shared-prefix-v12-final-v1.json",
+      "sha256": "11399d60cf5c87b7cef515f7fc0eafef73d3ae39cac2d468587f35ff0ab68abc",
+      "bytes": 264102
+    },
+    {
+      "path": "evaluation/results/shared-prefix-v12-preflight-v1.json",
+      "sha256": "905d504e82d24ace008e6f5cea32f3b102a9a9b6ac43dea96b686098a5993269",
+      "bytes": 110316
+    },
+    {
+      "path": "evaluation/results/shared-prefix-v12-preflight-v2.json",
+      "sha256": "c4a49e51b80d8937b43d39a00a1f92a5392f1e7e74e8847e607bc14f2671cac3",
+      "bytes": 143641
+    },
+    {
+      "path": "evaluation/results/shared-prefix-v12-preflight-v3.json",
+      "sha256": "e8084111f5bd063798c92cb7c11ba7f52d3ea2896974fb424852d6ea2eb0627c",
+      "bytes": 143428
+    },
+    {
+      "path": "scripts/eval/shared-prefix-v12-fixture-manifest.json",
+      "sha256": "e08039e24f743852e85d267a72f7f20f1fb372a7ee7eb398ee7fd62950e3c9c2",
+      "bytes": 384
+    },
+    {
+      "path": "scripts/eval/shared-prefix-v12-fixtures.json",
+      "sha256": "641bbb383211257153cd0948bca4692838f7d7b3c10f89f8dca8ce26ffdf73c9",
+      "bytes": 8119
+    }
+  ]
+}

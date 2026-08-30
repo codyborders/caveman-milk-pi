@@ -7,6 +7,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { describe, expect, it } from "vitest";
+import { buildSharedPrefixV12FinalAnalysis } from "../scripts/eval/shared-prefix-v12-runner.mjs";
 
 async function loadRunner() {
   try {
@@ -87,6 +88,52 @@ async function runReport(overrides = {}) {
 }
 
 describe("shared-prefix v12 analysis reporting", () => {
+  it("summarizes final raw report without changing its bytes", () => {
+    const raw = fs.readFileSync(path.resolve("evaluation/results/shared-prefix-v12-final-v1.json"), "utf8");
+    const report = JSON.parse(raw);
+    const analysis = buildSharedPrefixV12FinalAnalysis(report, []);
+    expect(analysis.schemaVersion).toBe("shared-prefix-v12-analysis/1");
+    expect(analysis.final.status).toBe("final v1");
+    expect(analysis.final.validWarmPairs).toBe(35);
+    expect(analysis.final.exclusions).toBe(0);
+    expect(analysis.eligible.completeProduct.pairedIntervals.tokens).toEqual(report.eligibleGroup.tokenInterval);
+    expect(analysis.eligible.contractOverhead.exactTokens).toBe(33);
+    expect(analysis.eligible.isolatedSharedPrefix.pairedIntervals.tokens).toEqual(
+      report.isolatedFinalizerComparison.tokenInterval,
+    );
+    expect(analysis.eligible.isolatedSharedPrefix.pairedIntervals.outputTokens).toEqual(
+      report.isolatedFinalizerComparison.outputTokenInterval,
+    );
+    expect(analysis.eligible.isolatedSharedPrefix.pairedIntervals.latency).toEqual(
+      report.isolatedFinalizerComparison.latencyInterval,
+    );
+    expect(analysis.eligible.taskSuccess).toEqual({
+      normalOffPassed: 4,
+      candidatePassed: 5,
+      taskCount: 7,
+    });
+    expect(analysis.eligible.criticalFinalizerLosses).toBe(1);
+    expect(analysis.unsupportedClaims.count).toBe(2);
+    expect(analysis.cache.exclusions).toEqual([]);
+    expect(analysis.protected.bypass.injectionTokens).toBe(0);
+    expect(analysis.protected.bypass.providerCandidatePromptTokens).toBe(0);
+    expect(analysis.protected.bypass.extraFinalizerCallsIncludingSetup).toBe(0);
+    expect(analysis.protected.bypass.successEqual).toBe(true);
+    expect(analysis.protected.bypass.contentComplete).toBe(false);
+    expect(analysis.mode.default).toBe("off");
+    expect(fs.readFileSync(path.resolve("evaluation/results/shared-prefix-v12-final-v1.json"), "utf8")).toBe(raw);
+  });
+
+  it("rejects inconsistent provider-reported contract overhead", () => {
+    const report = JSON.parse(
+      fs.readFileSync(path.resolve("evaluation/results/shared-prefix-v12-final-v1.json"), "utf8"),
+    );
+    report.eligibleGroup.contractOverhead[0].exactContractOverheadTokens = 34;
+    expect(() => buildSharedPrefixV12FinalAnalysis(report, [])).toThrow(
+      /contract overhead/i,
+    );
+  });
+
   it("fails closed with empty claims when the candidate adds tokens", async () => {
     const report = await runReport();
     expect(report.defaultMode).toBe("off");

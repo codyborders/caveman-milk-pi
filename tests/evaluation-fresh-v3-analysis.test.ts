@@ -4,7 +4,7 @@
 // every gate passes.
 
 import { describe, expect, it } from "vitest";
-import { buildFreshV3Analysis } from "../scripts/eval/fresh-v3-analysis.mjs";
+import { buildFreshV3Analysis, buildFreshV3PrSummary } from "../scripts/eval/fresh-v3-analysis.mjs";
 
 const responses = {
   "v3-warning-rollback":
@@ -137,6 +137,136 @@ const controlledRuns = [
   { id: "cold", cacheRule: "zero", raw: makeRun({ id: "cold", cacheRead: 0, dropNegation: true }) },
   { id: "warm", cacheRule: "positive", raw: makeRun({ id: "warm", cacheRead: 500, dropNegation: true }) }
 ];
+
+describe("fresh-v3 corrected v2 outputs", () => {
+  it("reports v2 validator provenance and corrected preservation vocabulary", () => {
+    const analysis = buildFreshV3Analysis({ controlledRuns });
+    expect(analysis.version).toBe(2);
+    expect(analysis.schemaVersion).toBe("fresh-v3-analysis-v2");
+    expect(analysis.validatorVersions).toEqual({ previous: "schema5-task-success-v13", current: "schema5-task-success-v14" });
+    expect(analysis.preservation.lite.userFacing).toHaveProperty("totalCriticalFindings");
+    expect(analysis.preservation.lite.userFacing).not.toHaveProperty("criticalOmissionCount");
+    expect(buildFreshV3PrSummary(analysis)).toContain("V10 reduces prompt injection itself");
+    expect(analysis.reconciliation.reclassifiedResults.length).toBeGreaterThan(0);
+    expect(analysis.taskGroupPerformance["direct single-agent tasks"]).toBeDefined();
+    expect(analysis.taskGroupPerformance["direct single-agent tasks"].byCondition).toHaveProperty("cold");
+    expect(analysis.taskGroupPerformance["direct single-agent tasks"].deploymentMix).toBeDefined();
+    expect(analysis.taskGroupPerformance["direct single-agent tasks"].metrics).toBeUndefined();
+    expect(analysis.taskGroupPerformance["direct single-agent tasks"].deploymentMix.input.offMean).not.toBeNull();
+    expect(analysis.taskGroupPerformance["direct single-agent tasks"].deploymentMix.input.pairedMeanDelta).toBeDefined();
+    expect(analysis.taskGroupPerformance["direct single-agent tasks"].byCondition.cold.metrics.input).toMatchObject({ lower95: expect.any(Number), upper95: expect.any(Number), pairCount: expect.any(Number), availability: "available" });
+    expect(analysis.taskGroupPerformance["nested child nodes"].byCondition.cold.metrics.criticalPathLatencyMs.offMean).toBeNull();
+    expect(analysis.taskGroupPerformance["child-to-parent responses"].byCondition.cold.metrics.criticalPathLatencyMs.offMean).toBeNull();
+    expect(analysis.usageValidation).toHaveProperty("mismatches");
+    expect(analysis.markdown).toContain("4d40fd64b47ca4806b838412c20415033c395e39");
+    expect(analysis.markdown).toContain("schema5-task-success-v14");
+    expect(analysis.markdown).toContain("cacheRead");
+    expect(analysis.markdown).toContain("criticalPathLatencyMs");
+    expect(analysis.markdown).toContain("| input |");
+    expect(analysis.markdown).toContain("mutually exclusive by validator finding type");
+    expect(analysis.markdown).not.toContain("\\n");
+    expect(buildFreshV3PrSummary(analysis)).not.toContain("\\n");
+  });
+});
+
+describe("fresh-v3 corrected metric sources", () => {
+  it("uses weighted condition means and audits behavioral exclusions", () => {
+    const analysis = buildFreshV3Analysis();
+    const direct = analysis.taskGroupPerformance["direct single-agent tasks"];
+    const expectedDirectTokenDelta =
+      0.5 * direct.byCondition.cold.metrics.totalTokens.pairedMeanDelta +
+      0.5 * direct.byCondition.warm.metrics.totalTokens.pairedMeanDelta;
+    expect(direct.deploymentMix.totalTokens.pairedMeanDelta).toBeCloseTo(
+      expectedDirectTokenDelta,
+      12,
+    );
+
+    const warmFailure = analysis.metricExclusions.warm.totalTreeTokens.find(
+      (entry) =>
+        entry.key === "2|v3-nested-fix" && entry.reason === "behavioral failure",
+    );
+    expect(warmFailure).toMatchObject({
+      sourcePath: "evaluation/results/fresh-v3-warm-controlled-v1.json",
+      offRawPointer: "/results/27",
+      liteRawPointer: "/results/26",
+    });
+
+    const summary = buildFreshV3PrSummary(analysis);
+    expect(summary).not.toContain("undefined");
+    expect(summary).toContain("| direct single-agent tasks | cold |");
+    expect(summary).toContain("| complete nested trees | warm |");
+    expect(summary).not.toContain("| complete nested trees | cold | 0 | n/a");
+    expect(analysis.markdown).not.toContain(";");
+  });
+
+  it("records old and new intervals plus pair deltas for every reconciled metric", () => {
+    const analysis = buildFreshV3Analysis();
+    expect(analysis.reconciliation.metrics.previousV13.warmTotalTreeTokens).toEqual({
+      count: 25,
+      mean: 210.2,
+      lower95: -277.88,
+      upper95: 825.4,
+    });
+    expect(analysis.reconciliation.metrics.currentV14.warmTotalTreeTokens).toMatchObject({
+      count: 27,
+      mean: 255.59259259259258,
+      lower95: -197.7037037037037,
+      upper95: 824.2962962962963,
+    });
+    expect(analysis.reconciliation.pairInclusionChanges).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: "2|v3-nested-rollout-review",
+          totalTreeTokenDelta: 672,
+          rootLatencyMsDelta: 6051,
+          firstTokenMsDelta: 75,
+        }),
+        expect.objectContaining({
+          key: "3|v3-nested-rollout-review",
+          totalTreeTokenDelta: 974,
+          rootLatencyMsDelta: -5210,
+          firstTokenMsDelta: 219,
+        }),
+      ]),
+    );
+  });
+});
+
+describe("fresh-v3 observed attribution", () => {
+  it("states observed cache and handoff contributors without isolated attribution", () => {
+    const analysis = buildFreshV3Analysis();
+    expect(analysis.markdown).toContain("increased cache reads while input and output decline");
+  });
+});
+
+describe("fresh-v3 prompt provenance", () => {
+  it("separates exact v10 overhead from prior v9 estimate and cross-run comparison", () => {
+    const analysis = buildFreshV3Analysis();
+    expect(analysis.measuredPromptOverhead.actualInjectedTokens).toBe(77);
+    expect(analysis.measuredPromptOverhead.v9EstimateTokens).toBe(113);
+    expect(analysis.measuredPromptOverhead.previousCrossRunComparisonTokens).toBe(102);
+    expect(analysis.promptComparability.provider).toBe(false);
+    expect(analysis.deploymentMixWeights).toEqual({ cold: 0.5, warm: 0.5 });
+  });
+});
+
+describe("fresh-v3 source reconciliation", () => {
+  it("retains exact raw report paths for reclassifications and pair changes", () => {
+    const analysis = buildFreshV3Analysis();
+    expect(analysis.reconciliation.reclassifiedResults[0].sourcePath).toBe("evaluation/results/fresh-v3-cold-controlled-v1.json");
+    expect(analysis.reconciliation.pairInclusionChanges[0].sourcePath).toBe("evaluation/results/fresh-v3-warm-controlled-v1.json");
+    expect(analysis.reconciliation.reclassifiedResults.length).toBe(11);
+    expect(analysis.reconciliation.reclassifiedResults[0].oldFindings).toBeDefined();
+  });
+});
+
+describe("fresh-v3 raw event group extraction", () => {
+  it("uses unavailable latency for child response groups", () => {
+    const analysis = buildFreshV3Analysis();
+    expect(analysis.taskGroupPerformance["nested child nodes"].byCondition.cold.metrics.criticalPathLatencyMs.offMean).toBeNull();
+    expect(analysis.taskGroupPerformance["child-to-parent responses"].byCondition.cold.metrics.criticalPathLatencyMs.offMean).toBeNull();
+  });
+});
 
 describe("fresh-v3 analysis", () => {
   it("verifies eligibility, splits preservation, and keeps the default off when a gate fails", () => {

@@ -36,6 +36,21 @@
       "path": "evaluation/results/fresh-v3-analysis-v1.md",
       "sha256": "f635a07e543c1384b81fe09eaa55367f7c080e50595ec395bfb4e9e341fdea2e",
       "role": "derived-analysis-prose"
+    },
+    {
+      "path": "evaluation/results/fresh-v3-analysis-v2.json",
+      "sha256": "552584c97ccec684f73d5af85af8bfac437b5ec386aa5507481a7979001e2d6f",
+      "role": "derived-analysis-v2"
+    },
+    {
+      "path": "evaluation/results/fresh-v3-analysis-v2.md",
+      "sha256": "2de8153c1da5d8ea8aa21f8409730c63459c105457040edb2f29f63bdfc6fbc2",
+      "role": "derived-analysis-v2-prose"
+    },
+    {
+      "path": "evaluation/results/fresh-v3-pr-summary-v2.md",
+      "sha256": "132b4e6f67e8b4a4db1819c79fdc01da50215d06e8c95594f0d388b316fa00ce",
+      "role": "derived-pr-summary-v2"
     }
   ]
 }

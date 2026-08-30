@@ -1,0 +1,2055 @@
+{
+  "version": 2,
+  "schemaVersion": "fresh-v4-selective-final-v11-analysis-v2",
+  "generatedBy": "scripts/eval/selective-final-v11-analysis-v2.mjs",
+  "bootstrapSamples": 20000,
+  "sources": [
+    {
+      "condition": "cold",
+      "path": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+      "sha256": "9e267111b52a3ab23641cbe27442735cbb28ec119977080e42e547d468e622ef",
+      "caseCount": 80
+    },
+    {
+      "condition": "warm",
+      "path": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+      "sha256": "9534b653864e969c4c57699b919faeb1936ff8d2e6067eaef7330dcd914295e5",
+      "caseCount": 80
+    }
+  ],
+  "processAccounting": {
+    "provider": 380,
+    "judge": 80,
+    "total": 460,
+    "providerFailures": 0,
+    "judgeFailures": 0
+  },
+  "conditions": {
+    "cold": {
+      "condition": "cold",
+      "rawPath": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+      "totalPairs": 40,
+      "eligiblePairs": 33,
+      "successfulPairs": 24,
+      "tokenDeltas": [
+        432,
+        384,
+        175,
+        17,
+        278,
+        995,
+        64,
+        -216,
+        -97,
+        77,
+        32,
+        293,
+        142,
+        114,
+        192,
+        450,
+        409,
+        453,
+        812,
+        1429,
+        266,
+        204,
+        -1083,
+        2187
+      ],
+      "latencyDeltas": [
+        3430,
+        4280,
+        1859,
+        -3464,
+        11931,
+        15358,
+        -822,
+        -3199,
+        -1437,
+        -5446,
+        -3434,
+        2590,
+        3103,
+        -433,
+        7840,
+        17030,
+        1332,
+        7012,
+        11670,
+        5859,
+        -106,
+        415,
+        -15626,
+        4498
+      ],
+      "totalTokens": {
+        "count": 24,
+        "samples": 20000,
+        "mean": 333.7083333333333,
+        "lower95": 105.58333333333333,
+        "upper95": 584.6666666666666
+      },
+      "endToEndLatencyMs": {
+        "count": 24,
+        "samples": 20000,
+        "mean": 2676.6666666666665,
+        "lower95": -111.54166666666667,
+        "upper95": 5417.833333333333
+      },
+      "exclusions": [
+        {
+          "key": "cold|1|v4-cache-purge",
+          "offRawPointer": "/results/3",
+          "candidateRawPointer": "/results/2",
+          "reasons": [
+            "off behavior or topology failure",
+            "candidate behavior or topology failure"
+          ]
+        },
+        {
+          "key": "cold|1|v4-nested-ledger",
+          "offRawPointer": "/results/11",
+          "candidateRawPointer": "/results/10",
+          "reasons": [
+            "off cache ineligible",
+            "candidate cache ineligible",
+            "candidate behavior or topology failure"
+          ]
+        },
+        {
+          "key": "cold|1|v4-nested-certificate-audit",
+          "offRawPointer": "/results/15",
+          "candidateRawPointer": "/results/14",
+          "reasons": [
+            "candidate cache ineligible"
+          ]
+        },
+        {
+          "key": "cold|2|v4-cache-purge",
+          "offRawPointer": "/results/19",
+          "candidateRawPointer": "/results/18",
+          "reasons": [
+            "off behavior or topology failure",
+            "candidate behavior or topology failure"
+          ]
+        },
+        {
+          "key": "cold|2|v4-nested-ledger",
+          "offRawPointer": "/results/27",
+          "candidateRawPointer": "/results/26",
+          "reasons": [
+            "off cache ineligible",
+            "candidate cache ineligible",
+            "candidate behavior or topology failure"
+          ]
+        },
+        {
+          "key": "cold|2|v4-nested-route-review",
+          "offRawPointer": "/results/28",
+          "candidateRawPointer": "/results/29",
+          "reasons": [
+            "off cache ineligible",
+            "candidate cache ineligible"
+          ]
+        },
+        {
+          "key": "cold|3|v4-cache-purge",
+          "offRawPointer": "/results/35",
+          "candidateRawPointer": "/results/34",
+          "reasons": [
+            "candidate behavior or topology failure"
+          ]
+        },
+        {
+          "key": "cold|3|v4-nested-ledger",
+          "offRawPointer": "/results/43",
+          "candidateRawPointer": "/results/42",
+          "reasons": [
+            "candidate behavior or topology failure"
+          ]
+        },
+        {
+          "key": "cold|3|v4-nested-certificate-audit",
+          "offRawPointer": "/results/47",
+          "candidateRawPointer": "/results/46",
+          "reasons": [
+            "candidate cache ineligible"
+          ]
+        },
+        {
+          "key": "cold|4|v4-cache-purge",
+          "offRawPointer": "/results/51",
+          "candidateRawPointer": "/results/50",
+          "reasons": [
+            "off behavior or topology failure",
+            "candidate behavior or topology failure"
+          ]
+        },
+        {
+          "key": "cold|4|v4-probe-setup",
+          "offRawPointer": "/results/55",
+          "candidateRawPointer": "/results/54",
+          "reasons": [
+            "candidate behavior or topology failure"
+          ]
+        },
+        {
+          "key": "cold|4|v4-nested-ledger",
+          "offRawPointer": "/results/59",
+          "candidateRawPointer": "/results/58",
+          "reasons": [
+            "off cache ineligible",
+            "candidate cache ineligible",
+            "off behavior or topology failure"
+          ]
+        },
+        {
+          "key": "cold|5|v4-cache-purge",
+          "offRawPointer": "/results/67",
+          "candidateRawPointer": "/results/66",
+          "reasons": [
+            "off behavior or topology failure",
+            "candidate behavior or topology failure"
+          ]
+        },
+        {
+          "key": "cold|5|v4-probe-setup",
+          "offRawPointer": "/results/71",
+          "candidateRawPointer": "/results/70",
+          "reasons": [
+            "candidate behavior or topology failure"
+          ]
+        },
+        {
+          "key": "cold|5|v4-nested-ledger",
+          "offRawPointer": "/results/75",
+          "candidateRawPointer": "/results/74",
+          "reasons": [
+            "off behavior or topology failure",
+            "candidate behavior or topology failure"
+          ]
+        },
+        {
+          "key": "cold|5|v4-nested-route-review",
+          "offRawPointer": "/results/76",
+          "candidateRawPointer": "/results/77",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        }
+      ]
+    },
+    "warm": {
+      "condition": "warm",
+      "rawPath": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+      "totalPairs": 40,
+      "eligiblePairs": 6,
+      "successfulPairs": 5,
+      "tokenDeltas": [
+        90,
+        213,
+        42,
+        115,
+        210
+      ],
+      "latencyDeltas": [
+        -3976,
+        369,
+        955,
+        232,
+        2867
+      ],
+      "totalTokens": {
+        "count": 5,
+        "samples": 20000,
+        "mean": 134,
+        "lower95": 75.8,
+        "upper95": 192.2
+      },
+      "endToEndLatencyMs": {
+        "count": 5,
+        "samples": 20000,
+        "mean": 89.4,
+        "lower95": -2148.2,
+        "upper95": 1840.4
+      },
+      "exclusions": [
+        {
+          "key": "warm|1|v4-siren-alert",
+          "offRawPointer": "/results/0",
+          "candidateRawPointer": "/results/1",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|1|v4-cache-purge",
+          "offRawPointer": "/results/3",
+          "candidateRawPointer": "/results/2",
+          "reasons": [
+            "off cache ineligible",
+            "off behavior or topology failure",
+            "candidate behavior or topology failure"
+          ]
+        },
+        {
+          "key": "warm|1|v4-route-status",
+          "offRawPointer": "/results/4",
+          "candidateRawPointer": "/results/5",
+          "reasons": [
+            "off cache ineligible",
+            "candidate cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|1|v4-pr-draft",
+          "offRawPointer": "/results/8",
+          "candidateRawPointer": "/results/9",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|1|v4-nested-ledger",
+          "offRawPointer": "/results/11",
+          "candidateRawPointer": "/results/10",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|1|v4-nested-route-review",
+          "offRawPointer": "/results/12",
+          "candidateRawPointer": "/results/13",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|1|v4-nested-certificate-audit",
+          "offRawPointer": "/results/15",
+          "candidateRawPointer": "/results/14",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|2|v4-siren-alert",
+          "offRawPointer": "/results/16",
+          "candidateRawPointer": "/results/17",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|2|v4-cache-purge",
+          "offRawPointer": "/results/19",
+          "candidateRawPointer": "/results/18",
+          "reasons": [
+            "off cache ineligible",
+            "off behavior or topology failure",
+            "candidate behavior or topology failure"
+          ]
+        },
+        {
+          "key": "warm|2|v4-route-status",
+          "offRawPointer": "/results/20",
+          "candidateRawPointer": "/results/21",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|2|v4-probe-setup",
+          "offRawPointer": "/results/23",
+          "candidateRawPointer": "/results/22",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|2|v4-pr-draft",
+          "offRawPointer": "/results/24",
+          "candidateRawPointer": "/results/25",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|2|v4-nested-ledger",
+          "offRawPointer": "/results/27",
+          "candidateRawPointer": "/results/26",
+          "reasons": [
+            "off cache ineligible",
+            "off behavior or topology failure",
+            "candidate behavior or topology failure"
+          ]
+        },
+        {
+          "key": "warm|2|v4-nested-route-review",
+          "offRawPointer": "/results/28",
+          "candidateRawPointer": "/results/29",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|2|v4-nested-certificate-audit",
+          "offRawPointer": "/results/31",
+          "candidateRawPointer": "/results/30",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|3|v4-siren-alert",
+          "offRawPointer": "/results/32",
+          "candidateRawPointer": "/results/33",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|3|v4-cache-purge",
+          "offRawPointer": "/results/35",
+          "candidateRawPointer": "/results/34",
+          "reasons": [
+            "off cache ineligible",
+            "off behavior or topology failure",
+            "candidate behavior or topology failure"
+          ]
+        },
+        {
+          "key": "warm|3|v4-route-status",
+          "offRawPointer": "/results/36",
+          "candidateRawPointer": "/results/37",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|3|v4-pr-draft",
+          "offRawPointer": "/results/40",
+          "candidateRawPointer": "/results/41",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|3|v4-nested-ledger",
+          "offRawPointer": "/results/43",
+          "candidateRawPointer": "/results/42",
+          "reasons": [
+            "off behavior or topology failure",
+            "candidate behavior or topology failure"
+          ]
+        },
+        {
+          "key": "warm|3|v4-nested-certificate-audit",
+          "offRawPointer": "/results/47",
+          "candidateRawPointer": "/results/46",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|4|v4-siren-alert",
+          "offRawPointer": "/results/48",
+          "candidateRawPointer": "/results/49",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|4|v4-cache-purge",
+          "offRawPointer": "/results/51",
+          "candidateRawPointer": "/results/50",
+          "reasons": [
+            "off cache ineligible",
+            "candidate cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|4|v4-route-status",
+          "offRawPointer": "/results/52",
+          "candidateRawPointer": "/results/53",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|4|v4-pr-draft",
+          "offRawPointer": "/results/56",
+          "candidateRawPointer": "/results/57",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|4|v4-nested-ledger",
+          "offRawPointer": "/results/59",
+          "candidateRawPointer": "/results/58",
+          "reasons": [
+            "off cache ineligible",
+            "off behavior or topology failure",
+            "candidate behavior or topology failure"
+          ]
+        },
+        {
+          "key": "warm|4|v4-nested-route-review",
+          "offRawPointer": "/results/60",
+          "candidateRawPointer": "/results/61",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|4|v4-nested-certificate-audit",
+          "offRawPointer": "/results/63",
+          "candidateRawPointer": "/results/62",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|5|v4-siren-alert",
+          "offRawPointer": "/results/64",
+          "candidateRawPointer": "/results/65",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|5|v4-cache-purge",
+          "offRawPointer": "/results/67",
+          "candidateRawPointer": "/results/66",
+          "reasons": [
+            "off cache ineligible",
+            "off behavior or topology failure",
+            "candidate behavior or topology failure"
+          ]
+        },
+        {
+          "key": "warm|5|v4-route-status",
+          "offRawPointer": "/results/68",
+          "candidateRawPointer": "/results/69",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|5|v4-pr-draft",
+          "offRawPointer": "/results/72",
+          "candidateRawPointer": "/results/73",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|5|v4-nested-ledger",
+          "offRawPointer": "/results/75",
+          "candidateRawPointer": "/results/74",
+          "reasons": [
+            "off cache ineligible",
+            "off behavior or topology failure",
+            "candidate behavior or topology failure"
+          ]
+        },
+        {
+          "key": "warm|5|v4-nested-route-review",
+          "offRawPointer": "/results/76",
+          "candidateRawPointer": "/results/77",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        },
+        {
+          "key": "warm|5|v4-nested-certificate-audit",
+          "offRawPointer": "/results/79",
+          "candidateRawPointer": "/results/78",
+          "reasons": [
+            "off cache ineligible"
+          ]
+        }
+      ]
+    }
+  },
+  "deploymentMix": {
+    "totalTokens": {
+      "count": 29,
+      "samples": 20000,
+      "mean": 233.85416666666666,
+      "lower95": 118.02083333333333,
+      "upper95": 363.75416666666666
+    },
+    "endToEndLatencyMs": {
+      "count": 29,
+      "samples": 20000,
+      "mean": 1383.0333333333333,
+      "lower95": -359.45000000000005,
+      "upper95": 3061.3458333333333
+    }
+  },
+  "taskSuccess": {
+    "direct": {
+      "count": 50,
+      "samples": 20000,
+      "mean": -0.06,
+      "lower95": -0.14,
+      "upper95": 0,
+      "offPassed": 42,
+      "candidatePassed": 39,
+      "pairCount": 50,
+      "candidateSuccessRate": 0.78
+    },
+    "nested": {
+      "count": 30,
+      "samples": 20000,
+      "mean": -0.06666666666666667,
+      "lower95": -0.2,
+      "upper95": 0.06666666666666667,
+      "offPassed": 24,
+      "candidatePassed": 22,
+      "pairCount": 30,
+      "candidateSuccessRate": 0.7333333333333333
+    }
+  },
+  "preservation": {
+    "totalCriticalFindings": 2,
+    "criticalFindings": [
+      {
+        "condition": "cold",
+        "rawPath": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+        "rawPointer": "/results/54",
+        "category": "v4-probe-setup",
+        "repetition": 4,
+        "responseSha256": "93b4687cdbf19fa3a0c74751aef4e399ebdc3a8f6510a1bc969876c570142610",
+        "finding": {
+          "type": "critical-omission",
+          "id": "order",
+          "detail": "ordered action is missing step(s): copy config/probe.sample.json to config/probe.json."
+        }
+      },
+      {
+        "condition": "cold",
+        "rawPath": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+        "rawPointer": "/results/70",
+        "category": "v4-probe-setup",
+        "repetition": 5,
+        "responseSha256": "3d8b2104b6ac73b7f0f9f2ffb9c385f8660b1364d4d42209f82863c709a341d1",
+        "finding": {
+          "type": "critical-omission",
+          "id": "order",
+          "detail": "ordered action is missing step(s): copy config/probe.sample.json to config/probe.json."
+        }
+      }
+    ],
+    "causalAttributionStatus": "unsupported",
+    "matchedContextPairCount": 0,
+    "unmatchedBaseTreeVariationCount": 80,
+    "unmatchedBaseTreeVariationRecords": [
+      {
+        "condition": "cold",
+        "category": "v4-siren-alert",
+        "repetition": 1,
+        "offRawPointer": "/results/0",
+        "candidateRawPointer": "/results/1",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-cache-purge",
+        "repetition": 1,
+        "offRawPointer": "/results/3",
+        "candidateRawPointer": "/results/2",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-route-status",
+        "repetition": 1,
+        "offRawPointer": "/results/4",
+        "candidateRawPointer": "/results/5",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-probe-setup",
+        "repetition": 1,
+        "offRawPointer": "/results/7",
+        "candidateRawPointer": "/results/6",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-pr-draft",
+        "repetition": 1,
+        "offRawPointer": "/results/8",
+        "candidateRawPointer": "/results/9",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-nested-ledger",
+        "repetition": 1,
+        "offRawPointer": "/results/11",
+        "candidateRawPointer": "/results/10",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-nested-route-review",
+        "repetition": 1,
+        "offRawPointer": "/results/12",
+        "candidateRawPointer": "/results/13",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-nested-certificate-audit",
+        "repetition": 1,
+        "offRawPointer": "/results/15",
+        "candidateRawPointer": "/results/14",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-siren-alert",
+        "repetition": 2,
+        "offRawPointer": "/results/16",
+        "candidateRawPointer": "/results/17",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-cache-purge",
+        "repetition": 2,
+        "offRawPointer": "/results/19",
+        "candidateRawPointer": "/results/18",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-route-status",
+        "repetition": 2,
+        "offRawPointer": "/results/20",
+        "candidateRawPointer": "/results/21",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-probe-setup",
+        "repetition": 2,
+        "offRawPointer": "/results/23",
+        "candidateRawPointer": "/results/22",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-pr-draft",
+        "repetition": 2,
+        "offRawPointer": "/results/24",
+        "candidateRawPointer": "/results/25",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-nested-ledger",
+        "repetition": 2,
+        "offRawPointer": "/results/27",
+        "candidateRawPointer": "/results/26",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-nested-route-review",
+        "repetition": 2,
+        "offRawPointer": "/results/28",
+        "candidateRawPointer": "/results/29",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-nested-certificate-audit",
+        "repetition": 2,
+        "offRawPointer": "/results/31",
+        "candidateRawPointer": "/results/30",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-siren-alert",
+        "repetition": 3,
+        "offRawPointer": "/results/32",
+        "candidateRawPointer": "/results/33",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-cache-purge",
+        "repetition": 3,
+        "offRawPointer": "/results/35",
+        "candidateRawPointer": "/results/34",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-route-status",
+        "repetition": 3,
+        "offRawPointer": "/results/36",
+        "candidateRawPointer": "/results/37",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-probe-setup",
+        "repetition": 3,
+        "offRawPointer": "/results/39",
+        "candidateRawPointer": "/results/38",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-pr-draft",
+        "repetition": 3,
+        "offRawPointer": "/results/40",
+        "candidateRawPointer": "/results/41",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-nested-ledger",
+        "repetition": 3,
+        "offRawPointer": "/results/43",
+        "candidateRawPointer": "/results/42",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-nested-route-review",
+        "repetition": 3,
+        "offRawPointer": "/results/44",
+        "candidateRawPointer": "/results/45",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-nested-certificate-audit",
+        "repetition": 3,
+        "offRawPointer": "/results/47",
+        "candidateRawPointer": "/results/46",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-siren-alert",
+        "repetition": 4,
+        "offRawPointer": "/results/48",
+        "candidateRawPointer": "/results/49",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-cache-purge",
+        "repetition": 4,
+        "offRawPointer": "/results/51",
+        "candidateRawPointer": "/results/50",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-route-status",
+        "repetition": 4,
+        "offRawPointer": "/results/52",
+        "candidateRawPointer": "/results/53",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-probe-setup",
+        "repetition": 4,
+        "offRawPointer": "/results/55",
+        "candidateRawPointer": "/results/54",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-pr-draft",
+        "repetition": 4,
+        "offRawPointer": "/results/56",
+        "candidateRawPointer": "/results/57",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-nested-ledger",
+        "repetition": 4,
+        "offRawPointer": "/results/59",
+        "candidateRawPointer": "/results/58",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-nested-route-review",
+        "repetition": 4,
+        "offRawPointer": "/results/60",
+        "candidateRawPointer": "/results/61",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-nested-certificate-audit",
+        "repetition": 4,
+        "offRawPointer": "/results/63",
+        "candidateRawPointer": "/results/62",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-siren-alert",
+        "repetition": 5,
+        "offRawPointer": "/results/64",
+        "candidateRawPointer": "/results/65",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-cache-purge",
+        "repetition": 5,
+        "offRawPointer": "/results/67",
+        "candidateRawPointer": "/results/66",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-route-status",
+        "repetition": 5,
+        "offRawPointer": "/results/68",
+        "candidateRawPointer": "/results/69",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-probe-setup",
+        "repetition": 5,
+        "offRawPointer": "/results/71",
+        "candidateRawPointer": "/results/70",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-pr-draft",
+        "repetition": 5,
+        "offRawPointer": "/results/72",
+        "candidateRawPointer": "/results/73",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-nested-ledger",
+        "repetition": 5,
+        "offRawPointer": "/results/75",
+        "candidateRawPointer": "/results/74",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-nested-route-review",
+        "repetition": 5,
+        "offRawPointer": "/results/76",
+        "candidateRawPointer": "/results/77",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "cold",
+        "category": "v4-nested-certificate-audit",
+        "repetition": 5,
+        "offRawPointer": "/results/79",
+        "candidateRawPointer": "/results/78",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-siren-alert",
+        "repetition": 1,
+        "offRawPointer": "/results/0",
+        "candidateRawPointer": "/results/1",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-cache-purge",
+        "repetition": 1,
+        "offRawPointer": "/results/3",
+        "candidateRawPointer": "/results/2",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-route-status",
+        "repetition": 1,
+        "offRawPointer": "/results/4",
+        "candidateRawPointer": "/results/5",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-probe-setup",
+        "repetition": 1,
+        "offRawPointer": "/results/7",
+        "candidateRawPointer": "/results/6",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-pr-draft",
+        "repetition": 1,
+        "offRawPointer": "/results/8",
+        "candidateRawPointer": "/results/9",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-nested-ledger",
+        "repetition": 1,
+        "offRawPointer": "/results/11",
+        "candidateRawPointer": "/results/10",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-nested-route-review",
+        "repetition": 1,
+        "offRawPointer": "/results/12",
+        "candidateRawPointer": "/results/13",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-nested-certificate-audit",
+        "repetition": 1,
+        "offRawPointer": "/results/15",
+        "candidateRawPointer": "/results/14",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-siren-alert",
+        "repetition": 2,
+        "offRawPointer": "/results/16",
+        "candidateRawPointer": "/results/17",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-cache-purge",
+        "repetition": 2,
+        "offRawPointer": "/results/19",
+        "candidateRawPointer": "/results/18",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-route-status",
+        "repetition": 2,
+        "offRawPointer": "/results/20",
+        "candidateRawPointer": "/results/21",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-probe-setup",
+        "repetition": 2,
+        "offRawPointer": "/results/23",
+        "candidateRawPointer": "/results/22",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-pr-draft",
+        "repetition": 2,
+        "offRawPointer": "/results/24",
+        "candidateRawPointer": "/results/25",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-nested-ledger",
+        "repetition": 2,
+        "offRawPointer": "/results/27",
+        "candidateRawPointer": "/results/26",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-nested-route-review",
+        "repetition": 2,
+        "offRawPointer": "/results/28",
+        "candidateRawPointer": "/results/29",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-nested-certificate-audit",
+        "repetition": 2,
+        "offRawPointer": "/results/31",
+        "candidateRawPointer": "/results/30",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-siren-alert",
+        "repetition": 3,
+        "offRawPointer": "/results/32",
+        "candidateRawPointer": "/results/33",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-cache-purge",
+        "repetition": 3,
+        "offRawPointer": "/results/35",
+        "candidateRawPointer": "/results/34",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-route-status",
+        "repetition": 3,
+        "offRawPointer": "/results/36",
+        "candidateRawPointer": "/results/37",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-probe-setup",
+        "repetition": 3,
+        "offRawPointer": "/results/39",
+        "candidateRawPointer": "/results/38",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-pr-draft",
+        "repetition": 3,
+        "offRawPointer": "/results/40",
+        "candidateRawPointer": "/results/41",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-nested-ledger",
+        "repetition": 3,
+        "offRawPointer": "/results/43",
+        "candidateRawPointer": "/results/42",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-nested-route-review",
+        "repetition": 3,
+        "offRawPointer": "/results/44",
+        "candidateRawPointer": "/results/45",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-nested-certificate-audit",
+        "repetition": 3,
+        "offRawPointer": "/results/47",
+        "candidateRawPointer": "/results/46",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-siren-alert",
+        "repetition": 4,
+        "offRawPointer": "/results/48",
+        "candidateRawPointer": "/results/49",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-cache-purge",
+        "repetition": 4,
+        "offRawPointer": "/results/51",
+        "candidateRawPointer": "/results/50",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-route-status",
+        "repetition": 4,
+        "offRawPointer": "/results/52",
+        "candidateRawPointer": "/results/53",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-probe-setup",
+        "repetition": 4,
+        "offRawPointer": "/results/55",
+        "candidateRawPointer": "/results/54",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-pr-draft",
+        "repetition": 4,
+        "offRawPointer": "/results/56",
+        "candidateRawPointer": "/results/57",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-nested-ledger",
+        "repetition": 4,
+        "offRawPointer": "/results/59",
+        "candidateRawPointer": "/results/58",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-nested-route-review",
+        "repetition": 4,
+        "offRawPointer": "/results/60",
+        "candidateRawPointer": "/results/61",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-nested-certificate-audit",
+        "repetition": 4,
+        "offRawPointer": "/results/63",
+        "candidateRawPointer": "/results/62",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-siren-alert",
+        "repetition": 5,
+        "offRawPointer": "/results/64",
+        "candidateRawPointer": "/results/65",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-cache-purge",
+        "repetition": 5,
+        "offRawPointer": "/results/67",
+        "candidateRawPointer": "/results/66",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-route-status",
+        "repetition": 5,
+        "offRawPointer": "/results/68",
+        "candidateRawPointer": "/results/69",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-probe-setup",
+        "repetition": 5,
+        "offRawPointer": "/results/71",
+        "candidateRawPointer": "/results/70",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-pr-draft",
+        "repetition": 5,
+        "offRawPointer": "/results/72",
+        "candidateRawPointer": "/results/73",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-nested-ledger",
+        "repetition": 5,
+        "offRawPointer": "/results/75",
+        "candidateRawPointer": "/results/74",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-nested-route-review",
+        "repetition": 5,
+        "offRawPointer": "/results/76",
+        "candidateRawPointer": "/results/77",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      },
+      {
+        "condition": "warm",
+        "category": "v4-nested-certificate-audit",
+        "repetition": 5,
+        "offRawPointer": "/results/79",
+        "candidateRawPointer": "/results/78",
+        "offSourceContextSha256": null,
+        "candidateSourceContextSha256": null,
+        "classification": "unmatched base-tree variation"
+      }
+    ],
+    "preFinalizerHandoffDifferenceCount": 8,
+    "preFinalizerHandoffDifferenceRecords": [
+      {
+        "condition": "cold",
+        "rawPath": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+        "rawPointer": "/results/10",
+        "category": "v4-nested-ledger",
+        "repetition": 1,
+        "responseSha256": "48f3946baa8ec6dfa7b46bb902475e69519447829c7b254ec38b18f821a8e921",
+        "classification": "unmatched base-tree variation",
+        "findings": [
+          {
+            "type": "child-handoff-term-missing",
+            "id": "workspace tests",
+            "detail": "child response is missing required content 'workspace tests'."
+          }
+        ]
+      },
+      {
+        "condition": "cold",
+        "rawPath": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+        "rawPointer": "/results/26",
+        "category": "v4-nested-ledger",
+        "repetition": 2,
+        "responseSha256": "878969868580be9f1b639cffc2a9796cf10f8b23ba3553d1dd253a7c3a74cb76",
+        "classification": "unmatched base-tree variation",
+        "findings": [
+          {
+            "type": "child-handoff-term-missing",
+            "id": "workspace tests",
+            "detail": "child response is missing required content 'workspace tests'."
+          }
+        ]
+      },
+      {
+        "condition": "cold",
+        "rawPath": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+        "rawPointer": "/results/42",
+        "category": "v4-nested-ledger",
+        "repetition": 3,
+        "responseSha256": "420940b87b30e84ad00f1246715a09f64cf09112921cdc76e6693da468616504",
+        "classification": "unmatched base-tree variation",
+        "findings": [
+          {
+            "type": "child-handoff-term-missing",
+            "id": "workspace tests",
+            "detail": "child response is missing required content 'workspace tests'."
+          }
+        ]
+      },
+      {
+        "condition": "cold",
+        "rawPath": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+        "rawPointer": "/results/74",
+        "category": "v4-nested-ledger",
+        "repetition": 5,
+        "responseSha256": "8c93308d3c29518f244a6b7da194a3dc3d55a397ac246d67a03d781c6afd9de9",
+        "classification": "unmatched base-tree variation",
+        "findings": [
+          {
+            "type": "child-handoff-term-missing",
+            "id": "workspace tests",
+            "detail": "child response is missing required content 'workspace tests'."
+          }
+        ]
+      },
+      {
+        "condition": "warm",
+        "rawPath": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+        "rawPointer": "/results/26",
+        "category": "v4-nested-ledger",
+        "repetition": 2,
+        "responseSha256": "db45bc06626ba5664a742a1c670466b8a09c52103a8d08d83fdeade53b539c65",
+        "classification": "unmatched base-tree variation",
+        "findings": [
+          {
+            "type": "child-handoff-term-missing",
+            "id": "workspace tests",
+            "detail": "child response is missing required content 'workspace tests'."
+          }
+        ]
+      },
+      {
+        "condition": "warm",
+        "rawPath": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+        "rawPointer": "/results/42",
+        "category": "v4-nested-ledger",
+        "repetition": 3,
+        "responseSha256": "36dc897f15e06be24d93bd44fcb0ddfb92d44c9fe54d22801b2d517ad4939d0d",
+        "classification": "unmatched base-tree variation",
+        "findings": [
+          {
+            "type": "child-handoff-term-missing",
+            "id": "workspace tests",
+            "detail": "child response is missing required content 'workspace tests'."
+          }
+        ]
+      },
+      {
+        "condition": "warm",
+        "rawPath": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+        "rawPointer": "/results/58",
+        "category": "v4-nested-ledger",
+        "repetition": 4,
+        "responseSha256": "2ba8bc4610d7732428cad59cd6eb14b8b9b1d39511365dc2dbbcf2f50535a9c0",
+        "classification": "unmatched base-tree variation",
+        "findings": [
+          {
+            "type": "child-handoff-term-missing",
+            "id": "workspace tests",
+            "detail": "child response is missing required content 'workspace tests'."
+          }
+        ]
+      },
+      {
+        "condition": "warm",
+        "rawPath": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+        "rawPointer": "/results/74",
+        "category": "v4-nested-ledger",
+        "repetition": 5,
+        "responseSha256": "52ee5c5e92d5d3259f1c92913c8074048bb6c00c85b6463819e1e95ccff67d46",
+        "classification": "unmatched base-tree variation",
+        "findings": [
+          {
+            "type": "child-handoff-term-missing",
+            "id": "workspace tests",
+            "detail": "child response is missing required content 'workspace tests'."
+          }
+        ]
+      }
+    ],
+    "taskImpactingHandoffLosses": 8,
+    "handoffLossRecords": [
+      {
+        "condition": "cold",
+        "rawPath": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+        "rawPointer": "/results/10",
+        "category": "v4-nested-ledger",
+        "repetition": 1,
+        "responseSha256": "48f3946baa8ec6dfa7b46bb902475e69519447829c7b254ec38b18f821a8e921",
+        "classification": "unmatched base-tree variation",
+        "findings": [
+          {
+            "type": "child-handoff-term-missing",
+            "id": "workspace tests",
+            "detail": "child response is missing required content 'workspace tests'."
+          }
+        ]
+      },
+      {
+        "condition": "cold",
+        "rawPath": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+        "rawPointer": "/results/26",
+        "category": "v4-nested-ledger",
+        "repetition": 2,
+        "responseSha256": "878969868580be9f1b639cffc2a9796cf10f8b23ba3553d1dd253a7c3a74cb76",
+        "classification": "unmatched base-tree variation",
+        "findings": [
+          {
+            "type": "child-handoff-term-missing",
+            "id": "workspace tests",
+            "detail": "child response is missing required content 'workspace tests'."
+          }
+        ]
+      },
+      {
+        "condition": "cold",
+        "rawPath": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+        "rawPointer": "/results/42",
+        "category": "v4-nested-ledger",
+        "repetition": 3,
+        "responseSha256": "420940b87b30e84ad00f1246715a09f64cf09112921cdc76e6693da468616504",
+        "classification": "unmatched base-tree variation",
+        "findings": [
+          {
+            "type": "child-handoff-term-missing",
+            "id": "workspace tests",
+            "detail": "child response is missing required content 'workspace tests'."
+          }
+        ]
+      },
+      {
+        "condition": "cold",
+        "rawPath": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+        "rawPointer": "/results/74",
+        "category": "v4-nested-ledger",
+        "repetition": 5,
+        "responseSha256": "8c93308d3c29518f244a6b7da194a3dc3d55a397ac246d67a03d781c6afd9de9",
+        "classification": "unmatched base-tree variation",
+        "findings": [
+          {
+            "type": "child-handoff-term-missing",
+            "id": "workspace tests",
+            "detail": "child response is missing required content 'workspace tests'."
+          }
+        ]
+      },
+      {
+        "condition": "warm",
+        "rawPath": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+        "rawPointer": "/results/26",
+        "category": "v4-nested-ledger",
+        "repetition": 2,
+        "responseSha256": "db45bc06626ba5664a742a1c670466b8a09c52103a8d08d83fdeade53b539c65",
+        "classification": "unmatched base-tree variation",
+        "findings": [
+          {
+            "type": "child-handoff-term-missing",
+            "id": "workspace tests",
+            "detail": "child response is missing required content 'workspace tests'."
+          }
+        ]
+      },
+      {
+        "condition": "warm",
+        "rawPath": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+        "rawPointer": "/results/42",
+        "category": "v4-nested-ledger",
+        "repetition": 3,
+        "responseSha256": "36dc897f15e06be24d93bd44fcb0ddfb92d44c9fe54d22801b2d517ad4939d0d",
+        "classification": "unmatched base-tree variation",
+        "findings": [
+          {
+            "type": "child-handoff-term-missing",
+            "id": "workspace tests",
+            "detail": "child response is missing required content 'workspace tests'."
+          }
+        ]
+      },
+      {
+        "condition": "warm",
+        "rawPath": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+        "rawPointer": "/results/58",
+        "category": "v4-nested-ledger",
+        "repetition": 4,
+        "responseSha256": "2ba8bc4610d7732428cad59cd6eb14b8b9b1d39511365dc2dbbcf2f50535a9c0",
+        "classification": "unmatched base-tree variation",
+        "findings": [
+          {
+            "type": "child-handoff-term-missing",
+            "id": "workspace tests",
+            "detail": "child response is missing required content 'workspace tests'."
+          }
+        ]
+      },
+      {
+        "condition": "warm",
+        "rawPath": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+        "rawPointer": "/results/74",
+        "category": "v4-nested-ledger",
+        "repetition": 5,
+        "responseSha256": "52ee5c5e92d5d3259f1c92913c8074048bb6c00c85b6463819e1e95ccff67d46",
+        "classification": "unmatched base-tree variation",
+        "findings": [
+          {
+            "type": "child-handoff-term-missing",
+            "id": "workspace tests",
+            "detail": "child response is missing required content 'workspace tests'."
+          }
+        ]
+      }
+    ],
+    "matchedContextJudgeLosses": 0,
+    "noncausalJudgeVariationCount": 18,
+    "taskImpactingJudgeLosses": 18,
+    "judgeLossRecords": [
+      {
+        "condition": "cold",
+        "rawPath": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+        "rawPointer": "/results/14",
+        "category": "v4-nested-certificate-audit",
+        "repetition": 1,
+        "responseSha256": "cda27810e4eace68282828bca48186d1d7fe1747ebe26f45ac25be68d8f49c34",
+        "classification": "unmatched base-tree variation",
+        "offQualityTotal": 8,
+        "candidateQualityTotal": 6,
+        "notes": "A re-read the file and ran tests after delegation, while B read the file only before the child responded; both overstate that no dry-run or rotation occurred."
+      },
+      {
+        "condition": "cold",
+        "rawPath": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+        "rawPointer": "/results/18",
+        "category": "v4-cache-purge",
+        "repetition": 2,
+        "responseSha256": "bb503a488c220c4787460b42e0f47f4eae969d7c1a2c8179351c7cbbd87ef116",
+        "classification": "unmatched base-tree variation",
+        "offQualityTotal": 8,
+        "candidateQualityTotal": 7,
+        "notes": "Both satisfy the prompt, but A inaccurately says typos exit even though its script reprompts."
+      },
+      {
+        "condition": "cold",
+        "rawPath": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+        "rawPointer": "/results/26",
+        "category": "v4-nested-ledger",
+        "repetition": 2,
+        "responseSha256": "878969868580be9f1b639cffc2a9796cf10f8b23ba3553d1dd253a7c3a74cb76",
+        "classification": "unmatched base-tree variation",
+        "offQualityTotal": 8,
+        "candidateQualityTotal": 6,
+        "notes": "Response B ends with both required confirmation phrases, while Response A adds gap text after them and therefore does not finish as instructed."
+      },
+      {
+        "condition": "cold",
+        "rawPath": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+        "rawPointer": "/results/29",
+        "category": "v4-nested-route-review",
+        "repetition": 2,
+        "responseSha256": "edb51406616747da695c098ebb36efb87d1a429bd0ba5cb4ed00da13ddf5c39f",
+        "classification": "unmatched base-tree variation",
+        "offQualityTotal": 8,
+        "candidateQualityTotal": 7,
+        "notes": "B unsupportedly claims that no fallback drill was run, while unfinished does not establish that it was never started."
+      },
+      {
+        "condition": "cold",
+        "rawPath": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+        "rawPointer": "/results/33",
+        "category": "v4-siren-alert",
+        "repetition": 3,
+        "responseSha256": "4656d56b765d3720dbffb03d1801e8bc537e25fd62f1e7397ecc9f0f3f5177e8",
+        "classification": "unmatched base-tree variation",
+        "offQualityTotal": 8,
+        "candidateQualityTotal": 7,
+        "notes": "Both add unsupported operational details, but B also conditionally softens the prohibition on a live test."
+      },
+      {
+        "condition": "cold",
+        "rawPath": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+        "rawPointer": "/results/53",
+        "category": "v4-route-status",
+        "repetition": 4,
+        "responseSha256": "dfbe189d3392bc4f151e89741e035030365f7033b3d105d09ec628324ff33e81",
+        "classification": "unmatched base-tree variation",
+        "offQualityTotal": 8,
+        "candidateQualityTotal": 6,
+        "notes": "A preserves every required statement and cobalt-only scope, while B adds unsupported claims about upstream reachability and epoch stability."
+      },
+      {
+        "condition": "cold",
+        "rawPath": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+        "rawPointer": "/results/61",
+        "category": "v4-nested-route-review",
+        "repetition": 4,
+        "responseSha256": "c997fcfc53ec333aac2416fe8f114dfc84ea94ed806ecfcc2346f947ce92e0ee",
+        "classification": "unmatched base-tree variation",
+        "offQualityTotal": 8,
+        "candidateQualityTotal": 7,
+        "notes": "Both fulfill the task, but A's unsupported “byte-for-byte identical” claim is overly exact and technically inaccurate."
+      },
+      {
+        "condition": "cold",
+        "rawPath": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+        "rawPointer": "/results/74",
+        "category": "v4-nested-ledger",
+        "repetition": 5,
+        "responseSha256": "8c93308d3c29518f244a6b7da194a3dc3d55a397ac246d67a03d781c6afd9de9",
+        "classification": "unmatched base-tree variation",
+        "offQualityTotal": 8,
+        "candidateQualityTotal": 7,
+        "notes": "Response B ends with the two required confirmation phrases, while Response A adds a gaps section afterward."
+      },
+      {
+        "condition": "warm",
+        "rawPath": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+        "rawPointer": "/results/1",
+        "category": "v4-siren-alert",
+        "repetition": 1,
+        "responseSha256": "d63cddd11171a50ae34f3317881c27c14bd86886575a84e074c67344bf57ab83",
+        "classification": "unmatched base-tree variation",
+        "offQualityTotal": 8,
+        "candidateQualityTotal": 6,
+        "notes": "B invents that 0.875 is a confidence threshold and that readiness is below it, while A preserves all supplied requirements without changing their meaning."
+      },
+      {
+        "condition": "warm",
+        "rawPath": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+        "rawPointer": "/results/10",
+        "category": "v4-nested-ledger",
+        "repetition": 1,
+        "responseSha256": "4dc5958880fc220d53caef801455b15ef6ce9211b7730015cb46c67cccb82d47",
+        "classification": "unmatched base-tree variation",
+        "offQualityTotal": 7,
+        "candidateQualityTotal": 5,
+        "notes": "Both capitalize the required lowercase child-task phrase, but A additionally places gap text after the mandated final confirmations while B ends correctly."
+      },
+      {
+        "condition": "warm",
+        "rawPath": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+        "rawPointer": "/results/14",
+        "category": "v4-nested-certificate-audit",
+        "repetition": 1,
+        "responseSha256": "966663be5a9e5578ac3e0bc5c5552e600067201e77c04fd52514749fe41ab533",
+        "classification": "unmatched base-tree variation",
+        "offQualityTotal": 8,
+        "candidateQualityTotal": 5,
+        "notes": "A performs both required self-checks after delegation, while B reads the file only before the child responds yet presents it as post-child verification."
+      },
+      {
+        "condition": "warm",
+        "rawPath": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+        "rawPointer": "/results/18",
+        "category": "v4-cache-purge",
+        "repetition": 2,
+        "responseSha256": "1a6b20e7921a9881b5f8a589503c1a6420989eecd2de6011bf912281a6f9f128",
+        "classification": "unmatched base-tree variation",
+        "offQualityTotal": 8,
+        "candidateQualityTotal": 6,
+        "notes": "Response B unsupportedly interprets `purge-plan.yaml` as excluded from deletion, while Response A preserves all required wording without altering the scope."
+      },
+      {
+        "condition": "warm",
+        "rawPath": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+        "rawPointer": "/results/21",
+        "category": "v4-route-status",
+        "repetition": 2,
+        "responseSha256": "0f6d0832eba05dfc712538a6d8c410d07b7b97cbb96a821408af6fb1109dcf5d",
+        "classification": "unmatched base-tree variation",
+        "offQualityTotal": 8,
+        "candidateQualityTotal": 7,
+        "notes": "A better satisfies the requested short format, while both add unsupported claims and B includes substantial unnecessary metadata."
+      },
+      {
+        "condition": "warm",
+        "rawPath": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+        "rawPointer": "/results/25",
+        "category": "v4-pr-draft",
+        "repetition": 2,
+        "responseSha256": "68fec06ca9c638b9521d3bb581462eed93f064a7298838ef7309bf279acda02e",
+        "classification": "unmatched base-tree variation",
+        "offQualityTotal": 8,
+        "candidateQualityTotal": 7,
+        "notes": "A preserves the statements verbatim, while B adds backtick formatting around each exact statement."
+      },
+      {
+        "condition": "warm",
+        "rawPath": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+        "rawPointer": "/results/33",
+        "category": "v4-siren-alert",
+        "repetition": 3,
+        "responseSha256": "21099ebd1dc90474ef4c84bab177321f1097edbc1815b8c279fa3f83eb2cda37",
+        "classification": "unmatched base-tree variation",
+        "offQualityTotal": 8,
+        "candidateQualityTotal": 7,
+        "notes": "B invents that 0.875 is an injury probability, while A leaves its meaning unlabeled despite mildly implying the path is its source."
+      },
+      {
+        "condition": "warm",
+        "rawPath": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+        "rawPointer": "/results/45",
+        "category": "v4-nested-route-review",
+        "repetition": 3,
+        "responseSha256": "0f76735894539d0fe348fbb005ab6e5d0108c7181b30bd8026b95ccbda87ad9b",
+        "classification": "unmatched base-tree variation",
+        "offQualityTotal": 8,
+        "candidateQualityTotal": 7,
+        "notes": "Response A inaccurately implies the fallback drill is prohibited, while Response B preserves its status only as unfinished."
+      },
+      {
+        "condition": "warm",
+        "rawPath": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+        "rawPointer": "/results/74",
+        "category": "v4-nested-ledger",
+        "repetition": 5,
+        "responseSha256": "52ee5c5e92d5d3259f1c92913c8074048bb6c00c85b6463819e1e95ccff67d46",
+        "classification": "unmatched base-tree variation",
+        "offQualityTotal": 8,
+        "candidateQualityTotal": 6,
+        "notes": "B includes the exact required lowercase phrase “run the workspace tests,” while A changes its capitalization."
+      },
+      {
+        "condition": "warm",
+        "rawPath": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+        "rawPointer": "/results/78",
+        "category": "v4-nested-certificate-audit",
+        "repetition": 5,
+        "responseSha256": "64739925dc391d56cc07e27b41c99c41643ed0ad7c4c531bcb63469a1e3b968a",
+        "classification": "unmatched base-tree variation",
+        "offQualityTotal": 8,
+        "candidateQualityTotal": 7,
+        "notes": "Response B follows the required delegation-then-verification order, while A incorrectly implies `CERTIFICATE WARNING` is present in the source file."
+      }
+    ],
+    "gatedLossCount": 2
+  },
+  "injectionAudit": {
+    "offInjectedNodes": 0,
+    "candidateInjectedNodes": 80,
+    "candidateNonFinalizerInjectedNodes": 0,
+    "candidateFinalizerCharacters": [
+      822
+    ]
+  },
+  "finalDecision": {
+    "passed": false,
+    "gates": {
+      "totalTokens": false,
+      "latency": false,
+      "nestedSuccess": false,
+      "preservation": false
+    },
+    "defaultMode": "off"
+  },
+  "protectedArtifactHashes": [
+    {
+      "path": "scripts/evaluation-fixtures-fresh-v4.json",
+      "sha256": "34a051015ef549043f96731047ab5d8dc64160a81ee770a26c5d11ffd0266907"
+    },
+    {
+      "path": "evaluation/fixture-manifest.json",
+      "sha256": "690fd66976a7127904fb66b9594c4ae1011624bef9525f89281e391d0ab13276"
+    },
+    {
+      "path": "evaluation/fresh-v4-artifacts-manifest.json",
+      "sha256": "7e9101f5c2fe5243c47ef7491912f25aabead31bbbbd404f909bcb48b7c24568"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-preflight-v0.json",
+      "sha256": "3ec6f335932427166f0ddbdd5c3aebb9e19f4f510f16b4848575ead326551985"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-preflight-v1.json",
+      "sha256": "ab288373184aceb727c20d617129fc40e491727d9883efb9e7aa285adad4a698"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-preflight.json",
+      "sha256": "d6965d7c52c72616628c975186513ba4032021e02e1f75ce5fbf722d9ea6a758"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+      "sha256": "9e267111b52a3ab23641cbe27442735cbb28ec119977080e42e547d468e622ef"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-warmup-shared-v0.json",
+      "sha256": "333a7221af718c2dc22cb0f23baa68464440b7a064f40df0c1a6bfe56b8e1da5"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-warmup-shared-v1.json",
+      "sha256": "bcb4de82239b8980254d1c1af5b358e4046e444612b44f169e8e6608a59c3e4e"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+      "sha256": "9534b653864e969c4c57699b919faeb1936ff8d2e6067eaef7330dcd914295e5"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-analysis-v1.json",
+      "sha256": "f5f33c80be11512b2cf81dfb38117a2ddb12c7283e15651aaee52917f91d03a7"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-analysis-v1.md",
+      "sha256": "c8d270d31a36fe6e5355369d7de263b050de37eb22f2d26fa5936a5919a0d09d"
+    }
+  ],
+  "interpretation": {
+    "categories": [
+      {
+        "id": "v4-siren-alert",
+        "eligible": false
+      },
+      {
+        "id": "v4-cache-purge",
+        "eligible": false
+      },
+      {
+        "id": "v4-route-status",
+        "eligible": false
+      },
+      {
+        "id": "v4-probe-setup",
+        "eligible": false
+      },
+      {
+        "id": "v4-pr-draft",
+        "eligible": false
+      },
+      {
+        "id": "v4-nested-ledger",
+        "eligible": false
+      },
+      {
+        "id": "v4-nested-route-review",
+        "eligible": false
+      },
+      {
+        "id": "v4-nested-certificate-audit",
+        "eligible": false
+      }
+    ],
+    "allEightCompressionPolicyEligibleFalse": true,
+    "statement": "All eight Fresh-v4 categories have compressionPolicy.eligible false, so this is a protected-content/pass-through stress test and cannot assess savings on eligible prose.",
+    "validConclusions": [
+      "Finalizer-only injection works.",
+      "Parent and child processes receive no V11 candidate bytes.",
+      "The 822-character candidate increases complete-tree tokens on protected content.",
+      "The candidate finalizer sometimes loses protected information."
+    ],
+    "unsupportedConclusions": [
+      "Selective-final can reduce tokens on eligible prose.",
+      "V11 caused pre-finalizer handoff differences."
+    ],
+    "preservationGate": "Candidate finalizer safety uses direct protected-fact findings. Causal cross-arm comparison requires matching canonical source-context hashes."
+  }
+}

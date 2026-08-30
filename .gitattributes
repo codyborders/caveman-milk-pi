@@ -38,3 +38,5 @@ evaluation/results/fresh-v4-warmup-shared-v1.json -text
 evaluation/results/fresh-v4-warm-controlled-v1.json -text
 evaluation/results/fresh-v4-analysis-v1.json -text
 evaluation/results/fresh-v4-analysis-v1.md -text
+evaluation/results/fresh-v4-analysis-v2.json -text
+evaluation/results/fresh-v4-analysis-v2.md -text

@@ -5,6 +5,7 @@ import {
   pairedBootstrap,
   renderSelectiveFinalAnalysis,
 } from "../scripts/eval/selective-final-v11-analysis.mjs";
+import { buildSelectiveFinalAnalysisV2 } from "../scripts/eval/selective-final-v11-analysis-v2.mjs";
 
 function result({
   mode,
@@ -136,5 +137,59 @@ describe("selective-final analysis", () => {
     expect(analysis.preservation.totalCriticalFindings).toBe(1);
     expect(analysis.finalDecision.gates.preservation).toBe(false);
     expect(analysis.finalDecision.defaultMode).toBe("off");
+  });
+
+  it("requires canonical source hashes before causal arm comparison", () => {
+    const cold = run("cold", true);
+    const warm = run("warm", true);
+    for (const current of [cold, warm]) {
+      for (const entry of current.report.results) entry.baseResponse = "same text is not a canonical context hash";
+    }
+    const analysis = buildSelectiveFinalAnalysisV2({ runs: [cold, warm] });
+    expect(analysis.preservation.matchedContextPairCount).toBe(0);
+    expect(analysis.preservation.unmatchedBaseTreeVariationCount).toBe(12);
+    expect(analysis.preservation.causalAttributionStatus).toBe("unsupported");
+  });
+
+  it("recognizes byte-identical source context only from matching canonical hashes", () => {
+    const cold = run("cold");
+    const warm = run("warm");
+    for (const current of [cold, warm]) {
+      for (const [index, entry] of current.report.results.entries()) {
+        entry.baseResponse = `different base response ${index}`;
+        entry.canonicalSourceContextSha256 = "a".repeat(64);
+      }
+    }
+    const analysis = buildSelectiveFinalAnalysisV2({ runs: [cold, warm] });
+    expect(analysis.preservation.matchedContextPairCount).toBe(12);
+    expect(analysis.preservation.unmatchedBaseTreeVariationCount).toBe(0);
+    expect(analysis.preservation.causalAttributionStatus).toBe("supported");
+  });
+
+  it("keeps candidate finalizer fact losses in the safety gate", () => {
+    const cold = run("cold");
+    const warm = run("warm");
+    const candidate = cold.report.results.find(
+      (entry) => entry.mode === "selective-final-v11" && entry.category === "direct" && entry.repetition === 1,
+    );
+    candidate.preservation.findings = [{ type: "missing-warning" }];
+    const analysis = buildSelectiveFinalAnalysisV2({ runs: [cold, warm] });
+    expect(analysis.preservation.totalCriticalFindings).toBe(1);
+    expect(analysis.preservation.unmatchedBaseTreeVariationCount).toBe(12);
+    expect(analysis.finalDecision.gates.preservation).toBe(false);
+  });
+
+  it("reports handoff differences as unmatched base-tree variation outside the safety gate", () => {
+    const cold = run("cold");
+    const warm = run("warm");
+    const candidate = cold.report.results.find(
+      (entry) => entry.mode === "selective-final-v11" && entry.category === "direct" && entry.repetition === 1,
+    );
+    candidate.nested = { complete: false, children: [] };
+    candidate.preservation.findings = [{ type: "nested-tree-incomplete" }];
+    const analysis = buildSelectiveFinalAnalysisV2({ runs: [cold, warm] });
+    expect(analysis.preservation.preFinalizerHandoffDifferenceCount).toBe(1);
+    expect(analysis.preservation.totalCriticalFindings).toBe(0);
+    expect(analysis.finalDecision.gates.preservation).toBe(true);
   });
 });

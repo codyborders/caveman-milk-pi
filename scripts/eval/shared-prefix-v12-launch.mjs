@@ -126,6 +126,7 @@ export function createDefaultLaunchNode({
       "--no-context-files",
       "--no-prompt-templates",
       "--no-session",
+      ...(["finalizer", "judge"].includes(request.kind) ? ["--no-tools"] : []),
       ...(request.canonicalFile !== undefined
         ? ["--append-system-prompt", request.canonicalFile]
         : []),

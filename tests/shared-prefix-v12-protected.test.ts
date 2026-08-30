@@ -56,7 +56,7 @@ describe("shared-prefix v12 protected group hardening", () => {
         const cacheRead = request.phase === "measured" ? 400 : 0;
         const usage = { input: 20, output: 8, cacheRead, cacheWrite: 4 };
         return {
-          text: "PRODUCTION WARNING: drop cannot be undone.",
+          text: "Warning omitted required wording.",
           usage,
           usageTurns: [{ ...usage }],
           rawEvents: [],
@@ -70,10 +70,11 @@ describe("shared-prefix v12 protected group hardening", () => {
     expect(group.providerCandidatePromptTokens).toBe(0);
     expect(group.extraFinalizerCallsIncludingSetup).toBe(0);
     expect(group.successEqual).toBe(true);
+    expect(group.contentComplete).toBe(false);
     // The protected product is byte-identical to the normal-off product.
     expect(group.responseHashEqualsNormalOff).toBe(true);
     const expectedHash = hashCanonicalSourceContext(
-      "PRODUCTION WARNING: drop cannot be undone.",
+      "Warning omitted required wording.",
     );
     expect(group.responseHashes).toEqual([expectedHash]);
     // No launch of any phase ever targeted a protected task with finalizer work.

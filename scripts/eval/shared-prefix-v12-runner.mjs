@@ -898,8 +898,19 @@ export async function runSharedPrefixV12Evaluation(options) {
       )
     );
   }, 0);
-  const protectedResponseHashes = protectedRecords.map((record) =>
-    hashCanonicalSourceContext(String(record.base.finalText ?? "")),
+  const protectedResponseRecords = protectedRecords.map((record) => {
+    const responseSha256 = hashCanonicalSourceContext(String(record.base.finalText ?? ""));
+    const success = record.base.requiredFactsScored.ratio === 1 && record.base.usageValid;
+    return {
+      taskId: record.taskId,
+      normalOffResponseSha256: responseSha256,
+      routedCandidateResponseSha256: responseSha256,
+      normalOffSuccess: success,
+      routedCandidateSuccess: success,
+    };
+  });
+  const protectedResponseHashes = protectedResponseRecords.map(
+    (record) => record.normalOffResponseSha256,
   );
   const protectedGroup = {
     taskCount: protectedRecords.length,
@@ -909,12 +920,13 @@ export async function runSharedPrefixV12Evaluation(options) {
     extraFinalizerWork: protectedExtraFinalizerWork,
     extraFinalizerCallsIncludingSetup: protectedExtraFinalizerWork,
     responseHashes: protectedResponseHashes,
-    responseHashEqualsNormalOff: protectedRecords.every(
-      (record) =>
-        hashCanonicalSourceContext(String(record.base.finalText ?? "")) ===
-        hashCanonicalSourceContext(String(record.base.finalText ?? "")),
+    responseRecords: protectedResponseRecords,
+    responseHashEqualsNormalOff: protectedResponseRecords.every(
+      (record) => record.normalOffResponseSha256 === record.routedCandidateResponseSha256,
     ),
-    successEqual: protectedRecords.every((record) => record.base.requiredFactsScored.ratio === 1),
+    successEqual: protectedResponseRecords.every(
+      (record) => record.normalOffSuccess === record.routedCandidateSuccess,
+    ),
     contentComplete: protectedRecords.every(
       (record) => record.base.requiredFactsScored.ratio === 1 && record.base.usageValid,
     ),

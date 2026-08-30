@@ -29,8 +29,9 @@ describe("shared-prefix v12 Pi launcher", () => {
         };
       },
     });
-    const result = await launch({ nodeId: "parent", prompt: "work" });
+    const result = await launch({ kind: "finalizer", nodeId: "finalizer", prompt: "work" });
     expect(path.isAbsolute(calls[0].args[0])).toBe(true);
+    expect(calls[0].args).toContain("--no-tools");
     expect(calls[0].args).toContain("--thinking");
     expect(calls[0].args).toContain("medium");
     expect(result.elapsedMs).toBe(250);

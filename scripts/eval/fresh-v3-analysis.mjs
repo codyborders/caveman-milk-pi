@@ -151,16 +151,27 @@ function pairResults(results) {
   return [...pairs.entries()].map(([key, pair]) => ({ key, ...pair }));
 }
 
+function cacheState(result) {
+  const reads = [
+    result.usage?.cacheRead,
+    ...(result.nested?.children ?? []).map((child) => child.usage?.cacheRead),
+  ];
+  if (reads.length === 0 || reads.some((value) => !Number.isFinite(value))) return "mixed";
+  if (reads.every((value) => value === 0)) return "zero";
+  if (reads.every((value) => value > 0)) return "positive";
+  return "mixed";
+}
+
 function cacheEligible(pair, rule) {
   if (pair.off === undefined || pair.lite === undefined) return false;
-  if (rule === "zero") return pair.off.usage.cacheRead === 0 && pair.lite.usage.cacheRead === 0;
-  return pair.off.usage.cacheRead > 0 && pair.lite.usage.cacheRead > 0;
+  const required = rule === "zero" ? "zero" : "positive";
+  return cacheState(pair.off) === required && cacheState(pair.lite) === required;
 }
 
 function classifyPair(pair) {
-  const zero = [pair.off, pair.lite].map((result) => result.usage.cacheRead === 0);
-  if (zero.every(Boolean)) return "both-zero";
-  if (zero.every((value) => !value)) return "both-positive";
+  const states = [cacheState(pair.off), cacheState(pair.lite)];
+  if (states.every((state) => state === "zero")) return "both-zero";
+  if (states.every((state) => state === "positive")) return "both-positive";
   return "mixed";
 }
 

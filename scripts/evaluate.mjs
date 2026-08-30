@@ -1613,12 +1613,27 @@ export async function runProviderEvaluation(options) {
       else if (pair.active === undefined) pair.active = result;
       byPair.set(key, pair);
     }
+    const cacheReadsFor = (result) => [
+      result.usage?.cacheRead,
+      ...(result.nested?.children ?? []).map((child) => child.usage?.cacheRead),
+    ];
+    const cacheState = (result) => {
+      const reads = cacheReadsFor(result);
+      if (reads.length === 0 || reads.some((value) => !Number.isFinite(value))) return "mixed";
+      if (reads.every((value) => value === 0)) return "zero";
+      if (reads.every((value) => value > 0)) return "positive";
+      return "mixed";
+    };
     for (const [key, pair] of byPair) {
       if (pair.off === undefined || pair.active === undefined) continue;
-      const offZero = pair.off.usage.cacheRead === 0;
-      const activeZero = pair.active.usage.cacheRead === 0;
+      const offState = cacheState(pair.off);
+      const activeState = cacheState(pair.active);
       const classification =
-        offZero && activeZero ? "both-zero" : !offZero && !activeZero ? "both-positive" : "mixed";
+        offState === "zero" && activeState === "zero"
+          ? "both-zero"
+          : offState === "positive" && activeState === "positive"
+            ? "both-positive"
+            : "mixed";
       const verifiedEligible =
         cacheCondition === "cold"
           ? classification === "both-zero"
@@ -1631,8 +1646,10 @@ export async function runProviderEvaluation(options) {
         repetition: pair.off.repetition,
         offMode: "off",
         offCacheRead: pair.off.usage.cacheRead,
+        offNodeCacheReads: cacheReadsFor(pair.off),
         activeMode: pair.active.mode,
         activeCacheRead: pair.active.usage.cacheRead,
+        activeNodeCacheReads: cacheReadsFor(pair.active),
         classification,
         verifiedEligible,
       });
@@ -2406,6 +2423,15 @@ export function createPiRunner({
                 CAVEMAN_EVAL_NESTED_MODE: nested.mode,
                 CAVEMAN_EVAL_NESTED_CAVEMAN_EXTENSION: nested.cavemanExtensionPath,
                 CAVEMAN_EVAL_NESTED_WORKSPACE_EXTENSION: nested.workspaceExtensionPath,
+                ...(nested.cacheControlExtensionPath === undefined
+                  ? {}
+                  : {
+                      CAVEMAN_EVAL_NESTED_CACHE_EXTENSION:
+                        nested.cacheControlExtensionPath,
+                    }),
+                ...(nested.cacheNonce === null
+                  ? {}
+                  : { CAVEMAN_EVAL_NESTED_CACHE_NONCE: nested.cacheNonce }),
               }),
         },
         timeout: timeoutMs,
@@ -2765,6 +2791,8 @@ export function createPiRunner({
               mode,
               cavemanExtensionPath: extensionPath,
               workspaceExtensionPath,
+              cacheControlExtensionPath,
+              cacheNonce,
             }
           : null,
       });

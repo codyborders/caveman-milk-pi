@@ -46,7 +46,7 @@ const nestedTree = {
   rawParentEvents: ["{}"]
 };
 
-function makeResult({ mode, repetition, category, cacheRead, dropNegation, breakTree }) {
+function makeResult({ mode, repetition, category, cacheRead, childCacheRead, dropNegation, breakTree }) {
   const lite = mode === "lite";
   const isNested = category === "v3-nested-fix" || category === "v3-nested-timeout";
   let response =
@@ -78,7 +78,12 @@ function makeResult({ mode, repetition, category, cacheRead, dropNegation, break
         ...nestedTree,
         rootMode: mode,
         complete: breakTree ? false : true,
-        children: breakTree ? [] : nestedTree.children,
+        children: breakTree
+          ? []
+          : nestedTree.children.map((child) => ({
+              ...child,
+              usage: { ...child.usage, cacheRead: childCacheRead },
+            })),
         childCount: breakTree ? 0 : 1
       }
     : null;
@@ -105,13 +110,13 @@ function makeResult({ mode, repetition, category, cacheRead, dropNegation, break
   };
 }
 
-function makeRun({ id, cacheRead, dropNegation = false, breakTree = false }) {
+function makeRun({ id, cacheRead, childCacheRead = cacheRead, dropNegation = false, breakTree = false }) {
   const categories = ["v3-warning-rollback", "v3-setup-steps", "v3-queue-status", "v3-unfinished-token-filter", "v3-commit-auth", "v3-nested-fix", "v3-nested-timeout"];
   const results = [];
   for (let repetition = 1; repetition <= 3; repetition += 1) {
     for (const category of categories) {
       for (const mode of ["off", "lite"]) {
-        results.push(makeResult({ mode, repetition, category, cacheRead, dropNegation, breakTree }));
+        results.push(makeResult({ mode, repetition, category, cacheRead, childCacheRead, dropNegation, breakTree }));
       }
     }
   }
@@ -162,6 +167,21 @@ describe("fresh-v3 analysis", () => {
     expect(analysis.finalDecision.gates.preservation.passed).toBe(false);
     expect(analysis.finalDecision.defaultMode).toBe("off");
     expect(analysis.externalModelCalls).toBe(0);
+  });
+});
+
+describe("fresh-v3 tree cache eligibility", () => {
+  it("excludes cold nested pairs when a child reports cache reads", () => {
+    const runs = [
+      {
+        id: "cold",
+        cacheRule: "zero",
+        raw: makeRun({ id: "cold-child-warm", cacheRead: 0, childCacheRead: 40 }),
+      },
+      { id: "warm", cacheRule: "positive", raw: makeRun({ id: "warm", cacheRead: 500 }) },
+    ];
+    const analysis = buildFreshV3Analysis({ controlledRuns: runs });
+    expect(analysis.conditions.cold.verifiedEligiblePairs).toBe(15);
   });
 });
 

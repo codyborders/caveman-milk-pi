@@ -124,6 +124,8 @@ export function createNestedEvalExtension(pi: ExtensionAPI, deps: NestedEvalDeps
       const workspaceExtension = requiredEnv(env, "CAVEMAN_EVAL_NESTED_WORKSPACE_EXTENSION");
       const workspaceDir = requiredEnv(env, "CAVEMAN_EVAL_WORKSPACE_DIR");
       const thinkingLevel = env.CAVEMAN_EVAL_NESTED_THINKING;
+      const cacheExtension = env.CAVEMAN_EVAL_NESTED_CACHE_EXTENSION;
+      const cacheNonce = env.CAVEMAN_EVAL_NESTED_CACHE_NONCE;
 
       childCounter += 1;
       const nodeId = `child-${childCounter}`;
@@ -150,6 +152,9 @@ export function createNestedEvalExtension(pi: ExtensionAPI, deps: NestedEvalDeps
           cavemanExtension,
           "-e",
           workspaceExtension,
+          ...(typeof cacheExtension === "string" && cacheExtension.length > 0
+            ? ["-e", cacheExtension]
+            : []),
           "--model",
           model,
           ...(typeof thinkingLevel === "string" && thinkingLevel.length > 0
@@ -164,6 +169,9 @@ export function createNestedEvalExtension(pi: ExtensionAPI, deps: NestedEvalDeps
             ...env,
             CAVEMAN_MILK_CONFIG_DIR: childConfigDir,
             CAVEMAN_EVAL_WORKSPACE_DIR: workspaceDir,
+            ...(typeof cacheNonce === "string" && cacheNonce.length > 0
+              ? { CAVEMAN_EVAL_CACHE_NONCE: cacheNonce }
+              : {}),
           },
           timeout: timeoutMs,
         });

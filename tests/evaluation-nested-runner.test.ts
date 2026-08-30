@@ -80,6 +80,7 @@ describe("pi runner nested wiring", () => {
       extensionPath: "/repo/index.ts",
       model: "test-model",
       thinkingLevel: "low",
+      cachePromptStrategy: "shared",
       spawnImpl: async (args, options) => {
         spawns.push({ args, options });
         return { code: 0, stdout: parentEvents(), stderr: "" };
@@ -93,8 +94,9 @@ describe("pi runner nested wiring", () => {
     const spawn = spawns[0];
     const flags = spawn.args.slice(1);
     const extensions = flags.filter((_value, index) => flags[index - 1] === "-e");
-    expect(extensions).toHaveLength(3);
+    expect(extensions).toHaveLength(4);
     expect(extensions[2]).toContain("pi-eval-nested.ts");
+    expect(extensions[3]).toContain("pi-eval-cache-control.ts");
     expect(flags[flags.indexOf("--tools") + 1].split(",")).toContain("delegate_eval_child");
     expect(spawn.options.env.CAVEMAN_EVAL_NESTED_PI_BIN).toBe("/opt/pi/bin/pi");
     expect(spawn.options.env.CAVEMAN_EVAL_NESTED_MODEL).toBe("test-model");
@@ -102,6 +104,8 @@ describe("pi runner nested wiring", () => {
     expect(spawn.options.env.CAVEMAN_EVAL_NESTED_MODE).toBe("lite");
     expect(spawn.options.env.CAVEMAN_EVAL_NESTED_CAVEMAN_EXTENSION).toBe("/repo/index.ts");
     expect(spawn.options.env.CAVEMAN_EVAL_NESTED_WORKSPACE_EXTENSION).toContain("pi-eval-workspace.ts");
+    expect(spawn.options.env.CAVEMAN_EVAL_NESTED_CACHE_EXTENSION).toContain("pi-eval-cache-control.ts");
+    expect(spawn.options.env.CAVEMAN_EVAL_NESTED_CACHE_NONCE).toBe("shared-warm-v1");
     expect(typeof spawn.options.env.CAVEMAN_EVAL_WORKSPACE_DIR).toBe("string");
 
     expect(outcome.nested).not.toBeNull();

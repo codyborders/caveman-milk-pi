@@ -53,6 +53,8 @@ function createRegistration(overrides = {}) {
     CAVEMAN_EVAL_NESTED_MODE: "lite",
     CAVEMAN_EVAL_NESTED_CAVEMAN_EXTENSION: "/repo/index.ts",
     CAVEMAN_EVAL_NESTED_WORKSPACE_EXTENSION: "/repo/scripts/eval/pi-eval-workspace.ts",
+    CAVEMAN_EVAL_NESTED_CACHE_EXTENSION: "/repo/scripts/eval/pi-eval-cache-control.ts",
+    CAVEMAN_EVAL_NESTED_CACHE_NONCE: "shared-warm-v1",
     CAVEMAN_EVAL_WORKSPACE_DIR: workspaceDir,
     ...overrides.env,
   };
@@ -94,7 +96,12 @@ describe("nested evaluation delegation tool", () => {
       "Fix parseDelay in src/delay.ts. Run the tests. Do not rename parseDelay.",
     );
     const extensions = flags.filter((_value, index) => flags[index - 1] === "-e");
-    expect(extensions).toEqual(["/repo/index.ts", "/repo/scripts/eval/pi-eval-workspace.ts"]);
+    expect(extensions).toEqual([
+      "/repo/index.ts",
+      "/repo/scripts/eval/pi-eval-workspace.ts",
+      "/repo/scripts/eval/pi-eval-cache-control.ts",
+    ]);
+    expect(spawn.options.env.CAVEMAN_EVAL_CACHE_NONCE).toBe("shared-warm-v1");
     const toolsFlag = flags[flags.indexOf("--tools") + 1].split(",").sort();
     expect(toolsFlag).toEqual(["workspace_read", "workspace_run_tests", "workspace_write"]);
 

@@ -2,6 +2,11 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import {
+  buildSelectiveFinalAnalysis,
+  loadDefaultRuns,
+  renderSelectiveFinalAnalysis,
+} from "../scripts/eval/selective-final-v11-analysis.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const manifestPath = path.join(root, "evaluation/fresh-v4-artifacts-manifest.json");
@@ -25,5 +30,21 @@ describe("fresh-v4 artifact history", () => {
       expect(fs.existsSync(path.join(root, artifact.path)), artifact.path).toBe(true);
       expect(hash(artifact.path), artifact.path).toBe(artifact.sha256);
     }
+  });
+
+  it("rebuilds both derived reports from locked raw reports", () => {
+    const analysis = buildSelectiveFinalAnalysis({ runs: loadDefaultRuns() });
+    expect(`${JSON.stringify(analysis, null, 2)}\n`).toBe(
+      fs.readFileSync(
+        path.join(root, "evaluation/results/fresh-v4-analysis-v1.json"),
+        "utf8",
+      ),
+    );
+    expect(renderSelectiveFinalAnalysis(analysis)).toBe(
+      fs.readFileSync(
+        path.join(root, "evaluation/results/fresh-v4-analysis-v1.md"),
+        "utf8",
+      ),
+    );
   });
 });

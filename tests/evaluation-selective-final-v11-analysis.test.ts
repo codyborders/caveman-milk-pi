@@ -3,6 +3,7 @@ import {
   BOOTSTRAP_SAMPLES,
   buildSelectiveFinalAnalysis,
   pairedBootstrap,
+  renderSelectiveFinalAnalysis,
 } from "../scripts/eval/selective-final-v11-analysis.mjs";
 
 function result({
@@ -96,16 +97,36 @@ describe("selective-final analysis", () => {
   it("applies complete-tree gates and records finalizer-only injection", () => {
     const analysis = buildSelectiveFinalAnalysis({ runs: [run("cold"), run("warm")] });
     expect(analysis.conditions.cold.successfulPairs).toBe(6);
+    expect(analysis.conditions.cold).not.toHaveProperty("pairs");
     expect(analysis.deploymentMix.totalTokens.upper95).toBeLessThan(0);
     expect(analysis.deploymentMix.endToEndLatencyMs.upper95).toBeLessThan(0);
     expect(analysis.taskSuccess.nested.lower95).toBeGreaterThanOrEqual(0);
     expect(analysis.taskSuccess.nested.candidateSuccessRate).toBe(1);
+    expect(analysis.taskSuccess.direct.pairCount).toBe(6);
+    expect(analysis.taskSuccess.nested.pairCount).toBe(6);
     expect(analysis.injectionAudit).toMatchObject({
       offInjectedNodes: 0,
       candidateInjectedNodes: 12,
       candidateNonFinalizerInjectedNodes: 0,
     });
     expect(analysis.finalDecision).toMatchObject({ passed: true, defaultMode: "selective-final-v11" });
+    const markdown = renderSelectiveFinalAnalysis(analysis);
+    expect(markdown).toContain("| Cold | 6 | 6 |");
+    expect(markdown).toContain("| Direct | 6 | 6 | 6 |");
+    expect(markdown).toContain("| Total-token reduction | PASS |");
+    expect(markdown).toContain("Candidate injections outside finalizers: 0");
+  });
+
+  it("separates inter-agent findings from final-response findings", () => {
+    const cold = run("cold");
+    const candidateNested = cold.report.results.find(
+      (entry) => entry.mode === "selective-final-v11" && entry.category === "nested",
+    );
+    candidateNested.preservation.findings.push({ type: "child-handoff-term-missing" });
+    candidateNested.validation.checks.push({ id: "delegation", passed: false });
+    const analysis = buildSelectiveFinalAnalysis({ runs: [cold, run("warm")] });
+    expect(analysis.preservation.totalCriticalFindings).toBe(0);
+    expect(analysis.preservation.taskImpactingHandoffLosses).toBe(1);
   });
 
   it("keeps off when one critical final-response finding remains", () => {

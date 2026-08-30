@@ -1,8 +1,8 @@
 {
   "version": 1,
   "fixtureFrozenBeforeTrials": true,
-  "trialStatus": "preflight-only",
-  "modelCalls": 434,
+  "trialStatus": "complete-negative",
+  "modelCalls": 778,
   "artifacts": [
     {
       "path": "scripts/evaluation-fixtures-fresh-v4.json",
@@ -41,27 +41,27 @@
     },
     {
       "path": "evaluation/results/fresh-v4-warmup-shared-v1.json",
-      "sha256": null,
-      "role": "locked-placeholder",
-      "status": "not-run"
+      "sha256": "bcb4de82239b8980254d1c1af5b358e4046e444612b44f169e8e6608a59c3e4e",
+      "role": "controlled-warmup",
+      "status": "complete"
     },
     {
       "path": "evaluation/results/fresh-v4-warm-controlled-v1.json",
-      "sha256": null,
-      "role": "locked-placeholder",
-      "status": "not-run"
+      "sha256": "9534b653864e969c4c57699b919faeb1936ff8d2e6067eaef7330dcd914295e5",
+      "role": "controlled-warm-run",
+      "status": "complete"
     },
     {
       "path": "evaluation/results/fresh-v4-analysis-v1.json",
-      "sha256": null,
-      "role": "locked-placeholder",
-      "status": "not-run"
+      "sha256": "f5f33c80be11512b2cf81dfb38117a2ddb12c7283e15651aaee52917f91d03a7",
+      "role": "derived-analysis",
+      "status": "complete"
     },
     {
       "path": "evaluation/results/fresh-v4-analysis-v1.md",
-      "sha256": null,
-      "role": "locked-placeholder",
-      "status": "not-run"
+      "sha256": "c8d270d31a36fe6e5355369d7de263b050de37eb22f2d26fa5936a5919a0d09d",
+      "role": "derived-analysis-prose",
+      "status": "complete"
     }
   ]
 }

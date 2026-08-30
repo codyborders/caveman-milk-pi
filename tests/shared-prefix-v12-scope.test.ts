@@ -19,7 +19,8 @@ const RUNTIME_HASHES = {
 } as const;
 
 function hash(filePath: string): string {
-  return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
+  const normalized = fs.readFileSync(filePath, "utf8").replace(/\r\n/g, "\n");
+  return crypto.createHash("sha256").update(normalized, "utf8").digest("hex");
 }
 
 function filesUnder(directory: string): string[] {

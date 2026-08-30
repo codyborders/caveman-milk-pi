@@ -2,7 +2,7 @@
   "version": 1,
   "fixtureFrozenBeforeTrials": true,
   "trialStatus": "preflight-only",
-  "modelCalls": 60,
+  "modelCalls": 434,
   "artifacts": [
     {
       "path": "scripts/evaluation-fixtures-fresh-v4.json",
@@ -23,15 +23,21 @@
     },
     {
       "path": "evaluation/results/fresh-v4-preflight.json",
-      "sha256": null,
-      "role": "locked-placeholder",
-      "status": "not-run"
+      "sha256": "d6965d7c52c72616628c975186513ba4032021e02e1f75ce5fbf722d9ea6a758",
+      "role": "controlled-preflight",
+      "status": "complete"
     },
     {
       "path": "evaluation/results/fresh-v4-cold-controlled-v1.json",
-      "sha256": null,
-      "role": "locked-placeholder",
-      "status": "not-run"
+      "sha256": "9e267111b52a3ab23641cbe27442735cbb28ec119977080e42e547d468e622ef",
+      "role": "controlled-cold-run",
+      "status": "complete"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-warmup-shared-v0.json",
+      "sha256": "333a7221af718c2dc22cb0f23baa68464440b7a064f40df0c1a6bfe56b8e1da5",
+      "role": "preserved-invalid-warmup",
+      "status": "excluded-short-system-prompt-cache-control"
     },
     {
       "path": "evaluation/results/fresh-v4-warmup-shared-v1.json",

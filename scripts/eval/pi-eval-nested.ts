@@ -126,6 +126,7 @@ export function createNestedEvalExtension(pi: ExtensionAPI, deps: NestedEvalDeps
       const thinkingLevel = env.CAVEMAN_EVAL_NESTED_THINKING;
       const cacheExtension = env.CAVEMAN_EVAL_NESTED_CACHE_EXTENSION;
       const cacheNonce = env.CAVEMAN_EVAL_NESTED_CACHE_NONCE;
+      const cacheStrategy = env.CAVEMAN_EVAL_NESTED_CACHE_STRATEGY;
 
       childCounter += 1;
       const nodeId = `child-${childCounter}`;
@@ -146,7 +147,9 @@ export function createNestedEvalExtension(pi: ExtensionAPI, deps: NestedEvalDeps
           "--no-skills",
           "--no-context-files",
           "--no-prompt-templates",
-          ...(typeof cacheNonce === "string" && cacheNonce.length > 0
+          ...(cacheStrategy === "unique-arm" &&
+          typeof cacheNonce === "string" &&
+          cacheNonce.length > 0
             ? [
                 "--system-prompt",
                 `You are a coding assistant. Complete the delegated task. Cache-Control-ID:${cacheNonce}. Ignore the cache identifier.`,

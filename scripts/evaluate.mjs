@@ -2501,6 +2501,7 @@ export function createPiRunner({
                 ...(nested.cacheNonce === null
                   ? {}
                   : { CAVEMAN_EVAL_NESTED_CACHE_NONCE: nested.cacheNonce }),
+                CAVEMAN_EVAL_NESTED_CACHE_STRATEGY: nested.cachePromptStrategy,
               }),
         },
         timeout: timeoutMs,
@@ -2825,7 +2826,7 @@ export function createPiRunner({
         "--no-skills",
         "--no-context-files",
         "--no-prompt-templates",
-        ...(cacheNonce === null
+        ...(cachePromptStrategy !== "unique-arm" || cacheNonce === null
           ? []
           : [
               "--system-prompt",
@@ -2869,6 +2870,7 @@ export function createPiRunner({
               workspaceExtensionPath,
               cacheControlExtensionPath,
               cacheNonce,
+              cachePromptStrategy,
             }
           : null,
       });
@@ -2903,7 +2905,7 @@ export function createPiRunner({
       "--no-skills",
       "--no-context-files",
       "--no-prompt-templates",
-      ...(cacheNonce === null
+      ...(cachePromptStrategy !== "unique-arm" || cacheNonce === null
         ? []
         : [
             "--system-prompt",

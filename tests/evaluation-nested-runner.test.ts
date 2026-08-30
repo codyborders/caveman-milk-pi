@@ -98,6 +98,7 @@ describe("pi runner nested wiring", () => {
     expect(extensions[2]).toContain("pi-eval-nested.ts");
     expect(extensions[3]).toContain("pi-eval-cache-control.ts");
     expect(flags[flags.indexOf("--tools") + 1].split(",")).toContain("delegate_eval_child");
+    expect(flags).not.toContain("--system-prompt");
     expect(spawn.options.env.CAVEMAN_EVAL_NESTED_PI_BIN).toBe("/opt/pi/bin/pi");
     expect(spawn.options.env.CAVEMAN_EVAL_NESTED_MODEL).toBe("test-model");
     expect(spawn.options.env.CAVEMAN_EVAL_NESTED_THINKING).toBe("low");

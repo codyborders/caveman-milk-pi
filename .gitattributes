@@ -25,3 +25,6 @@ evaluation/results/fresh-v3-cold-controlled-v1.json -text
 evaluation/results/fresh-v3-warm-controlled-v1.json -text
 evaluation/results/fresh-v3-analysis-v1.json -text
 evaluation/results/fresh-v3-analysis-v1.md -text
+evaluation/results/fresh-v3-analysis-v2.json -text
+evaluation/results/fresh-v3-analysis-v2.md -text
+evaluation/results/fresh-v3-pr-summary-v2.md -text

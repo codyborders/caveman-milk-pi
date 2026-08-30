@@ -20,6 +20,17 @@ describe("fresh-v3 v2 artifact lock", () => {
     expect(fs.existsSync(path.join(root, "evaluation/results/fresh-v3-analysis-v2.md"))).toBe(true);
     expect(fs.existsSync(path.join(root, "evaluation/results/fresh-v3-pr-summary-v2.md"))).toBe(true);
   });
+
+  it("locks every v2 output against platform line-ending conversion", () => {
+    const attributes = fs.readFileSync(path.join(root, ".gitattributes"), "utf8");
+    for (const file of [
+      "evaluation/results/fresh-v3-analysis-v2.json",
+      "evaluation/results/fresh-v3-analysis-v2.md",
+      "evaluation/results/fresh-v3-pr-summary-v2.md",
+    ]) {
+      expect(attributes).toContain(`${file} -text`);
+    }
+  });
 });
 
 describe("fresh-v3 artifact lock", () => {

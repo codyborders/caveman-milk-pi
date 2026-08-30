@@ -11,7 +11,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const fixturePath = path.join(here, "evaluation-fixtures.json");
 const fixtureManifestPath = path.join(here, "..", "evaluation", "fixture-manifest.json");
 const contractPath = path.join(here, "..", "src", "prompt-contract.json");
-const liveValidatorVersion = "schema5-protected-facts-v13";
+const liveValidatorVersion = "schema5-task-success-v14";
 
 function loadPromptContract() {
   const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"));
@@ -1304,9 +1304,10 @@ export async function runProviderEvaluation(options) {
         );
       }
       payload = outcome.json;
+      const elapsedMs = nowImpl() - startedAtMs;
       executionExtras = {
         attempts: outcome.attempts,
-        elapsedMs: nowImpl() - startedAtMs,
+        elapsedMs,
         costUsd: null,
         systemPromptSent: systemBlocks.map((block) => block.text).join(""),
         sessionId: null,
@@ -1317,7 +1318,7 @@ export async function runProviderEvaluation(options) {
         timing: {
           timeToFirstTokenMs: null,
           generationDurationMs: null,
-          totalElapsedMs: nowImpl() - startedAtMs,
+          totalElapsedMs: elapsedMs,
         },
         toolMetrics: {
           toolCalls: 0,
@@ -1442,6 +1443,7 @@ export async function runProviderEvaluation(options) {
         failedTestsWithoutCorrectiveTurn: null,
         retries: Math.max(0, (executionExtras.attempts ?? 1) - 1),
       },
+      sessionToolMetrics: executionExtras.sessionToolMetrics ?? null,
       cacheCondition: {
         label: cacheCondition,
         promptCacheEligible: true,

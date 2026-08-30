@@ -1,0 +1,2636 @@
+{
+  "schemaVersion": 4,
+  "fixtureVersion": 5,
+  "fixtureSet": "fresh-v2",
+  "fixtureHash": "8bd5776b40800d69e238100bfe5ccddf00e6d5ab826919c8c400835f9caf353a",
+  "provider": "pi",
+  "runner": "pi",
+  "model": "z-ai/glm-5.3",
+  "tokenAccounting": {
+    "method": "provider-count-endpoint",
+    "endpointPath": "/v1/messages/count_tokens",
+    "status": "not-run",
+    "model": "z-ai/glm-5.3",
+    "totalRequestInputTokens": {},
+    "incrementalActiveMinusOffTokens": {},
+    "exactCounts": {}
+  },
+  "judge": {
+    "enabled": false,
+    "model": null,
+    "tolerance": 0
+  },
+  "gate": null,
+  "pricing": null,
+  "validatorVersion": "schema5-protected-facts-v13",
+  "seed": "0xc0ffee0e",
+  "runId": "caveman-eval-017337c24afe2b1a",
+  "runIdentity": {
+    "provider": "pi",
+    "endpoint": "https://api.anthropic.com/v1/messages",
+    "model": "z-ai/glm-5.3",
+    "thinkingLevel": "medium",
+    "judge": false,
+    "judgeModel": null,
+    "gate": null,
+    "pricing": null,
+    "validatorVersion": "schema5-protected-facts-v13",
+    "fixtureVersion": 5,
+    "fixtureSet": "fresh-v2",
+    "fixtureHash": "8bd5776b40800d69e238100bfe5ccddf00e6d5ab826919c8c400835f9caf353a",
+    "commit": "f56a4335b5143046068e4367a5b5ae2479a3e517",
+    "modes": [
+      "off",
+      "lite"
+    ],
+    "categories": [
+      "v2-coding-millis"
+    ],
+    "repetitions": 3,
+    "seed": "0xc0ffee0e",
+    "pairOrderStrategy": "alternating",
+    "cacheCondition": "observed",
+    "baseSystemPromptHash": "50fa36792a831a710bce59bf9c130272ebd7577a281e23f611fa299c71b87cae",
+    "promptContractHash": "3611fa174ef844d6323a1e1f28428c78d00316588607d6f0b68df62e58734d49",
+    "runtimePromptHash": "29742fac18006c7b1b0d1ba6e15f6b559c46a7d409e18695d9950f763a0ae6e3"
+  },
+  "generatedAt": "2026-08-29T21:29:59.224Z",
+  "environment": {
+    "node": "v25.8.2",
+    "platform": "darwin",
+    "arch": "arm64",
+    "commit": "f56a4335b5143046068e4367a5b5ae2479a3e517",
+    "piVersion": "0.84.3",
+    "provider": "pi",
+    "runner": "pi",
+    "model": "z-ai/glm-5.3",
+    "thinkingLevel": "medium",
+    "fixtureVersion": 5,
+    "pricing": null,
+    "seed": "0xc0ffee0e",
+    "generatedAt": "2026-08-29T21:25:53.433Z"
+  },
+  "repetitions": 3,
+  "modes": [
+    "off",
+    "lite"
+  ],
+  "categories": [
+    "v2-coding-millis"
+  ],
+  "plannedCalls": 6,
+  "plannedProviderCalls": 6,
+  "plannedJudgeCalls": 0,
+  "paidCallAccounting": {
+    "cap": 8,
+    "planned": {
+      "provider": 6,
+      "judge": 0,
+      "countEndpoint": 0,
+      "total": 6
+    },
+    "actual": {
+      "provider": 6,
+      "judge": 0,
+      "countEndpoint": 0,
+      "total": 6
+    },
+    "invocation": {
+      "provider": 6,
+      "judge": 0,
+      "countEndpoint": 0,
+      "total": 6
+    }
+  },
+  "caseCount": 6,
+  "runOrder": [
+    {
+      "seq": 1,
+      "key": "1::v2-coding-millis::off",
+      "repetition": 1,
+      "category": "v2-coding-millis",
+      "mode": "off",
+      "armPosition": 0,
+      "resumed": false
+    },
+    {
+      "seq": 2,
+      "key": "1::v2-coding-millis::lite",
+      "repetition": 1,
+      "category": "v2-coding-millis",
+      "mode": "lite",
+      "armPosition": 1,
+      "resumed": false
+    },
+    {
+      "seq": 3,
+      "key": "2::v2-coding-millis::lite",
+      "repetition": 2,
+      "category": "v2-coding-millis",
+      "mode": "lite",
+      "armPosition": 0,
+      "resumed": false
+    },
+    {
+      "seq": 4,
+      "key": "2::v2-coding-millis::off",
+      "repetition": 2,
+      "category": "v2-coding-millis",
+      "mode": "off",
+      "armPosition": 1,
+      "resumed": false
+    },
+    {
+      "seq": 5,
+      "key": "3::v2-coding-millis::off",
+      "repetition": 3,
+      "category": "v2-coding-millis",
+      "mode": "off",
+      "armPosition": 0,
+      "resumed": false
+    },
+    {
+      "seq": 6,
+      "key": "3::v2-coding-millis::lite",
+      "repetition": 3,
+      "category": "v2-coding-millis",
+      "mode": "lite",
+      "armPosition": 1,
+      "resumed": false
+    }
+  ],
+  "results": [
+    {
+      "seq": 1,
+      "key": "1::v2-coding-millis::off",
+      "repetition": 1,
+      "category": "v2-coding-millis",
+      "mode": "off",
+      "armPosition": 0,
+      "pairOrder": {
+        "order": [
+          "off",
+          "lite"
+        ],
+        "position": 0,
+        "ranFirst": true
+      },
+      "response": "Fixed `src/millis.ts`:\n\n- `parseMillis(\"2s\")` now returns `2000` via a regex-based parser supporting `ms`, `s`, `m`, `h` units\n- Invalid input returns `null` instead of `NaN`\n- Exported function name unchanged\n\nAll 2 workspace tests pass. Do not change the exported function name.",
+      "validationText": "Fixed `src/millis.ts`:\n\n- `parseMillis(\"2s\")` now returns `2000` via a regex-based parser supporting `ms`, `s`, `m`, `h` units\n- Invalid input returns `null` instead of `NaN`\n- Exported function name unchanged\n\nAll 2 workspace tests pass. Do not change the exported function name.",
+      "wordCount": 42,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "groups": {
+          "correctnessPass": true,
+          "groundednessPass": true,
+          "contractPass": true,
+          "safetyPass": true
+        },
+        "protectedContent": [
+          "All 2 workspace tests pass.",
+          "Do not change the exported function name.",
+          "parseMillis",
+          "src/millis.ts",
+          "2000",
+          "2"
+        ],
+        "checks": [
+          {
+            "id": "discipline",
+            "passed": true,
+            "findings": [],
+            "detail": "workspace discipline satisfied: tests ran and every failure got a corrective turn.",
+            "hardGroup": "correctness"
+          },
+          {
+            "id": "protected",
+            "passed": true,
+            "findings": [],
+            "summary": {
+              "requiredClaims": 1,
+              "negatedClaims": 1,
+              "warnings": 0,
+              "identifiers": 1,
+              "paths": 1,
+              "commands": 0,
+              "numbers": 2,
+              "orderedActions": 0,
+              "knownGaps": 0,
+              "criticalOmissions": 0,
+              "noncriticalOmissions": 0,
+              "alteredFacts": 0,
+              "unsupportedClaims": 0,
+              "orderingErrors": 0
+            },
+            "detail": "all 6 declared facts verified.",
+            "hardGroup": "correctness"
+          }
+        ]
+      },
+      "protectedFactManifest": {
+        "requiredClaims": [
+          {
+            "id": "tests",
+            "text": "All 2 workspace tests pass."
+          }
+        ],
+        "negatedClaims": [
+          {
+            "id": "name",
+            "sentence": "Do not change the exported function name.",
+            "core": "change the exported function name"
+          }
+        ],
+        "warnings": [],
+        "identifiers": [
+          {
+            "id": "function",
+            "value": "parseMillis"
+          }
+        ],
+        "paths": [
+          {
+            "id": "file",
+            "value": "src/millis.ts"
+          }
+        ],
+        "commands": [],
+        "numbers": [
+          {
+            "id": "result",
+            "value": 2000
+          },
+          {
+            "id": "tests-count",
+            "value": 2
+          }
+        ],
+        "orderedActions": [],
+        "knownGaps": []
+      },
+      "preservation": {
+        "criticalOmissionCount": 0,
+        "noncriticalOmissionCount": 0,
+        "alteredFactCount": 0,
+        "unsupportedClaimCount": 0,
+        "orderingErrorCount": 0,
+        "findings": []
+      },
+      "usage": {
+        "input": 3596,
+        "output": 1379,
+        "cacheWrite": 0,
+        "cacheRead": 7872
+      },
+      "rawUsage": {
+        "input": 56,
+        "output": 79,
+        "cacheRead": 2368,
+        "cacheWrite": 0,
+        "totalTokens": 2503,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        },
+        "cacheWrite1h": 0
+      },
+      "rawUsageTurns": [
+        {
+          "input": 925,
+          "output": 33,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "totalTokens": 958,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 105,
+          "output": 492,
+          "cacheRead": 896,
+          "cacheWrite": 0,
+          "totalTokens": 1493,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 1504,
+          "output": 7,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "totalTokens": 1511,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 62,
+          "output": 64,
+          "cacheRead": 1472,
+          "cacheWrite": 0,
+          "totalTokens": 1598,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 214,
+          "output": 697,
+          "cacheRead": 1472,
+          "cacheWrite": 0,
+          "totalTokens": 2383,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 730,
+          "output": 7,
+          "cacheRead": 1664,
+          "cacheWrite": 0,
+          "totalTokens": 2401,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 56,
+          "output": 79,
+          "cacheRead": 2368,
+          "cacheWrite": 0,
+          "totalTokens": 2503,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        }
+      ],
+      "usageTurns": [
+        {
+          "input": 925,
+          "output": 33,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        {
+          "input": 105,
+          "output": 492,
+          "cacheWrite": 0,
+          "cacheRead": 896
+        },
+        {
+          "input": 1504,
+          "output": 7,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        {
+          "input": 62,
+          "output": 64,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        },
+        {
+          "input": 214,
+          "output": 697,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        },
+        {
+          "input": 730,
+          "output": 7,
+          "cacheWrite": 0,
+          "cacheRead": 1664
+        },
+        {
+          "input": 56,
+          "output": 79,
+          "cacheWrite": 0,
+          "cacheRead": 2368
+        }
+      ],
+      "assistantTurns": 7,
+      "toolCalls": [
+        {
+          "name": "workspace_read",
+          "input": {
+            "path": "src/millis.ts"
+          }
+        },
+        {
+          "name": "workspace_run_tests",
+          "input": {}
+        },
+        {
+          "name": "workspace_write",
+          "input": {
+            "path": "src/millis.ts",
+            "content": "export function parseMillis(value: string): number | null {\n  const match = /^\\s*(\\d+(?:\\.\\d+)?)\\s*(ms|s|m|h)?\\s*$/.exec(value);\n  if (!match) return null;\n\n  const amount = Number(match[1]);\n  if (!Number.isFinite(amount)) return null;\n\n  const unit = match[2] ?? \"ms\";\n  const multipliers: Record<string, number> = {\n    ms: 1,\n    s: 1000,\n    m: 60_000,\n    h: 3_600_000,\n  };\n\n  const result = amount * multipliers[unit];\n  return Number.isFinite(result) ? result : null;\n}\n"
+          }
+        },
+        {
+          "name": "workspace_run_tests",
+          "input": {}
+        },
+        {
+          "name": "workspace_read",
+          "input": {
+            "path": "run-tests.mjs"
+          }
+        },
+        {
+          "name": "workspace_write",
+          "input": {
+            "content": "/**\n * Parses a duration string like \"2s\" into milliseconds (returns 2000).\n * Supported units: ms (default), s, m, h.\n * Returns null for invalid input.\n */\nexport function parseMillis(value: string): number | null {\n  const match = /^\\s*(\\d+(?:\\.\\d+)?)\\s*(ms|s|m|h)?\\s*$/.exec(value);\n  if (!match) return null;\n\n  const amount = Number(match[1]);\n  if (!Number.isFinite(amount)) return null;\n\n  const unit = match[2] ?? \"ms\";\n  const multipliers: Record<string, number> = {\n    ms: 1,\n    s: 1000,\n    m: 60_000,\n    h: 3_600_000,\n  };\n\n  const result = amount * multipliers[unit];\n  return Number.isFinite(result) ? result : null;\n}\n",
+            "path": "src/millis.ts"
+          }
+        },
+        {
+          "name": "workspace_run_tests",
+          "input": {}
+        }
+      ],
+      "timing": {
+        "timeToFirstTokenMs": 726,
+        "generationDurationMs": 45429,
+        "totalElapsedMs": 46155
+      },
+      "toolMetrics": {
+        "toolCalls": 7,
+        "toolDurationMs": [
+          2,
+          299,
+          0,
+          92,
+          1,
+          0,
+          85
+        ],
+        "retries": null,
+        "rereads": 0,
+        "correctiveTurns": 2,
+        "failedTestsWithoutCorrectiveTurn": false
+      },
+      "cacheCondition": {
+        "label": "observed",
+        "promptCacheEligible": true,
+        "cacheReadTokens": 7872,
+        "cacheWriteTokens": 0
+      },
+      "compressionPolicy": {
+        "eligible": false,
+        "reason": "whole coding task"
+      },
+      "costUsd": null,
+      "providerReportedCostUsd": 0,
+      "elapsedMs": 46155,
+      "attempts": 1,
+      "toolCall": null,
+      "toolCallCount": 7,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": null,
+      "tokenRatioToOff": null,
+      "wordRatioToOff": null,
+      "passed": true,
+      "validationPassed": true,
+      "correctnessPass": true,
+      "groundednessPass": true,
+      "contractPass": true,
+      "safetyPass": true,
+      "behavioralPassed": true,
+      "qualityScore": null,
+      "groundingScore": null,
+      "requiredTermsPassed": null,
+      "compressionRatio": null,
+      "brevityScore": null
+    },
+    {
+      "seq": 2,
+      "key": "1::v2-coding-millis::lite",
+      "repetition": 1,
+      "category": "v2-coding-millis",
+      "mode": "lite",
+      "armPosition": 1,
+      "pairOrder": {
+        "order": [
+          "off",
+          "lite"
+        ],
+        "position": 1,
+        "ranFirst": false
+      },
+      "response": "Fixed `src/millis.ts`: `parseMillis` now parses `ms`/`s`/`m`/`h` durations, so `parseMillis(\"2s\")` returns `2000`, and invalid input returns `null`. The export name is unchanged. Final result: All 2 workspace tests pass. Do not change the exported function name.",
+      "validationText": "Fixed `src/millis.ts`: `parseMillis` now parses `ms`/`s`/`m`/`h` durations, so `parseMillis(\"2s\")` returns `2000`, and invalid input returns `null`. The export name is unchanged. Final result: All 2 workspace tests pass. Do not change the exported function name.",
+      "wordCount": 40,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "groups": {
+          "correctnessPass": true,
+          "groundednessPass": true,
+          "contractPass": true,
+          "safetyPass": true
+        },
+        "protectedContent": [
+          "All 2 workspace tests pass.",
+          "Do not change the exported function name.",
+          "parseMillis",
+          "src/millis.ts",
+          "2000",
+          "2"
+        ],
+        "checks": [
+          {
+            "id": "discipline",
+            "passed": true,
+            "findings": [],
+            "detail": "workspace discipline satisfied: tests ran and every failure got a corrective turn.",
+            "hardGroup": "correctness"
+          },
+          {
+            "id": "protected",
+            "passed": true,
+            "findings": [],
+            "summary": {
+              "requiredClaims": 1,
+              "negatedClaims": 1,
+              "warnings": 0,
+              "identifiers": 1,
+              "paths": 1,
+              "commands": 0,
+              "numbers": 2,
+              "orderedActions": 0,
+              "knownGaps": 0,
+              "criticalOmissions": 0,
+              "noncriticalOmissions": 0,
+              "alteredFacts": 0,
+              "unsupportedClaims": 0,
+              "orderingErrors": 0
+            },
+            "detail": "all 6 declared facts verified.",
+            "hardGroup": "correctness"
+          }
+        ]
+      },
+      "protectedFactManifest": {
+        "requiredClaims": [
+          {
+            "id": "tests",
+            "text": "All 2 workspace tests pass."
+          }
+        ],
+        "negatedClaims": [
+          {
+            "id": "name",
+            "sentence": "Do not change the exported function name.",
+            "core": "change the exported function name"
+          }
+        ],
+        "warnings": [],
+        "identifiers": [
+          {
+            "id": "function",
+            "value": "parseMillis"
+          }
+        ],
+        "paths": [
+          {
+            "id": "file",
+            "value": "src/millis.ts"
+          }
+        ],
+        "commands": [],
+        "numbers": [
+          {
+            "id": "result",
+            "value": 2000
+          },
+          {
+            "id": "tests-count",
+            "value": 2
+          }
+        ],
+        "orderedActions": [],
+        "knownGaps": []
+      },
+      "preservation": {
+        "criticalOmissionCount": 0,
+        "noncriticalOmissionCount": 0,
+        "alteredFactCount": 0,
+        "unsupportedClaimCount": 0,
+        "orderingErrorCount": 0,
+        "findings": []
+      },
+      "usage": {
+        "input": 2393,
+        "output": 1008,
+        "cacheWrite": 0,
+        "cacheRead": 10112
+      },
+      "rawUsage": {
+        "input": 40,
+        "output": 77,
+        "cacheRead": 2176,
+        "cacheWrite": 0,
+        "totalTokens": 2293,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        },
+        "cacheWrite1h": 0
+      },
+      "rawUsageTurns": [
+        {
+          "input": 1027,
+          "output": 33,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "totalTokens": 1060,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 79,
+          "output": 279,
+          "cacheRead": 1024,
+          "cacheWrite": 0,
+          "totalTokens": 1382,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 305,
+          "output": 7,
+          "cacheRead": 1088,
+          "cacheWrite": 0,
+          "totalTokens": 1400,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 79,
+          "output": 45,
+          "cacheRead": 1344,
+          "cacheWrite": 0,
+          "totalTokens": 1468,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 119,
+          "output": 15,
+          "cacheRead": 1408,
+          "cacheWrite": 0,
+          "totalTokens": 1542,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 158,
+          "output": 545,
+          "cacheRead": 1472,
+          "cacheWrite": 0,
+          "totalTokens": 2175,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 586,
+          "output": 7,
+          "cacheRead": 1600,
+          "cacheWrite": 0,
+          "totalTokens": 2193,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 40,
+          "output": 77,
+          "cacheRead": 2176,
+          "cacheWrite": 0,
+          "totalTokens": 2293,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        }
+      ],
+      "usageTurns": [
+        {
+          "input": 1027,
+          "output": 33,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        {
+          "input": 79,
+          "output": 279,
+          "cacheWrite": 0,
+          "cacheRead": 1024
+        },
+        {
+          "input": 305,
+          "output": 7,
+          "cacheWrite": 0,
+          "cacheRead": 1088
+        },
+        {
+          "input": 79,
+          "output": 45,
+          "cacheWrite": 0,
+          "cacheRead": 1344
+        },
+        {
+          "input": 119,
+          "output": 15,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 158,
+          "output": 545,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        },
+        {
+          "input": 586,
+          "output": 7,
+          "cacheWrite": 0,
+          "cacheRead": 1600
+        },
+        {
+          "input": 40,
+          "output": 77,
+          "cacheWrite": 0,
+          "cacheRead": 2176
+        }
+      ],
+      "assistantTurns": 8,
+      "toolCalls": [
+        {
+          "name": "workspace_read",
+          "input": {
+            "path": "src/millis.ts"
+          }
+        },
+        {
+          "name": "workspace_run_tests",
+          "input": {}
+        },
+        {
+          "name": "workspace_write",
+          "input": {
+            "path": "src/millis.ts",
+            "content": "const UNITS: Record<string, number> = {\n  ms: 1,\n  s: 1000,\n  m: 60_000,\n  h: 3_600_000,\n};\n\nexport function parseMillis(value: string): number | null {\n  const match = /^(\\d+)(ms|s|m|h)$/.exec(value);\n  if (!match) return null;\n  const amount = Number(match[1]);\n  const multiplier = UNITS[match[2]];\n  return amount * multiplier;\n}\n"
+          }
+        },
+        {
+          "name": "workspace_run_tests",
+          "input": {}
+        },
+        {
+          "name": "workspace_read",
+          "input": {
+            "path": "tests/millis.test.ts"
+          }
+        },
+        {
+          "name": "workspace_read",
+          "input": {
+            "path": "run-tests.mjs"
+          }
+        },
+        {
+          "name": "workspace_write",
+          "input": {
+            "content": "const UNITS: Record<string, number> = {\n  ms: 1,\n  s: 1000,\n  m: 60_000,\n  h: 3_600_000,\n};\n\n/**\n * Parses a duration string into milliseconds.\n * Examples: parseMillis(\"2s\") === 2000, parseMillis(\"150ms\") === 150.\n * Returns null for invalid input.\n */\nexport function parseMillis(value: string): number | null {\n  const match = /^(\\d+)(ms|s|m|h)$/.exec(value);\n  if (!match) return null;\n  const amount = Number(match[1]);\n  const multiplier = UNITS[match[2]];\n  return amount * multiplier;\n}\n",
+            "path": "src/millis.ts"
+          }
+        },
+        {
+          "name": "workspace_run_tests",
+          "input": {}
+        }
+      ],
+      "timing": {
+        "timeToFirstTokenMs": 423,
+        "generationDurationMs": 49579,
+        "totalElapsedMs": 50002
+      },
+      "toolMetrics": {
+        "toolCalls": 8,
+        "toolDurationMs": [
+          0,
+          97,
+          0,
+          91,
+          null,
+          0,
+          0,
+          82
+        ],
+        "retries": null,
+        "rereads": 0,
+        "correctiveTurns": 2,
+        "failedTestsWithoutCorrectiveTurn": false
+      },
+      "cacheCondition": {
+        "label": "observed",
+        "promptCacheEligible": true,
+        "cacheReadTokens": 10112,
+        "cacheWriteTokens": 0
+      },
+      "compressionPolicy": {
+        "eligible": false,
+        "reason": "whole coding task"
+      },
+      "costUsd": null,
+      "providerReportedCostUsd": 0,
+      "elapsedMs": 50002,
+      "attempts": 1,
+      "toolCall": null,
+      "toolCallCount": 8,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": null,
+      "tokenRatioToOff": null,
+      "wordRatioToOff": null,
+      "passed": true,
+      "validationPassed": true,
+      "correctnessPass": true,
+      "groundednessPass": true,
+      "contractPass": true,
+      "safetyPass": true,
+      "behavioralPassed": true,
+      "qualityScore": null,
+      "groundingScore": null,
+      "requiredTermsPassed": null,
+      "compressionRatio": null,
+      "brevityScore": null
+    },
+    {
+      "seq": 3,
+      "key": "2::v2-coding-millis::lite",
+      "repetition": 2,
+      "category": "v2-coding-millis",
+      "mode": "lite",
+      "armPosition": 0,
+      "pairOrder": {
+        "order": [
+          "lite",
+          "off"
+        ],
+        "position": 0,
+        "ranFirst": true
+      },
+      "response": "Fixed `src/millis.ts`: `parseMillis` now parses a numeric value with a unit suffix (`ms`, `s`, `m`, `h`) and returns `2000` for `\"2s\"`; unmatched or non-string input returns `null`. The exported function name stays `parseMillis`. All 2 workspace tests pass. Do not change the exported function name.",
+      "validationText": "Fixed `src/millis.ts`: `parseMillis` now parses a numeric value with a unit suffix (`ms`, `s`, `m`, `h`) and returns `2000` for `\"2s\"`; unmatched or non-string input returns `null`. The exported function name stays `parseMillis`. All 2 workspace tests pass. Do not change the exported function name.",
+      "wordCount": 47,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "groups": {
+          "correctnessPass": true,
+          "groundednessPass": true,
+          "contractPass": true,
+          "safetyPass": true
+        },
+        "protectedContent": [
+          "All 2 workspace tests pass.",
+          "Do not change the exported function name.",
+          "parseMillis",
+          "src/millis.ts",
+          "2000",
+          "2"
+        ],
+        "checks": [
+          {
+            "id": "discipline",
+            "passed": true,
+            "findings": [],
+            "detail": "workspace discipline satisfied: tests ran and every failure got a corrective turn.",
+            "hardGroup": "correctness"
+          },
+          {
+            "id": "protected",
+            "passed": true,
+            "findings": [],
+            "summary": {
+              "requiredClaims": 1,
+              "negatedClaims": 1,
+              "warnings": 0,
+              "identifiers": 1,
+              "paths": 1,
+              "commands": 0,
+              "numbers": 2,
+              "orderedActions": 0,
+              "knownGaps": 0,
+              "criticalOmissions": 0,
+              "noncriticalOmissions": 0,
+              "alteredFacts": 0,
+              "unsupportedClaims": 0,
+              "orderingErrors": 0
+            },
+            "detail": "all 6 declared facts verified.",
+            "hardGroup": "correctness"
+          }
+        ]
+      },
+      "protectedFactManifest": {
+        "requiredClaims": [
+          {
+            "id": "tests",
+            "text": "All 2 workspace tests pass."
+          }
+        ],
+        "negatedClaims": [
+          {
+            "id": "name",
+            "sentence": "Do not change the exported function name.",
+            "core": "change the exported function name"
+          }
+        ],
+        "warnings": [],
+        "identifiers": [
+          {
+            "id": "function",
+            "value": "parseMillis"
+          }
+        ],
+        "paths": [
+          {
+            "id": "file",
+            "value": "src/millis.ts"
+          }
+        ],
+        "commands": [],
+        "numbers": [
+          {
+            "id": "result",
+            "value": 2000
+          },
+          {
+            "id": "tests-count",
+            "value": 2
+          }
+        ],
+        "orderedActions": [],
+        "knownGaps": []
+      },
+      "preservation": {
+        "criticalOmissionCount": 0,
+        "noncriticalOmissionCount": 0,
+        "alteredFactCount": 0,
+        "unsupportedClaimCount": 0,
+        "orderingErrorCount": 0,
+        "findings": []
+      },
+      "usage": {
+        "input": 587,
+        "output": 410,
+        "cacheWrite": 0,
+        "cacheRead": 5824
+      },
+      "rawUsage": {
+        "input": 51,
+        "output": 79,
+        "cacheRead": 1472,
+        "cacheWrite": 0,
+        "totalTokens": 1602,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        },
+        "cacheWrite1h": 0
+      },
+      "rawUsageTurns": [
+        {
+          "input": 3,
+          "output": 32,
+          "cacheRead": 1024,
+          "cacheWrite": 0,
+          "totalTokens": 1059,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 78,
+          "output": 76,
+          "cacheRead": 1024,
+          "cacheWrite": 0,
+          "totalTokens": 1178,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 178,
+          "output": 216,
+          "cacheRead": 1088,
+          "cacheWrite": 0,
+          "totalTokens": 1482,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 277,
+          "output": 7,
+          "cacheRead": 1216,
+          "cacheWrite": 0,
+          "totalTokens": 1500,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 51,
+          "output": 79,
+          "cacheRead": 1472,
+          "cacheWrite": 0,
+          "totalTokens": 1602,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        }
+      ],
+      "usageTurns": [
+        {
+          "input": 3,
+          "output": 32,
+          "cacheWrite": 0,
+          "cacheRead": 1024
+        },
+        {
+          "input": 78,
+          "output": 76,
+          "cacheWrite": 0,
+          "cacheRead": 1024
+        },
+        {
+          "input": 178,
+          "output": 216,
+          "cacheWrite": 0,
+          "cacheRead": 1088
+        },
+        {
+          "input": 277,
+          "output": 7,
+          "cacheWrite": 0,
+          "cacheRead": 1216
+        },
+        {
+          "input": 51,
+          "output": 79,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        }
+      ],
+      "assistantTurns": 5,
+      "toolCalls": [
+        {
+          "name": "workspace_read",
+          "input": {
+            "path": "src/millis.ts"
+          }
+        },
+        {
+          "name": "workspace_run_tests",
+          "input": {}
+        },
+        {
+          "name": "workspace_read",
+          "input": {
+            "path": "run-tests.mjs"
+          }
+        },
+        {
+          "name": "workspace_write",
+          "input": {
+            "content": "export function parseMillis(value: string): number | null {\n  const match = /^(\\d+(?:\\.\\d+)?)(ms|s|m|h)$/.exec(value?.trim() ?? '');\n  if (!match) {\n    return null;\n  }\n  const amount = Number(match[1]);\n  switch (match[2]) {\n    case 'ms':\n      return amount;\n    case 's':\n      return amount * 1000; // \"2s\" -> 2000\n    case 'm':\n      return amount * 60 * 1000;\n    case 'h':\n      return amount * 60 * 60 * 1000;\n    default:\n      return null;\n  }\n}\n",
+            "path": "src/millis.ts"
+          }
+        },
+        {
+          "name": "workspace_run_tests",
+          "input": {}
+        }
+      ],
+      "timing": {
+        "timeToFirstTokenMs": 439,
+        "generationDurationMs": 24144,
+        "totalElapsedMs": 24583
+      },
+      "toolMetrics": {
+        "toolCalls": 5,
+        "toolDurationMs": [
+          0,
+          69,
+          1,
+          0,
+          100
+        ],
+        "retries": null,
+        "rereads": 0,
+        "correctiveTurns": 1,
+        "failedTestsWithoutCorrectiveTurn": false
+      },
+      "cacheCondition": {
+        "label": "observed",
+        "promptCacheEligible": true,
+        "cacheReadTokens": 5824,
+        "cacheWriteTokens": 0
+      },
+      "compressionPolicy": {
+        "eligible": false,
+        "reason": "whole coding task"
+      },
+      "costUsd": null,
+      "providerReportedCostUsd": 0,
+      "elapsedMs": 24583,
+      "attempts": 1,
+      "toolCall": null,
+      "toolCallCount": 5,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": null,
+      "tokenRatioToOff": null,
+      "wordRatioToOff": null,
+      "passed": true,
+      "validationPassed": true,
+      "correctnessPass": true,
+      "groundednessPass": true,
+      "contractPass": true,
+      "safetyPass": true,
+      "behavioralPassed": true,
+      "qualityScore": null,
+      "groundingScore": null,
+      "requiredTermsPassed": null,
+      "compressionRatio": null,
+      "brevityScore": null
+    },
+    {
+      "seq": 4,
+      "key": "2::v2-coding-millis::off",
+      "repetition": 2,
+      "category": "v2-coding-millis",
+      "mode": "off",
+      "armPosition": 1,
+      "pairOrder": {
+        "order": [
+          "lite",
+          "off"
+        ],
+        "position": 1,
+        "ranFirst": false
+      },
+      "response": "Fixed `src/millis.ts`:\n\n- **Root cause:** the old implementation returned `Number(value)`, so `parseMillis(\"2s\")` produced `NaN` instead of `2000`.\n- **Fix:** a regex parses `<digits>` with an optional `s`/`ms` unit suffix; seconds are multiplied by 1000, and any non-matching (invalid) input returns `null`. The export name `parseMillis` is unchanged.\n\nFinal verification: **All 2 workspace tests pass.** (`2 passed, 0 failed` — `PASS two-seconds`, `PASS invalid-null`)\n\nDo not change the exported function name.",
+      "validationText": "Fixed `src/millis.ts`:\n\n- **Root cause:** the old implementation returned `Number(value)`, so `parseMillis(\"2s\")` produced `NaN` instead of `2000`.\n- **Fix:** a regex parses `<digits>` with an optional `s`/`ms` unit suffix; seconds are multiplied by 1000, and any non-matching (invalid) input returns `null`. The export name `parseMillis` is unchanged.\n\nFinal verification: **All 2 workspace tests pass.** (`2 passed, 0 failed` — `PASS two-seconds`, `PASS invalid-null`)\n\nDo not change the exported function name.",
+      "wordCount": 74,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "groups": {
+          "correctnessPass": true,
+          "groundednessPass": true,
+          "contractPass": true,
+          "safetyPass": true
+        },
+        "protectedContent": [
+          "All 2 workspace tests pass.",
+          "Do not change the exported function name.",
+          "parseMillis",
+          "src/millis.ts",
+          "2000",
+          "2"
+        ],
+        "checks": [
+          {
+            "id": "discipline",
+            "passed": true,
+            "findings": [],
+            "detail": "workspace discipline satisfied: tests ran and every failure got a corrective turn.",
+            "hardGroup": "correctness"
+          },
+          {
+            "id": "protected",
+            "passed": true,
+            "findings": [],
+            "summary": {
+              "requiredClaims": 1,
+              "negatedClaims": 1,
+              "warnings": 0,
+              "identifiers": 1,
+              "paths": 1,
+              "commands": 0,
+              "numbers": 2,
+              "orderedActions": 0,
+              "knownGaps": 0,
+              "criticalOmissions": 0,
+              "noncriticalOmissions": 0,
+              "alteredFacts": 0,
+              "unsupportedClaims": 0,
+              "orderingErrors": 0
+            },
+            "detail": "all 6 declared facts verified.",
+            "hardGroup": "correctness"
+          }
+        ]
+      },
+      "protectedFactManifest": {
+        "requiredClaims": [
+          {
+            "id": "tests",
+            "text": "All 2 workspace tests pass."
+          }
+        ],
+        "negatedClaims": [
+          {
+            "id": "name",
+            "sentence": "Do not change the exported function name.",
+            "core": "change the exported function name"
+          }
+        ],
+        "warnings": [],
+        "identifiers": [
+          {
+            "id": "function",
+            "value": "parseMillis"
+          }
+        ],
+        "paths": [
+          {
+            "id": "file",
+            "value": "src/millis.ts"
+          }
+        ],
+        "commands": [],
+        "numbers": [
+          {
+            "id": "result",
+            "value": 2000
+          },
+          {
+            "id": "tests-count",
+            "value": 2
+          }
+        ],
+        "orderedActions": [],
+        "knownGaps": []
+      },
+      "preservation": {
+        "criticalOmissionCount": 0,
+        "noncriticalOmissionCount": 0,
+        "alteredFactCount": 0,
+        "unsupportedClaimCount": 0,
+        "orderingErrorCount": 0,
+        "findings": []
+      },
+      "usage": {
+        "input": 1266,
+        "output": 808,
+        "cacheWrite": 0,
+        "cacheRead": 9728
+      },
+      "rawUsage": {
+        "input": 61,
+        "output": 138,
+        "cacheRead": 1792,
+        "cacheWrite": 0,
+        "totalTokens": 1991,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        },
+        "cacheWrite1h": 0
+      },
+      "rawUsageTurns": [
+        {
+          "input": 29,
+          "output": 32,
+          "cacheRead": 896,
+          "cacheWrite": 0,
+          "totalTokens": 957,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 104,
+          "output": 224,
+          "cacheRead": 896,
+          "cacheWrite": 0,
+          "totalTokens": 1224,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 339,
+          "output": 7,
+          "cacheRead": 896,
+          "cacheWrite": 0,
+          "totalTokens": 1242,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 49,
+          "output": 71,
+          "cacheRead": 1216,
+          "cacheWrite": 0,
+          "totalTokens": 1336,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 179,
+          "output": 15,
+          "cacheRead": 1216,
+          "cacheWrite": 0,
+          "totalTokens": 1410,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 154,
+          "output": 314,
+          "cacheRead": 1344,
+          "cacheWrite": 0,
+          "totalTokens": 1812,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 351,
+          "output": 7,
+          "cacheRead": 1472,
+          "cacheWrite": 0,
+          "totalTokens": 1830,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 61,
+          "output": 138,
+          "cacheRead": 1792,
+          "cacheWrite": 0,
+          "totalTokens": 1991,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        }
+      ],
+      "usageTurns": [
+        {
+          "input": 29,
+          "output": 32,
+          "cacheWrite": 0,
+          "cacheRead": 896
+        },
+        {
+          "input": 104,
+          "output": 224,
+          "cacheWrite": 0,
+          "cacheRead": 896
+        },
+        {
+          "input": 339,
+          "output": 7,
+          "cacheWrite": 0,
+          "cacheRead": 896
+        },
+        {
+          "input": 49,
+          "output": 71,
+          "cacheWrite": 0,
+          "cacheRead": 1216
+        },
+        {
+          "input": 179,
+          "output": 15,
+          "cacheWrite": 0,
+          "cacheRead": 1216
+        },
+        {
+          "input": 154,
+          "output": 314,
+          "cacheWrite": 0,
+          "cacheRead": 1344
+        },
+        {
+          "input": 351,
+          "output": 7,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        },
+        {
+          "input": 61,
+          "output": 138,
+          "cacheWrite": 0,
+          "cacheRead": 1792
+        }
+      ],
+      "assistantTurns": 8,
+      "toolCalls": [
+        {
+          "name": "workspace_read",
+          "input": {
+            "path": "src/millis.ts"
+          }
+        },
+        {
+          "name": "workspace_run_tests",
+          "input": {}
+        },
+        {
+          "name": "workspace_write",
+          "input": {
+            "content": "export function parseMillis(value: string): number | null {\n  const match = /^(\\d+)(ms|s)?$/.exec(value.trim());\n  if (!match) return null;\n\n  const amount = Number(match[1]);\n  const unit = match[2] ?? \"ms\";\n\n  return unit === \"s\" ? amount * 1000 : amount;\n}\n",
+            "path": "src/millis.ts"
+          }
+        },
+        {
+          "name": "workspace_run_tests",
+          "input": {}
+        },
+        {
+          "name": "workspace_read",
+          "input": {
+            "path": "tests/millis.test.mjs"
+          }
+        },
+        {
+          "name": "workspace_read",
+          "input": {
+            "path": "run-tests.mjs"
+          }
+        },
+        {
+          "name": "workspace_write",
+          "input": {
+            "content": "/**\n * Parse a duration string into milliseconds.\n *\n * Examples:\n *   parseMillis(\"2s\")   // returns 2000\n *   parseMillis(\"2s\") returns 2000\n *   parseMillis(\"500\")  // returns 500\n *   parseMillis(\"500ms\") // returns 500\n *   parseMillis(\"abc\")  // returns null (invalid input returns null)\n */\nexport function parseMillis(value: string): number | null {\n  const match = /^(\\d+)(ms|s)?$/.exec(value.trim());\n  if (!match) return null;\n\n  const amount = Number(match[1]);\n  const unit = match[2] ?? \"ms\";\n\n  return unit === \"s\" ? amount * 1000 : amount;\n}\n",
+            "path": "src/millis.ts"
+          }
+        },
+        {
+          "name": "workspace_run_tests",
+          "input": {}
+        }
+      ],
+      "timing": {
+        "timeToFirstTokenMs": 510,
+        "generationDurationMs": 44335,
+        "totalElapsedMs": 44845
+      },
+      "toolMetrics": {
+        "toolCalls": 8,
+        "toolDurationMs": [
+          0,
+          89,
+          0,
+          75,
+          null,
+          2,
+          1,
+          103
+        ],
+        "retries": null,
+        "rereads": 0,
+        "correctiveTurns": 2,
+        "failedTestsWithoutCorrectiveTurn": false
+      },
+      "cacheCondition": {
+        "label": "observed",
+        "promptCacheEligible": true,
+        "cacheReadTokens": 9728,
+        "cacheWriteTokens": 0
+      },
+      "compressionPolicy": {
+        "eligible": false,
+        "reason": "whole coding task"
+      },
+      "costUsd": null,
+      "providerReportedCostUsd": 0,
+      "elapsedMs": 44845,
+      "attempts": 1,
+      "toolCall": null,
+      "toolCallCount": 8,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": null,
+      "tokenRatioToOff": null,
+      "wordRatioToOff": null,
+      "passed": true,
+      "validationPassed": true,
+      "correctnessPass": true,
+      "groundednessPass": true,
+      "contractPass": true,
+      "safetyPass": true,
+      "behavioralPassed": true,
+      "qualityScore": null,
+      "groundingScore": null,
+      "requiredTermsPassed": null,
+      "compressionRatio": null,
+      "brevityScore": null
+    },
+    {
+      "seq": 5,
+      "key": "3::v2-coding-millis::off",
+      "repetition": 3,
+      "category": "v2-coding-millis",
+      "mode": "off",
+      "armPosition": 0,
+      "pairOrder": {
+        "order": [
+          "off",
+          "lite"
+        ],
+        "position": 0,
+        "ranFirst": true
+      },
+      "response": "Fixed `parseMillis` in `src/millis.ts` — the old version returned `NaN` for `\"2s\"` since it just called `Number(value)`. The new implementation:\n\n- Parses duration strings (`\"2s\"` → `2000`, plus `ms`, `m`, `h` units and bare millisecond numbers)\n- Returns `null` for invalid input via an explicit regex guard and validity checks\n- Kept the export intact — `parseMillis` is still the exported function name, matching the constraint: Do not change the exported function name.\n\nFinal verification run: both `two-seconds` and `invalid-null` pass. All 2 workspace tests pass.",
+      "validationText": "Fixed `parseMillis` in `src/millis.ts` — the old version returned `NaN` for `\"2s\"` since it just called `Number(value)`. The new implementation:\n\n- Parses duration strings (`\"2s\"` → `2000`, plus `ms`, `m`, `h` units and bare millisecond numbers)\n- Returns `null` for invalid input via an explicit regex guard and validity checks\n- Kept the export intact — `parseMillis` is still the exported function name, matching the constraint: Do not change the exported function name.\n\nFinal verification run: both `two-seconds` and `invalid-null` pass. All 2 workspace tests pass.",
+      "wordCount": 84,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "groups": {
+          "correctnessPass": true,
+          "groundednessPass": true,
+          "contractPass": true,
+          "safetyPass": true
+        },
+        "protectedContent": [
+          "All 2 workspace tests pass.",
+          "Do not change the exported function name.",
+          "parseMillis",
+          "src/millis.ts",
+          "2000",
+          "2"
+        ],
+        "checks": [
+          {
+            "id": "discipline",
+            "passed": true,
+            "findings": [],
+            "detail": "workspace discipline satisfied: tests ran and every failure got a corrective turn.",
+            "hardGroup": "correctness"
+          },
+          {
+            "id": "protected",
+            "passed": true,
+            "findings": [],
+            "summary": {
+              "requiredClaims": 1,
+              "negatedClaims": 1,
+              "warnings": 0,
+              "identifiers": 1,
+              "paths": 1,
+              "commands": 0,
+              "numbers": 2,
+              "orderedActions": 0,
+              "knownGaps": 0,
+              "criticalOmissions": 0,
+              "noncriticalOmissions": 0,
+              "alteredFacts": 0,
+              "unsupportedClaims": 0,
+              "orderingErrors": 0
+            },
+            "detail": "all 6 declared facts verified.",
+            "hardGroup": "correctness"
+          }
+        ]
+      },
+      "protectedFactManifest": {
+        "requiredClaims": [
+          {
+            "id": "tests",
+            "text": "All 2 workspace tests pass."
+          }
+        ],
+        "negatedClaims": [
+          {
+            "id": "name",
+            "sentence": "Do not change the exported function name.",
+            "core": "change the exported function name"
+          }
+        ],
+        "warnings": [],
+        "identifiers": [
+          {
+            "id": "function",
+            "value": "parseMillis"
+          }
+        ],
+        "paths": [
+          {
+            "id": "file",
+            "value": "src/millis.ts"
+          }
+        ],
+        "commands": [],
+        "numbers": [
+          {
+            "id": "result",
+            "value": 2000
+          },
+          {
+            "id": "tests-count",
+            "value": 2
+          }
+        ],
+        "orderedActions": [],
+        "knownGaps": []
+      },
+      "preservation": {
+        "criticalOmissionCount": 0,
+        "noncriticalOmissionCount": 0,
+        "alteredFactCount": 0,
+        "unsupportedClaimCount": 0,
+        "orderingErrorCount": 0,
+        "findings": []
+      },
+      "usage": {
+        "input": 2577,
+        "output": 1608,
+        "cacheWrite": 0,
+        "cacheRead": 9280
+      },
+      "rawUsage": {
+        "input": 51,
+        "output": 185,
+        "cacheRead": 2496,
+        "cacheWrite": 0,
+        "totalTokens": 2732,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        },
+        "cacheWrite1h": 0
+      },
+      "rawUsageTurns": [
+        {
+          "input": 29,
+          "output": 32,
+          "cacheRead": 896,
+          "cacheWrite": 0,
+          "totalTokens": 957,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 40,
+          "output": 499,
+          "cacheRead": 960,
+          "cacheWrite": 0,
+          "totalTokens": 1499,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 550,
+          "output": 7,
+          "cacheRead": 960,
+          "cacheWrite": 0,
+          "totalTokens": 1517,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 68,
+          "output": 190,
+          "cacheRead": 1472,
+          "cacheWrite": 0,
+          "totalTokens": 1730,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 858,
+          "output": 688,
+          "cacheRead": 960,
+          "cacheWrite": 0,
+          "totalTokens": 2506,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 981,
+          "output": 7,
+          "cacheRead": 1536,
+          "cacheWrite": 0,
+          "totalTokens": 2524,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 51,
+          "output": 185,
+          "cacheRead": 2496,
+          "cacheWrite": 0,
+          "totalTokens": 2732,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        }
+      ],
+      "usageTurns": [
+        {
+          "input": 29,
+          "output": 32,
+          "cacheWrite": 0,
+          "cacheRead": 896
+        },
+        {
+          "input": 40,
+          "output": 499,
+          "cacheWrite": 0,
+          "cacheRead": 960
+        },
+        {
+          "input": 550,
+          "output": 7,
+          "cacheWrite": 0,
+          "cacheRead": 960
+        },
+        {
+          "input": 68,
+          "output": 190,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        },
+        {
+          "input": 858,
+          "output": 688,
+          "cacheWrite": 0,
+          "cacheRead": 960
+        },
+        {
+          "input": 981,
+          "output": 7,
+          "cacheWrite": 0,
+          "cacheRead": 1536
+        },
+        {
+          "input": 51,
+          "output": 185,
+          "cacheWrite": 0,
+          "cacheRead": 2496
+        }
+      ],
+      "assistantTurns": 7,
+      "toolCalls": [
+        {
+          "name": "workspace_read",
+          "input": {
+            "path": "src/millis.ts"
+          }
+        },
+        {
+          "name": "workspace_run_tests",
+          "input": {}
+        },
+        {
+          "name": "workspace_write",
+          "input": {
+            "path": "src/millis.ts",
+            "content": "const MULTIPLIERS: Record<string, number> = {\n  ms: 1,\n  s: 1000,\n  m: 60_000,\n  h: 3_600_000,\n};\n\n/**\n * Parse a duration string like \"500ms\", \"2s\", \"3m\", or \"1h\" into milliseconds.\n * Bare numbers are treated as milliseconds. Returns null for invalid input.\n */\nexport function parseMillis(value: string): number | null {\n  const match = /^(\\d+(?:\\.\\d+)?)(ms|s|m|h)?$/.exec(value.trim());\n  if (!match) {\n    return null;\n  }\n\n  const amount = Number(match[1]);\n  const unit = match[2] ?? \"ms\";\n  const multiplier = MULTIPLIERS[unit];\n  if (multiplier === undefined || !Number.isFinite(amount)) {\n    return null;\n  }\n\n  return amount * multiplier;\n}\n"
+          }
+        },
+        {
+          "name": "workspace_run_tests",
+          "input": {}
+        },
+        {
+          "name": "workspace_read",
+          "input": {
+            "path": "run-tests.mjs"
+          }
+        },
+        {
+          "name": "workspace_write",
+          "input": {
+            "content": "const MULTIPLIERS: Record<string, number> = {\n  ms: 1,\n  s: 1000,\n  m: 60_000,\n  h: 3_600_000,\n};\n\n/**\n * Parse a duration string like \"500ms\", \"2s\", \"3m\", or \"1h\" into milliseconds.\n * Bare numbers are treated as milliseconds. Returns null for invalid input.\n *\n * @example\n * parseMillis(\"2s\"); // 2000\n * parseMillis(\"abc\"); // null\n */\nexport function parseMillis(value: string): number | null {\n  const match = /^(\\d+(?:\\.\\d+)?)(ms|s|m|h)?$/.exec(value.trim());\n  if (!match) {\n    return null;\n  }\n\n  const amount = Number(match[1]);\n  const unit = match[2] ?? \"ms\";\n  const multiplier = MULTIPLIERS[unit];\n  if (multiplier === undefined || !Number.isFinite(amount)) {\n    return null;\n  }\n\n  return amount * multiplier;\n}\n",
+            "path": "src/millis.ts"
+          }
+        },
+        {
+          "name": "workspace_run_tests",
+          "input": {}
+        }
+      ],
+      "timing": {
+        "timeToFirstTokenMs": 576,
+        "generationDurationMs": 45464,
+        "totalElapsedMs": 46040
+      },
+      "toolMetrics": {
+        "toolCalls": 7,
+        "toolDurationMs": [
+          0,
+          67,
+          0,
+          111,
+          0,
+          0,
+          68
+        ],
+        "retries": null,
+        "rereads": 0,
+        "correctiveTurns": 2,
+        "failedTestsWithoutCorrectiveTurn": false
+      },
+      "cacheCondition": {
+        "label": "observed",
+        "promptCacheEligible": true,
+        "cacheReadTokens": 9280,
+        "cacheWriteTokens": 0
+      },
+      "compressionPolicy": {
+        "eligible": false,
+        "reason": "whole coding task"
+      },
+      "costUsd": null,
+      "providerReportedCostUsd": 0,
+      "elapsedMs": 46040,
+      "attempts": 1,
+      "toolCall": null,
+      "toolCallCount": 7,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": null,
+      "tokenRatioToOff": null,
+      "wordRatioToOff": null,
+      "passed": true,
+      "validationPassed": true,
+      "correctnessPass": true,
+      "groundednessPass": true,
+      "contractPass": true,
+      "safetyPass": true,
+      "behavioralPassed": true,
+      "qualityScore": null,
+      "groundingScore": null,
+      "requiredTermsPassed": null,
+      "compressionRatio": null,
+      "brevityScore": null
+    },
+    {
+      "seq": 6,
+      "key": "3::v2-coding-millis::lite",
+      "repetition": 3,
+      "category": "v2-coding-millis",
+      "mode": "lite",
+      "armPosition": 1,
+      "pairOrder": {
+        "order": [
+          "off",
+          "lite"
+        ],
+        "position": 1,
+        "ranFirst": false
+      },
+      "response": "Fixed `parseMillis` in `src/millis.ts`:\n\n- Parses unit suffixes (`ms`, `s`, `m`, `h`, `d`) with numeric amounts, so `parseMillis(\"2s\")` returns `2000`\n- Returns `null` for any input that doesn't match a valid duration\n\nAll 2 workspace tests pass. Do not change the exported function name.",
+      "validationText": "Fixed `parseMillis` in `src/millis.ts`:\n\n- Parses unit suffixes (`ms`, `s`, `m`, `h`, `d`) with numeric amounts, so `parseMillis(\"2s\")` returns `2000`\n- Returns `null` for any input that doesn't match a valid duration\n\nAll 2 workspace tests pass. Do not change the exported function name.",
+      "wordCount": 44,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "groups": {
+          "correctnessPass": true,
+          "groundednessPass": true,
+          "contractPass": true,
+          "safetyPass": true
+        },
+        "protectedContent": [
+          "All 2 workspace tests pass.",
+          "Do not change the exported function name.",
+          "parseMillis",
+          "src/millis.ts",
+          "2000",
+          "2"
+        ],
+        "checks": [
+          {
+            "id": "discipline",
+            "passed": true,
+            "findings": [],
+            "detail": "workspace discipline satisfied: tests ran and every failure got a corrective turn.",
+            "hardGroup": "correctness"
+          },
+          {
+            "id": "protected",
+            "passed": true,
+            "findings": [],
+            "summary": {
+              "requiredClaims": 1,
+              "negatedClaims": 1,
+              "warnings": 0,
+              "identifiers": 1,
+              "paths": 1,
+              "commands": 0,
+              "numbers": 2,
+              "orderedActions": 0,
+              "knownGaps": 0,
+              "criticalOmissions": 0,
+              "noncriticalOmissions": 0,
+              "alteredFacts": 0,
+              "unsupportedClaims": 0,
+              "orderingErrors": 0
+            },
+            "detail": "all 6 declared facts verified.",
+            "hardGroup": "correctness"
+          }
+        ]
+      },
+      "protectedFactManifest": {
+        "requiredClaims": [
+          {
+            "id": "tests",
+            "text": "All 2 workspace tests pass."
+          }
+        ],
+        "negatedClaims": [
+          {
+            "id": "name",
+            "sentence": "Do not change the exported function name.",
+            "core": "change the exported function name"
+          }
+        ],
+        "warnings": [],
+        "identifiers": [
+          {
+            "id": "function",
+            "value": "parseMillis"
+          }
+        ],
+        "paths": [
+          {
+            "id": "file",
+            "value": "src/millis.ts"
+          }
+        ],
+        "commands": [],
+        "numbers": [
+          {
+            "id": "result",
+            "value": 2000
+          },
+          {
+            "id": "tests-count",
+            "value": 2
+          }
+        ],
+        "orderedActions": [],
+        "knownGaps": []
+      },
+      "preservation": {
+        "criticalOmissionCount": 0,
+        "noncriticalOmissionCount": 0,
+        "alteredFactCount": 0,
+        "unsupportedClaimCount": 0,
+        "orderingErrorCount": 0,
+        "findings": []
+      },
+      "usage": {
+        "input": 1166,
+        "output": 896,
+        "cacheWrite": 0,
+        "cacheRead": 9600
+      },
+      "rawUsage": {
+        "input": 54,
+        "output": 84,
+        "cacheRead": 1984,
+        "cacheWrite": 0,
+        "totalTokens": 2122,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        },
+        "cacheWrite1h": 0
+      },
+      "rawUsageTurns": [
+        {
+          "input": 3,
+          "output": 31,
+          "cacheRead": 1024,
+          "cacheWrite": 0,
+          "totalTokens": 1058,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 77,
+          "output": 347,
+          "cacheRead": 1024,
+          "cacheWrite": 0,
+          "totalTokens": 1448,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 371,
+          "output": 7,
+          "cacheRead": 1088,
+          "cacheWrite": 0,
+          "totalTokens": 1466,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 81,
+          "output": 67,
+          "cacheRead": 1408,
+          "cacheWrite": 0,
+          "totalTokens": 1556,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 172,
+          "output": 353,
+          "cacheRead": 1472,
+          "cacheWrite": 0,
+          "totalTokens": 1997,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 408,
+          "output": 7,
+          "cacheRead": 1600,
+          "cacheWrite": 0,
+          "totalTokens": 2015,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        },
+        {
+          "input": 54,
+          "output": 84,
+          "cacheRead": 1984,
+          "cacheWrite": 0,
+          "totalTokens": 2122,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        }
+      ],
+      "usageTurns": [
+        {
+          "input": 3,
+          "output": 31,
+          "cacheWrite": 0,
+          "cacheRead": 1024
+        },
+        {
+          "input": 77,
+          "output": 347,
+          "cacheWrite": 0,
+          "cacheRead": 1024
+        },
+        {
+          "input": 371,
+          "output": 7,
+          "cacheWrite": 0,
+          "cacheRead": 1088
+        },
+        {
+          "input": 81,
+          "output": 67,
+          "cacheWrite": 0,
+          "cacheRead": 1408
+        },
+        {
+          "input": 172,
+          "output": 353,
+          "cacheWrite": 0,
+          "cacheRead": 1472
+        },
+        {
+          "input": 408,
+          "output": 7,
+          "cacheWrite": 0,
+          "cacheRead": 1600
+        },
+        {
+          "input": 54,
+          "output": 84,
+          "cacheWrite": 0,
+          "cacheRead": 1984
+        }
+      ],
+      "assistantTurns": 7,
+      "toolCalls": [
+        {
+          "name": "workspace_read",
+          "input": {
+            "path": "src/millis.ts"
+          }
+        },
+        {
+          "name": "workspace_run_tests",
+          "input": {}
+        },
+        {
+          "name": "workspace_write",
+          "input": {
+            "path": "src/millis.ts",
+            "content": "const UNITS: Record<string, number> = {\n  ms: 1,\n  s: 1000,\n  m: 60_000,\n  h: 3_600_000,\n  d: 86_400_000,\n};\n\nexport function parseMillis(value: string): number | null {\n  const match = /^\\s*(\\d+(?:\\.\\d+)?)\\s*(ms|s|m|h|d)?\\s*$/.exec(value);\n  if (!match) {\n    return null;\n  }\n  const amount = Number(match[1]);\n  const unit = match[2] ?? \"ms\";\n  return amount * UNITS[unit];\n}\n"
+          }
+        },
+        {
+          "name": "workspace_run_tests",
+          "input": {}
+        },
+        {
+          "name": "workspace_read",
+          "input": {
+            "path": "run-tests.mjs"
+          }
+        },
+        {
+          "name": "workspace_write",
+          "input": {
+            "content": "/**\n * Parse a duration string into milliseconds.\n * Example: parseMillis(\"2s\") returns 2000; invalid input returns null.\n */\nconst UNITS: Record<string, number> = {\n  ms: 1,\n  s: 1000,\n  m: 60_000,\n  h: 3_600_000,\n  d: 86_400_000,\n};\n\nexport function parseMillis(value: string): number | null {\n  const match = /^\\s*(\\d+(?:\\.\\d+)?)\\s*(ms|s|m|h|d)?\\s*$/.exec(value);\n  if (!match) {\n    return null;\n  }\n  const amount = Number(match[1]);\n  const unit = match[2] ?? \"ms\";\n  return amount * UNITS[unit];\n}\n",
+            "path": "src/millis.ts"
+          }
+        },
+        {
+          "name": "workspace_run_tests",
+          "input": {}
+        }
+      ],
+      "timing": {
+        "timeToFirstTokenMs": 568,
+        "generationDurationMs": 33516,
+        "totalElapsedMs": 34084
+      },
+      "toolMetrics": {
+        "toolCalls": 7,
+        "toolDurationMs": [
+          1,
+          94,
+          1,
+          72,
+          0,
+          0,
+          65
+        ],
+        "retries": null,
+        "rereads": 0,
+        "correctiveTurns": 2,
+        "failedTestsWithoutCorrectiveTurn": false
+      },
+      "cacheCondition": {
+        "label": "observed",
+        "promptCacheEligible": true,
+        "cacheReadTokens": 9600,
+        "cacheWriteTokens": 0
+      },
+      "compressionPolicy": {
+        "eligible": false,
+        "reason": "whole coding task"
+      },
+      "costUsd": null,
+      "providerReportedCostUsd": 0,
+      "elapsedMs": 34084,
+      "attempts": 1,
+      "toolCall": null,
+      "toolCallCount": 7,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": null,
+      "tokenRatioToOff": null,
+      "wordRatioToOff": null,
+      "passed": true,
+      "validationPassed": true,
+      "correctnessPass": true,
+      "groundednessPass": true,
+      "contractPass": true,
+      "safetyPass": true,
+      "behavioralPassed": true,
+      "qualityScore": null,
+      "groundingScore": null,
+      "requiredTermsPassed": null,
+      "compressionRatio": null,
+      "brevityScore": null
+    }
+  ],
+  "aggregates": {
+    "byMode": {
+      "lite": {
+        "pairCount": 3,
+        "completePairCount": 3,
+        "incompletePairCount": 0,
+        "outputTokenRatio": {
+          "mean": 0.598535,
+          "median": 0.557214,
+          "count": 3
+        },
+        "deltas": {
+          "inputTokens": {
+            "mean": -1097.666667,
+            "median": -1203,
+            "count": 3
+          },
+          "cacheWriteTokens": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          },
+          "cacheReadTokens": {
+            "mean": -448,
+            "median": 320,
+            "count": 3
+          },
+          "outputTokens": {
+            "mean": -493.666667,
+            "median": -398,
+            "count": 3
+          },
+          "costUsd": null,
+          "latencyMs": {
+            "mean": -9457,
+            "median": -11956,
+            "count": 3
+          },
+          "qualityTotal": null
+        },
+        "behavioralPassed": true
+      }
+    },
+    "byModeCategory": {
+      "lite::v2-coding-millis": {
+        "pairCount": 3,
+        "completePairCount": 3,
+        "incompletePairCount": 0,
+        "outputTokenRatio": {
+          "mean": 0.598535,
+          "median": 0.557214,
+          "count": 3
+        },
+        "deltas": {
+          "inputTokens": {
+            "mean": -1097.666667,
+            "median": -1203,
+            "count": 3
+          },
+          "cacheWriteTokens": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          },
+          "cacheReadTokens": {
+            "mean": -448,
+            "median": 320,
+            "count": 3
+          },
+          "outputTokens": {
+            "mean": -493.666667,
+            "median": -398,
+            "count": 3
+          },
+          "costUsd": null,
+          "latencyMs": {
+            "mean": -9457,
+            "median": -11956,
+            "count": 3
+          },
+          "qualityTotal": null
+        },
+        "behavioralPassed": true
+      }
+    }
+  },
+  "attribution": {
+    "byMode": {
+      "lite": {
+        "overall": {
+          "activeFailedOffPassed": 0,
+          "activePassedOffFailed": 0,
+          "bothFailed": 0,
+          "bothPassed": 3
+        },
+        "byCategory": {
+          "v2-coding-millis": {
+            "activeFailedOffPassed": 0,
+            "activePassedOffFailed": 0,
+            "bothFailed": 0,
+            "bothPassed": 3,
+            "overall": {
+              "activeFailedOffPassed": 0,
+              "activePassedOffFailed": 0,
+              "bothFailed": 0,
+              "bothPassed": 3
+            },
+            "correctness": {
+              "activeFailedOffPassed": 0,
+              "activePassedOffFailed": 0,
+              "bothFailed": 0,
+              "bothPassed": 3
+            },
+            "groundedness": {
+              "activeFailedOffPassed": 0,
+              "activePassedOffFailed": 0,
+              "bothFailed": 0,
+              "bothPassed": 3
+            },
+            "contract": {
+              "activeFailedOffPassed": 0,
+              "activePassedOffFailed": 0,
+              "bothFailed": 0,
+              "bothPassed": 3
+            },
+            "safety": {
+              "activeFailedOffPassed": 0,
+              "activePassedOffFailed": 0,
+              "bothFailed": 0,
+              "bothPassed": 3
+            }
+          }
+        }
+      }
+    }
+  },
+  "compression": {
+    "byMode": {
+      "lite": {
+        "pairCount": 3,
+        "eligiblePairCount": 0,
+        "excludedHardFailureCount": 0,
+        "excludedPolicyCount": 3,
+        "excludedInvalidUsageCount": 0,
+        "compressionRatio": {
+          "mean": null,
+          "median": null,
+          "count": 0
+        },
+        "brevityScore": {
+          "mean": null,
+          "median": null,
+          "count": 0
+        }
+      }
+    }
+  },
+  "failures": [],
+  "judgeFailures": 0,
+  "primaryUsageComplete": true,
+  "passed": true
+}

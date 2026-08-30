@@ -6,3 +6,9 @@ evaluation/results/benchmark-targeted-v2.json -text
 evaluation/results/benchmark-targeted-v2.md -text
 scripts/evaluation-fixtures-fresh-v1.json -text
 scripts/evaluation-fixtures-fresh-v2.json -text
+evaluation/results/fresh-v2-tool-preflight.json -text
+evaluation/results/fresh-v2-cold-v1.json -text
+evaluation/results/fresh-v2-warm-v1.json -text
+evaluation/results/fresh-v2-cold-controlled-v1.json -text
+evaluation/results/fresh-v2-warmup-shared-v1.json -text
+evaluation/results/fresh-v2-warm-controlled-v1.json -text

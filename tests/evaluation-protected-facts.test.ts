@@ -49,6 +49,82 @@ describe("protected-facts requirement", () => {
     expect(validation.protectedContent).toContain("The default timeout was 30 seconds before this change.");
   });
 
+  it("accepts semantic wording, Markdown punctuation, ordered steps, explicit gaps, and tool-backed test claims", () => {
+    const outcome = runRequirements(
+      [
+        "**SECURITY WARNING** for a production database operation.",
+        "The AUTH-77 fixture is missing.",
+        "1. Create archive `/tmp/app.tar`.",
+        "2. Run `sha256sum /tmp/app.tar`.",
+        "Support: GAP — support contact not supplied.",
+        "All 2 workspace tests pass.",
+      ].join("\n"),
+      [
+        {
+          id: "facts",
+          kind: "protected-facts",
+          requiredClaims: [
+            { id: "missing", text: "AUTH-77 fixture is missing." },
+            { id: "gap", text: "Support: GAP — support contact not supplied." },
+          ],
+          warnings: [{ id: "warning", marker: "SECURITY WARNING", requiredTerms: ["production database"] }],
+          orderedActions: [{ id: "steps", items: ["create `/tmp/app.tar`", "sha256sum /tmp/app.tar"] }],
+        },
+        {
+          id: "record",
+          kind: "artifact-usability",
+          artifactType: "fields",
+          requiredFields: ["Support:"],
+        },
+      ],
+      {
+        sessionToolMetrics: { finalTestRunPassed: true, passingTestRuns: 1 },
+      },
+    );
+    expect(outcome.passed).toBe(true);
+  });
+
+  it("checks protected facts across final text and recorded tool messages", () => {
+    const outcome = runRequirements(
+      "All 2 workspace tests pass.",
+      [{
+        id: "facts",
+        kind: "protected-facts",
+        requiredClaims: [{ id: "disabled", text: "enabled remains false" }],
+        paths: [{ id: "file", value: "src/settings.json" }],
+        numbers: [{ id: "retry", value: 4 }],
+        suppliedCompletions: ["All 2 workspace tests pass."],
+      }],
+      {
+        toolCalls: [{
+          name: "handoff_to_parent",
+          input: { message: "Status: COMPLETE. src/settings.json has retryLimit 4; enabled remains false." },
+        }],
+      },
+    );
+    expect(outcome.passed).toBe(true);
+  });
+
+  it("does not treat a negated test status as a completion claim", () => {
+    const outcome = runRequirements(
+      "Status: BLOCKED. No fix claimed; tests not passing.",
+      [{ id: "facts", kind: "protected-facts", requiredClaims: [{ id: "status", text: "BLOCKED" }] }],
+      {},
+    );
+    expect(outcome.passed).toBe(true);
+  });
+
+  it("accepts punctuation changes in handoff terms while retaining values", () => {
+    const outcome = runRequirements(
+      "Handoff complete.",
+      [{ id: "handoff", kind: "handoff-message", toolName: "handoff_to_parent", requiredTerms: ["retryLimit 4", "enabled remains false"] }],
+      {
+        toolCalls: [{ name: "handoff_to_parent", input: { message: "retryLimit: 4; enabled remaining false" } }],
+      },
+    );
+    expect(outcome.passed).toBe(true);
+  });
+
   it("classifies omissions, altered facts, unsupported claims, ordering errors, and unmarked gaps", () => {
     const text = [
       "The Default Timeout Was 30 Seconds before this change.",

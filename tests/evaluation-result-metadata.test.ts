@@ -104,6 +104,7 @@ describe("evaluator result metadata", () => {
       expect(result.toolMetrics.rereads).toBeNull();
       expect(result.toolMetrics.correctiveTurns).toBeNull();
       expect(result.toolMetrics.failedTestsWithoutCorrectiveTurn).toBeNull();
+      expect(result.sessionToolMetrics).toBeNull();
       // Cache condition is recorded from the request shape and usage.
       expect(result.cacheCondition.promptCacheEligible).toBe(true);
       expect(result.cacheCondition.cacheReadTokens).toBe(25);

@@ -40,6 +40,18 @@ describe("confirmation-language validator", () => {
       noTool,
     );
     expect(yesNoApproval.passed).toBe(true);
+    const sureApproval = runValidators(
+      "Are you sure you want to delete /var/lib/caveman/cache? This action cannot be undone.",
+      [targeted],
+      noTool,
+    );
+    expect(sureApproval.passed).toBe(true);
+    const mayIApproval = runValidators(
+      "May I delete /var/lib/caveman/cache? This action cannot be undone.",
+      [targeted],
+      noTool,
+    );
+    expect(mayIApproval.passed).toBe(true);
     const confirmCancelApproval = runValidators(
       "Deleting /var/lib/caveman/cache cannot be undone. Confirm or cancel deleting /var/lib/caveman/cache?",
       [targeted],

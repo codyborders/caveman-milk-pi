@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "description": "Pinned bytes of the shared-prefix v12 holdout fixture. The loader verifies fixtureSha256 and freezeCommit before any launch.",
+  "fixturePath": "scripts/eval/shared-prefix-v12-fixtures.json",
+  "fixtureSha256": "641bbb383211257153cd0948bca4692838f7d7b3c10f89f8dca8ce26ffdf73c9",
+  "freezeCommit": "58456417feb1ee2987f6ed895af5adb520be62a7"
+}

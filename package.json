@@ -52,6 +52,8 @@
     "typecheck": "tsc --noEmit",
     "evaluate": "node scripts/evaluate.mjs",
     "evaluate:offline": "node scripts/evaluate.mjs",
+    "evaluate:v12:offline": "node scripts/eval/shared-prefix-v12-cli.mjs",
+    "evaluate:v12:analysis": "node scripts/eval/shared-prefix-v12-analysis-cli.mjs --final evaluation/results/shared-prefix-v12-final-v1.json --preflight evaluation/results/shared-prefix-v12-preflight-v1.json --preflight evaluation/results/shared-prefix-v12-preflight-v2.json --preflight evaluation/results/shared-prefix-v12-preflight-v3.json --json evaluation/results/shared-prefix-v12-analysis-v1.json --markdown evaluation/results/shared-prefix-v12-analysis-v1.md --manifest evaluation/shared-prefix-v12-artifacts-manifest.json --artifact-root .",
     "test:package": "node scripts/smoke-packed.mjs"
   },
   "devDependencies": {

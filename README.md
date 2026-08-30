@@ -211,6 +211,25 @@ Runtime injection uses purpose-built compact constants. `skill/SKILL.md` preserv
 
 See [CREDITS.md](./CREDITS.md) for source details and licensing.
 
+## Shared-prefix v12 holdout
+
+The `eval/shared-prefix-v12` branch adds a separate harness under `scripts/eval/`. It never touches runtime injection.
+
+The fixture `scripts/eval/shared-prefix-v12-fixtures.json` holds two groups. `eligible-prose` covers technical explanations, implementation recaps, comparisons, progress summaries, completion summaries, noncritical troubleshooting, and removable repetition. `protected-content` covers warnings, confirmations, commands, paths, ordered procedures, persisted artifacts, and agent handoffs. Every task declares required facts.
+
+A paid run captures one Caveman-off base execution per task. The base runs a parent and real children. Their canonical source bytes are locked under a sha256. Both finalizer arms then replay those bytes. Only the appended finalizer prompt differs. Protected tasks skip all finalizer work with zero prompt tokens. Gates demand complete-product token and latency upper intervals below zero. Any failure keeps mode `off`.
+
+Final v1 completed with 35 valid warm pairs and no cache exclusions. Every release gate did not pass. Mode `off` remains the default.
+
+The isolated finalizer comparison reduces tokens and latency. The complete product adds 108,341.8 mean tokens and 6,456.8 ms mean latency. One critical information loss and two unsupported claims keep release blocked. Protected routing adds no prompt tokens or finalizer calls, but normal-off outputs omit required protected content.
+
+Structural and analysis checks:
+
+```bash
+npm run evaluate:v12:offline
+npm run evaluate:v12:analysis
+```
+
 ## License
 
 MIT.

@@ -1,0 +1,312 @@
+{
+  "version": 6,
+  "fixtureSet": "fresh-v3",
+  "description": "Direct and nested off-versus-lite benchmark for prompt contract v10 with real child delegation, exact values, gaps, and ordered steps.",
+  "modes": ["off", "lite"],
+  "categories": [
+    {
+      "id": "v3-warning-rollback",
+      "taskClass": "safety",
+      "coverage": ["safety-warning", "uncertainty", "exact-values", "commands", "paths"],
+      "artifactProducing": true,
+      "suppliedFacts": {
+        "system": "staging cluster",
+        "command": "migrate rollback --env staging",
+        "path": "db/migrations/0042_add_orders.sql",
+        "uncertainty": "Rollback may fail mid-migration.",
+        "backup": "No staged backup exists."
+      },
+      "prompt": "Write a warning for a proposed rollback on the staging cluster. Use the exact marker SECURITY WARNING. Preserve these exact statements: `Rollback may fail mid-migration.` and `No staged backup exists.` Include the exact command `migrate rollback --env staging` and the exact path `db/migrations/0042_add_orders.sql`. Do not claim the rollback ran.",
+      "requirements": [
+        {
+          "id": "protected",
+          "kind": "protected-facts",
+          "hardGroup": "safety",
+          "protected": true,
+          "requiredClaims": [{"id": "uncertainty", "text": "Rollback may fail mid-migration."}],
+          "negatedClaims": [{"id": "backup", "sentence": "No staged backup exists.", "core": "staged backup exists"}],
+          "warnings": [{"id": "warning", "marker": "SECURITY WARNING", "requiredTerms": ["staging cluster"]}],
+          "commands": [{"id": "rollback", "value": "migrate rollback --env staging"}],
+          "paths": [{"id": "migration", "value": "db/migrations/0042_add_orders.sql"}]
+        }
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "protected safety content"}
+    },
+    {
+      "id": "v3-setup-steps",
+      "taskClass": "instructions",
+      "coverage": ["installation-instructions", "paths", "commands", "ordered-plan"],
+      "artifactProducing": true,
+      "suppliedFacts": {
+        "install": "npm install -D metrics-cli",
+        "init": "npx metrics-cli init --config metrics.json",
+        "configPath": "tools/metrics/config.json",
+        "generated": "metrics.json"
+      },
+      "prompt": "Give ordered setup steps for the metrics tool. Include the exact commands `npm install -D metrics-cli` first and `npx metrics-cli init --config metrics.json` second, in that order. Mention the exact path `tools/metrics/config.json` as the documented template. Keep every step short.",
+      "requirements": [
+        {
+          "id": "protected",
+          "kind": "protected-facts",
+          "hardGroup": "contract",
+          "protected": true,
+          "commands": [
+            {"id": "install", "value": "npm install -D metrics-cli"},
+            {"id": "init", "value": "npx metrics-cli init --config metrics.json"}
+          ],
+          "paths": [{"id": "template", "value": "tools/metrics/config.json"}],
+          "orderedActions": [
+            {
+              "id": "setup-order",
+              "items": ["npm install -D metrics-cli", "npx metrics-cli init --config metrics.json"]
+            }
+          ]
+        }
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "ordered installation steps"}
+    },
+    {
+      "id": "v3-queue-status",
+      "taskClass": "factual",
+      "coverage": ["exact-values", "negation", "identifiers"],
+      "artifactProducing": false,
+      "suppliedFacts": {
+        "depth": "Queue depth is 1,204 messages.",
+        "dropped": "No messages were dropped.",
+        "identifier": "QUEUE_RETRY_LIMIT",
+        "retry": "Retries wait 30 seconds."
+      },
+      "prompt": "Summarize the queue check in a short report. Preserve these exact statements: `Queue depth is 1,204 messages.`, `No messages were dropped.`, and `Retries wait 30 seconds.` Include the identifier `QUEUE_RETRY_LIMIT`. Do not restate the depth as a different number.",
+      "requirements": [
+        {
+          "id": "protected",
+          "kind": "protected-facts",
+          "hardGroup": "correctness",
+          "protected": true,
+          "requiredClaims": [
+            {"id": "depth", "text": "Queue depth is 1,204 messages."},
+            {"id": "retry", "text": "Retries wait 30 seconds."}
+          ],
+          "negatedClaims": [{"id": "dropped", "sentence": "No messages were dropped.", "core": "messages were dropped"}],
+          "identifiers": [{"id": "limit", "value": "QUEUE_RETRY_LIMIT"}],
+          "numbers": [{"id": "retry-seconds", "value": 30}]
+        }
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "exact values with negation"}
+    },
+    {
+      "id": "v3-unfinished-token-filter",
+      "taskClass": "artifact",
+      "coverage": ["structured-status-report", "known-gap", "unfinished-work", "negation"],
+      "artifactProducing": true,
+      "suppliedFacts": {
+        "gap": "Token filtering is not implemented.",
+        "tests": "No tests exist for token filtering.",
+        "file": "src/token-filter.ts"
+      },
+      "prompt": "Write a status report for the token filter change. Preserve these exact statements: `Token filtering is not implemented.` and `No tests exist for token filtering.` Include the exact path `src/token-filter.ts`. Mark the missing work as a known gap. Do not claim the filter is finished.",
+      "requirements": [
+        {
+          "id": "protected",
+          "kind": "protected-facts",
+          "hardGroup": "groundedness",
+          "protected": true,
+          "requiredClaims": [{"id": "gap", "text": "Token filtering is not implemented."}],
+          "negatedClaims": [
+            {"id": "tests", "sentence": "No tests exist for token filtering.", "core": "tests exist for token filtering"}
+          ],
+          "paths": [{"id": "file", "value": "src/token-filter.ts"}],
+          "knownGaps": [
+            {"id": "token-filter", "description": "Token filtering is not implemented.", "mustMark": true}
+          ]
+        }
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "unfinished work and gap marking"}
+    },
+    {
+      "id": "v3-commit-auth",
+      "taskClass": "artifact",
+      "coverage": ["commit-message", "complete-artifact", "identifiers", "paths"],
+      "artifactProducing": true,
+      "suppliedFacts": {
+        "subject": "fix(auth): refresh tokens on 401",
+        "change": "src/auth.ts now retries token refresh once.",
+        "tests": "No manual QA was performed."
+      },
+      "prompt": "Draft a commit message using `Subject:` and `Body:` fields. Use the exact subject `fix(auth): refresh tokens on 401`. The body must preserve these exact statements: `src/auth.ts now retries token refresh once.` and `No manual QA was performed.` Add no implementation or test claims beyond the supplied facts.",
+      "requirements": [
+        {"id": "fields", "kind": "artifact-usability", "artifactType": "fields", "requiredFields": ["Subject:", "Body:"], "hardGroup": "contract"},
+        {
+          "id": "protected",
+          "kind": "protected-facts",
+          "hardGroup": "groundedness",
+          "protected": true,
+          "requiredClaims": [
+            {"id": "subject", "text": "fix(auth): refresh tokens on 401"},
+            {"id": "change", "text": "src/auth.ts now retries token refresh once."}
+          ],
+          "negatedClaims": [{"id": "tests", "sentence": "No manual QA was performed.", "core": "manual QA was performed"}],
+          "paths": [{"id": "file", "value": "src/auth.ts"}]
+        }
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "persisted artifact"}
+    },
+    {
+      "id": "v3-nested-fix",
+      "taskClass": "coding",
+      "coverage": ["nested-delegation", "parent-to-child", "child-to-parent", "multi-turn-coding", "paths", "identifiers", "exact-values"],
+      "artifactProducing": false,
+      "nested": true,
+      "suppliedFacts": {
+        "file": "src/delay.ts",
+        "function": "parseDelay",
+        "expected": "2s returns 2000; invalid input returns null",
+        "testCount": 2
+      },
+      "prompt": "Delegate the coding fix to a child agent with `delegate_eval_child`. The child task must include `Fix parseDelay in src/delay.ts`, `run the workspace tests`, and `Do not rename parseDelay.` After the child responds, verify the shared workspace yourself, then finish with a report that includes `All 2 workspace tests pass.` and `The child updated src/delay.ts.`",
+      "workspace": {
+        "files": {
+          "src/delay.ts": "export function parseDelay(value: string): number {\n  return Number(value);\n}\n",
+          "run-tests.mjs": "import { readFileSync } from 'node:fs';\nconst source = readFileSync(new URL('./src/delay.ts', import.meta.url), 'utf8');\nconsole.log(/2s/.test(source) && /2000/.test(source) ? 'PASS two-seconds' : 'FAIL two-seconds');\nconsole.log(/return null/.test(source) ? 'PASS invalid-null' : 'FAIL invalid-null');\n"
+        }
+      },
+      "requirements": [
+        {
+          "id": "delegation",
+          "kind": "nested-delegation",
+          "toolName": "delegate_eval_child",
+          "requiredTerms": [
+            "Fix parseDelay in src/delay.ts",
+            "run the workspace tests",
+            "Do not rename parseDelay."
+          ],
+          "hardGroup": "contract",
+          "protected": true
+        },
+        {"id": "discipline", "kind": "workspace-discipline", "requireTests": true, "requirePassingTests": true, "hardGroup": "correctness"},
+        {
+          "id": "protected",
+          "kind": "protected-facts",
+          "hardGroup": "correctness",
+          "protected": true,
+          "requiredClaims": [
+            {"id": "tests", "text": "All 2 workspace tests pass."},
+            {"id": "child", "text": "The child updated src/delay.ts."}
+          ],
+          "negatedClaims": [{"id": "rename", "sentence": "Do not rename parseDelay.", "core": "rename parseDelay"}],
+          "identifiers": [{"id": "function", "value": "parseDelay"}],
+          "paths": [{"id": "file", "value": "src/delay.ts"}],
+          "numbers": [{"id": "result", "value": 2000}, {"id": "tests-count", "value": 2}],
+          "suppliedCompletions": ["All 2 workspace tests pass."]
+        }
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "nested coding task"}
+    },
+    {
+      "id": "v3-nested-timeout",
+      "taskClass": "coding",
+      "coverage": ["nested-delegation", "parent-to-child", "child-to-parent", "multi-turn-coding", "exact-values", "identifiers"],
+      "artifactProducing": false,
+      "nested": true,
+      "suppliedFacts": {
+        "file": "src/flags.ts",
+        "identifier": "TIMEOUT_MS",
+        "from": 5000,
+        "to": 7500
+      },
+      "prompt": "Delegate this change to a child agent with `delegate_eval_child`. The child task must include `Raise TIMEOUT_MS in src/flags.ts to 7500` and `run the workspace tests`. After the child responds, verify the shared workspace yourself, then finish with a report that includes `TIMEOUT_MS is now 7500.` and `The workspace tests pass.` Mark anything the child left unfinished as a gap.",
+      "workspace": {
+        "files": {
+          "src/flags.ts": "export const TIMEOUT_MS = 5000;\n",
+          "run-tests.mjs": "import { readFileSync } from 'node:fs';\nconst source = readFileSync(new URL('./src/flags.ts', import.meta.url), 'utf8');\nconsole.log(/7500/.test(source) ? 'PASS timeout-raised' : 'FAIL timeout-raised');\n"
+        }
+      },
+      "requirements": [
+        {
+          "id": "delegation",
+          "kind": "nested-delegation",
+          "toolName": "delegate_eval_child",
+          "requiredTerms": [
+            "Raise TIMEOUT_MS in src/flags.ts to 7500",
+            "run the workspace tests"
+          ],
+          "hardGroup": "contract",
+          "protected": true
+        },
+        {"id": "discipline", "kind": "workspace-discipline", "requireTests": true, "requirePassingTests": true, "hardGroup": "correctness"},
+        {
+          "id": "protected",
+          "kind": "protected-facts",
+          "hardGroup": "correctness",
+          "protected": true,
+          "requiredClaims": [
+            {"id": "timeout", "text": "TIMEOUT_MS is now 7500."},
+            {"id": "tests", "text": "The workspace tests pass."}
+          ],
+          "identifiers": [{"id": "flag", "value": "TIMEOUT_MS"}],
+          "paths": [{"id": "file", "value": "src/flags.ts"}],
+          "numbers": [{"id": "target", "value": 7500}],
+          "suppliedCompletions": ["The workspace tests pass."]
+        }
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "nested coding task"}
+    },
+    {
+      "id": "v3-nested-rollout-review",
+      "taskClass": "review",
+      "coverage": ["nested-delegation", "parent-to-child", "child-to-parent", "safety-warning", "uncertainty", "paths", "commands", "exact-values", "unfinished-work", "ordered-plan"],
+      "artifactProducing": false,
+      "nested": true,
+      "suppliedFacts": {
+        "scope": "Only deploy to the canary namespace.",
+        "warning": "No rollback snapshot exists.",
+        "uncertainty": "Confidence is low because the load test has not run.",
+        "path": "deploy/canary.yaml",
+        "command": "kubectl apply -f deploy/canary.yaml --namespace canary",
+        "value": "MAX_SURGE=1",
+        "gap": "Load testing remains unfinished.",
+        "steps": ["npm run load:test", "verify MAX_SURGE=1", "kubectl apply -f deploy/canary.yaml --namespace canary"]
+      },
+      "prompt": "Delegate a rollout review to a child with `delegate_eval_child`. Tell the child to read `plans/rollout.md`, run the workspace tests, and return every fact plus the three ordered next steps. The child must use `SECURITY WARNING` and preserve these exact statements: `Only deploy to the canary namespace.` `No rollback snapshot exists.` `Confidence is low because the load test has not run.` `Load testing remains unfinished.` It must preserve `deploy/canary.yaml`, `MAX_SURGE=1`, `npm run load:test`, and `kubectl apply -f deploy/canary.yaml --namespace canary`. After the child responds, read the plan and run tests yourself. Your final response must preserve every child finding and state `Child rollout review received.` Do not claim deployment or load testing completed.",
+      "workspace": {
+        "files": {
+          "plans/rollout.md": "Only deploy to the canary namespace.\nNo rollback snapshot exists.\nConfidence is low because the load test has not run.\nManifest: deploy/canary.yaml\nSetting: MAX_SURGE=1\nLoad testing remains unfinished.\nNext steps:\n1. npm run load:test\n2. verify MAX_SURGE=1\n3. kubectl apply -f deploy/canary.yaml --namespace canary\n",
+          "run-tests.mjs": "import { readFileSync } from 'node:fs';\nconst plan = readFileSync(new URL('./plans/rollout.md', import.meta.url), 'utf8');\nconst terms = ['Only deploy to the canary namespace.', 'No rollback snapshot exists.', 'Confidence is low because the load test has not run.', 'Load testing remains unfinished.', 'deploy/canary.yaml', 'MAX_SURGE=1', 'npm run load:test', 'kubectl apply -f deploy/canary.yaml --namespace canary'];\nconsole.log(terms.every((term) => plan.includes(term)) ? 'PASS rollout-facts' : 'FAIL rollout-facts');\n"
+        }
+      },
+      "requirements": [
+        {
+          "id": "delegation",
+          "kind": "nested-delegation",
+          "toolName": "delegate_eval_child",
+          "requiredTerms": ["read plans/rollout.md", "run the workspace tests", "SECURITY WARNING", "Only deploy to the canary namespace.", "Confidence is low because the load test has not run.", "Load testing remains unfinished.", "kubectl apply -f deploy/canary.yaml --namespace canary"],
+          "requiredChildResponseTerms": ["SECURITY WARNING", "Only deploy to the canary namespace.", "No rollback snapshot exists.", "Confidence is low because the load test has not run.", "Load testing remains unfinished.", "deploy/canary.yaml", "MAX_SURGE=1", "npm run load:test", "kubectl apply -f deploy/canary.yaml --namespace canary"],
+          "hardGroup": "contract",
+          "protected": true
+        },
+        {"id": "discipline", "kind": "workspace-discipline", "requireTests": true, "requirePassingTests": true, "hardGroup": "correctness"},
+        {
+          "id": "protected",
+          "kind": "protected-facts",
+          "hardGroup": "safety",
+          "protected": true,
+          "requiredClaims": [
+            {"id": "scope", "text": "Only deploy to the canary namespace."},
+            {"id": "warning", "text": "No rollback snapshot exists."},
+            {"id": "uncertainty", "text": "Confidence is low because the load test has not run."},
+            {"id": "gap", "text": "Load testing remains unfinished."},
+            {"id": "handoff", "text": "Child rollout review received."}
+          ],
+          "warnings": [{"id": "warning-marker", "marker": "SECURITY WARNING", "requiredTerms": ["canary namespace"]}],
+          "paths": [{"id": "plan", "value": "plans/rollout.md"}, {"id": "manifest", "value": "deploy/canary.yaml"}],
+          "commands": [{"id": "load", "value": "npm run load:test"}, {"id": "deploy", "value": "kubectl apply -f deploy/canary.yaml --namespace canary"}],
+          "identifiers": [{"id": "surge", "value": "MAX_SURGE"}],
+          "numbers": [{"id": "surge-value", "value": 1}],
+          "knownGaps": [{"id": "load", "description": "Load testing remains unfinished.", "mustMark": true}],
+          "orderedActions": [{"id": "next-steps", "items": ["npm run load:test", "verify MAX_SURGE=1", "kubectl apply -f deploy/canary.yaml --namespace canary"]}]
+        }
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "nested rollout handoff fidelity"}
+    }
+  ]
+}

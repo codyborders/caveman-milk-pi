@@ -1,0 +1,1280 @@
+{
+  "schemaVersion": 2,
+  "fixtureVersion": 2,
+  "provider": "pi",
+  "runner": "pi",
+  "model": "openai-codex/gpt-5.4-mini",
+  "tokenAccounting": {
+    "method": "provider-count-endpoint",
+    "endpointPath": "/v1/messages/count_tokens",
+    "status": "not-run",
+    "model": "openai-codex/gpt-5.4-mini",
+    "totalRequestInputTokens": {},
+    "incrementalActiveMinusOffTokens": {},
+    "exactCounts": {}
+  },
+  "judge": {
+    "enabled": true,
+    "model": "openai-codex/gpt-5.6-sol",
+    "tolerance": 0
+  },
+  "pricing": null,
+  "seed": "0xc0ffee04",
+  "runId": "caveman-eval-3fe91f05c92b54f3",
+  "runIdentity": {
+    "provider": "pi",
+    "endpoint": "https://api.anthropic.com/v1/messages",
+    "model": "openai-codex/gpt-5.4-mini",
+    "judge": true,
+    "judgeModel": "openai-codex/gpt-5.6-sol",
+    "fixtureVersion": 2,
+    "commit": "4901ea05548d5efafc4e02ff1668615ba3233021",
+    "modes": [
+      "off",
+      "lite",
+      "full"
+    ],
+    "categories": [
+      "tool-argument"
+    ],
+    "repetitions": 3,
+    "seed": "0xc0ffee04",
+    "baseSystemPromptHash": "50fa36792a831a710bce59bf9c130272ebd7577a281e23f611fa299c71b87cae",
+    "promptContractHash": "c59769742e305985e772eb5fa4b34931cd644ed09e908cfe7abccbff9c2ab8e6",
+    "runtimePromptHash": "03edd1eb4baa46467645a0a0607f0066951043a444763b43138843f681f108f8"
+  },
+  "generatedAt": "2026-08-28T04:06:09.712Z",
+  "environment": {
+    "node": "v25.8.2",
+    "platform": "darwin",
+    "arch": "arm64",
+    "commit": "4901ea05548d5efafc4e02ff1668615ba3233021",
+    "piVersion": "0.84.3",
+    "provider": "pi",
+    "runner": "pi",
+    "model": "openai-codex/gpt-5.4-mini",
+    "fixtureVersion": 2,
+    "pricing": null,
+    "seed": "0xc0ffee04",
+    "generatedAt": "2026-08-28T04:04:05.211Z"
+  },
+  "repetitions": 3,
+  "modes": [
+    "off",
+    "lite",
+    "full"
+  ],
+  "categories": [
+    "tool-argument"
+  ],
+  "plannedCalls": 15,
+  "plannedProviderCalls": 9,
+  "plannedJudgeCalls": 6,
+  "paidCallAccounting": {
+    "cap": 15,
+    "planned": {
+      "provider": 9,
+      "judge": 6,
+      "countEndpoint": 0,
+      "total": 15
+    },
+    "actual": {
+      "provider": 9,
+      "judge": 6,
+      "countEndpoint": 0,
+      "total": 15
+    },
+    "invocation": {
+      "provider": 9,
+      "judge": 6,
+      "countEndpoint": 0,
+      "total": 15
+    }
+  },
+  "caseCount": 9,
+  "runOrder": [
+    {
+      "seq": 1,
+      "key": "1::tool-argument::full",
+      "repetition": 1,
+      "category": "tool-argument",
+      "mode": "full",
+      "armPosition": 0,
+      "resumed": false
+    },
+    {
+      "seq": 2,
+      "key": "1::tool-argument::off",
+      "repetition": 1,
+      "category": "tool-argument",
+      "mode": "off",
+      "armPosition": 1,
+      "resumed": false
+    },
+    {
+      "seq": 3,
+      "key": "1::tool-argument::lite",
+      "repetition": 1,
+      "category": "tool-argument",
+      "mode": "lite",
+      "armPosition": 2,
+      "resumed": false
+    },
+    {
+      "seq": 4,
+      "key": "2::tool-argument::lite",
+      "repetition": 2,
+      "category": "tool-argument",
+      "mode": "lite",
+      "armPosition": 0,
+      "resumed": false
+    },
+    {
+      "seq": 5,
+      "key": "2::tool-argument::full",
+      "repetition": 2,
+      "category": "tool-argument",
+      "mode": "full",
+      "armPosition": 1,
+      "resumed": false
+    },
+    {
+      "seq": 6,
+      "key": "2::tool-argument::off",
+      "repetition": 2,
+      "category": "tool-argument",
+      "mode": "off",
+      "armPosition": 2,
+      "resumed": false
+    },
+    {
+      "seq": 7,
+      "key": "3::tool-argument::full",
+      "repetition": 3,
+      "category": "tool-argument",
+      "mode": "full",
+      "armPosition": 0,
+      "resumed": false
+    },
+    {
+      "seq": 8,
+      "key": "3::tool-argument::off",
+      "repetition": 3,
+      "category": "tool-argument",
+      "mode": "off",
+      "armPosition": 1,
+      "resumed": false
+    },
+    {
+      "seq": 9,
+      "key": "3::tool-argument::lite",
+      "repetition": 3,
+      "category": "tool-argument",
+      "mode": "lite",
+      "armPosition": 2,
+      "resumed": false
+    }
+  ],
+  "results": [
+    {
+      "seq": 1,
+      "key": "1::tool-argument::full",
+      "repetition": 1,
+      "category": "tool-argument",
+      "mode": "full",
+      "armPosition": 0,
+      "response": "Configuration remains valid after restart.",
+      "wordCount": 5,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "tool-structure",
+            "passed": true,
+            "detail": "tool 'write_artifact' called with the required input shape."
+          },
+          {
+            "id": "persisted-prose",
+            "passed": true,
+            "detail": "1/1 sentences are full prose."
+          },
+          {
+            "id": "terms",
+            "passed": true,
+            "detail": "all 1 required terms retained"
+          }
+        ]
+      },
+      "usage": {
+        "input": 318,
+        "output": 4,
+        "cacheWrite": 0,
+        "cacheRead": 1024
+      },
+      "rawUsage": {
+        "input": 318,
+        "output": 4,
+        "cacheRead": 1024,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 1346,
+        "cost": {
+          "input": 0.0002385,
+          "output": 0.000018,
+          "cacheRead": 0.0000768,
+          "cacheWrite": 0,
+          "total": 0.0003333
+        }
+      },
+      "costUsd": 0.0003333,
+      "elapsedMs": 6527,
+      "attempts": 1,
+      "toolCall": {
+        "name": "write_artifact",
+        "input": {
+          "content": "Configuration remains valid after restart."
+        }
+      },
+      "toolCallCount": 1,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": {
+        "failed": false,
+        "assignment": {
+          "A": "off",
+          "B": "full"
+        },
+        "verdict": {
+          "A": {
+            "completeness": 2,
+            "correctness": 3,
+            "total": 5
+          },
+          "B": {
+            "completeness": 2,
+            "correctness": 3,
+            "total": 5
+          },
+          "notes": "Both reproduce the exact sentence but do not call write_artifact."
+        },
+        "offQualityTotal": 5,
+        "activeQualityTotal": 5,
+        "notes": "Both reproduce the exact sentence but do not call write_artifact.",
+        "usage": {
+          "input": 937,
+          "output": 230,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": {
+          "input": 937,
+          "output": 230,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 184,
+          "totalTokens": 1167,
+          "cost": {
+            "input": 0.004685000000000001,
+            "output": 0.0069,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0.011585000000000002
+          }
+        }
+      },
+      "tokenRatioToOff": 0.6666666666666666,
+      "wordRatioToOff": 1,
+      "brevityPassed": true,
+      "qualityPassed": true,
+      "passed": true,
+      "requiredTermsPassed": true,
+      "validationPassed": true
+    },
+    {
+      "seq": 2,
+      "key": "1::tool-argument::off",
+      "repetition": 1,
+      "category": "tool-argument",
+      "mode": "off",
+      "armPosition": 1,
+      "response": "Configuration remains valid after restart.",
+      "wordCount": 5,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "tool-structure",
+            "passed": true,
+            "detail": "tool 'write_artifact' called with the required input shape."
+          },
+          {
+            "id": "persisted-prose",
+            "passed": true,
+            "detail": "1/1 sentences are full prose."
+          },
+          {
+            "id": "terms",
+            "passed": true,
+            "detail": "all 1 required terms retained"
+          }
+        ]
+      },
+      "usage": {
+        "input": 215,
+        "output": 6,
+        "cacheWrite": 0,
+        "cacheRead": 1024
+      },
+      "rawUsage": {
+        "input": 215,
+        "output": 6,
+        "cacheRead": 1024,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 1245,
+        "cost": {
+          "input": 0.00016125000000000002,
+          "output": 0.000027,
+          "cacheRead": 0.0000768,
+          "cacheWrite": 0,
+          "total": 0.00026505
+        }
+      },
+      "costUsd": 0.00026505,
+      "elapsedMs": 8280,
+      "attempts": 1,
+      "toolCall": {
+        "name": "write_artifact",
+        "input": {
+          "content": "Configuration remains valid after restart."
+        }
+      },
+      "toolCallCount": 1,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": null,
+      "tokenRatioToOff": null,
+      "wordRatioToOff": null,
+      "brevityPassed": true,
+      "qualityPassed": true,
+      "passed": true,
+      "requiredTermsPassed": true,
+      "validationPassed": true
+    },
+    {
+      "seq": 3,
+      "key": "1::tool-argument::lite",
+      "repetition": 1,
+      "category": "tool-argument",
+      "mode": "lite",
+      "armPosition": 2,
+      "response": "Configuration remains valid after restart.",
+      "wordCount": 5,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "tool-structure",
+            "passed": true,
+            "detail": "tool 'write_artifact' called with the required input shape."
+          },
+          {
+            "id": "persisted-prose",
+            "passed": true,
+            "detail": "1/1 sentences are full prose."
+          },
+          {
+            "id": "terms",
+            "passed": true,
+            "detail": "all 1 required terms retained"
+          }
+        ]
+      },
+      "usage": {
+        "input": 313,
+        "output": 4,
+        "cacheWrite": 0,
+        "cacheRead": 1024
+      },
+      "rawUsage": {
+        "input": 313,
+        "output": 4,
+        "cacheRead": 1024,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 1341,
+        "cost": {
+          "input": 0.00023475000000000001,
+          "output": 0.000018,
+          "cacheRead": 0.0000768,
+          "cacheWrite": 0,
+          "total": 0.00032954999999999996
+        }
+      },
+      "costUsd": 0.00032954999999999996,
+      "elapsedMs": 6772,
+      "attempts": 1,
+      "toolCall": {
+        "name": "write_artifact",
+        "input": {
+          "content": "Configuration remains valid after restart."
+        }
+      },
+      "toolCallCount": 1,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": {
+        "failed": false,
+        "assignment": {
+          "A": "off",
+          "B": "lite"
+        },
+        "verdict": {
+          "A": {
+            "completeness": 1,
+            "correctness": 2,
+            "total": 3
+          },
+          "B": {
+            "completeness": 1,
+            "correctness": 2,
+            "total": 3
+          },
+          "notes": "Both reproduce the exact sentence but do not call write_artifact."
+        },
+        "offQualityTotal": 3,
+        "activeQualityTotal": 3,
+        "notes": "Both reproduce the exact sentence but do not call write_artifact.",
+        "usage": {
+          "input": 937,
+          "output": 126,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": {
+          "input": 937,
+          "output": 126,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 80,
+          "totalTokens": 1063,
+          "cost": {
+            "input": 0.004685000000000001,
+            "output": 0.00378,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0.008465
+          }
+        }
+      },
+      "tokenRatioToOff": 0.6666666666666666,
+      "wordRatioToOff": 1,
+      "brevityPassed": true,
+      "qualityPassed": true,
+      "passed": true,
+      "requiredTermsPassed": true,
+      "validationPassed": true
+    },
+    {
+      "seq": 4,
+      "key": "2::tool-argument::lite",
+      "repetition": 2,
+      "category": "tool-argument",
+      "mode": "lite",
+      "armPosition": 0,
+      "response": "Configuration remains valid after restart.",
+      "wordCount": 5,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "tool-structure",
+            "passed": true,
+            "detail": "tool 'write_artifact' called with the required input shape."
+          },
+          {
+            "id": "persisted-prose",
+            "passed": true,
+            "detail": "1/1 sentences are full prose."
+          },
+          {
+            "id": "terms",
+            "passed": true,
+            "detail": "all 1 required terms retained"
+          }
+        ]
+      },
+      "usage": {
+        "input": 316,
+        "output": 6,
+        "cacheWrite": 0,
+        "cacheRead": 1024
+      },
+      "rawUsage": {
+        "input": 316,
+        "output": 6,
+        "cacheRead": 1024,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 1346,
+        "cost": {
+          "input": 0.00023700000000000001,
+          "output": 0.000027,
+          "cacheRead": 0.0000768,
+          "cacheWrite": 0,
+          "total": 0.00034080000000000004
+        }
+      },
+      "costUsd": 0.00034080000000000004,
+      "elapsedMs": 6854,
+      "attempts": 1,
+      "toolCall": {
+        "name": "write_artifact",
+        "input": {
+          "content": "Configuration remains valid after restart."
+        }
+      },
+      "toolCallCount": 1,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": {
+        "failed": false,
+        "assignment": {
+          "A": "off",
+          "B": "lite"
+        },
+        "verdict": {
+          "A": {
+            "completeness": 2,
+            "correctness": 3,
+            "total": 5
+          },
+          "B": {
+            "completeness": 2,
+            "correctness": 3,
+            "total": 5
+          },
+          "notes": "Both preserve the exact sentence but fail to call write_artifact."
+        },
+        "offQualityTotal": 5,
+        "activeQualityTotal": 5,
+        "notes": "Both preserve the exact sentence but fail to call write_artifact.",
+        "usage": {
+          "input": 937,
+          "output": 232,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": {
+          "input": 937,
+          "output": 232,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 186,
+          "totalTokens": 1169,
+          "cost": {
+            "input": 0.004685000000000001,
+            "output": 0.00696,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0.011645
+          }
+        }
+      },
+      "tokenRatioToOff": 1,
+      "wordRatioToOff": 1,
+      "brevityPassed": false,
+      "qualityPassed": true,
+      "passed": false,
+      "requiredTermsPassed": true,
+      "validationPassed": true
+    },
+    {
+      "seq": 5,
+      "key": "2::tool-argument::full",
+      "repetition": 2,
+      "category": "tool-argument",
+      "mode": "full",
+      "armPosition": 1,
+      "response": "Configuration remains valid after restart.",
+      "wordCount": 5,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "tool-structure",
+            "passed": true,
+            "detail": "tool 'write_artifact' called with the required input shape."
+          },
+          {
+            "id": "persisted-prose",
+            "passed": true,
+            "detail": "1/1 sentences are full prose."
+          },
+          {
+            "id": "terms",
+            "passed": true,
+            "detail": "all 1 required terms retained"
+          }
+        ]
+      },
+      "usage": {
+        "input": 323,
+        "output": 6,
+        "cacheWrite": 0,
+        "cacheRead": 1024
+      },
+      "rawUsage": {
+        "input": 323,
+        "output": 6,
+        "cacheRead": 1024,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 1353,
+        "cost": {
+          "input": 0.00024225,
+          "output": 0.000027,
+          "cacheRead": 0.0000768,
+          "cacheWrite": 0,
+          "total": 0.00034605
+        }
+      },
+      "costUsd": 0.00034605,
+      "elapsedMs": 8078,
+      "attempts": 1,
+      "toolCall": {
+        "name": "write_artifact",
+        "input": {
+          "content": "Configuration remains valid after restart."
+        }
+      },
+      "toolCallCount": 1,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": {
+        "failed": false,
+        "assignment": {
+          "A": "full",
+          "B": "off"
+        },
+        "verdict": {
+          "A": {
+            "completeness": 2,
+            "correctness": 3,
+            "total": 5
+          },
+          "B": {
+            "completeness": 2,
+            "correctness": 3,
+            "total": 5
+          },
+          "notes": "Both preserve the exact sentence but do not show the required write_artifact call."
+        },
+        "offQualityTotal": 5,
+        "activeQualityTotal": 5,
+        "notes": "Both preserve the exact sentence but do not show the required write_artifact call.",
+        "usage": {
+          "input": 937,
+          "output": 241,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": {
+          "input": 937,
+          "output": 241,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 192,
+          "totalTokens": 1178,
+          "cost": {
+            "input": 0.004685000000000001,
+            "output": 0.00723,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0.011915000000000002
+          }
+        }
+      },
+      "tokenRatioToOff": 1,
+      "wordRatioToOff": 1,
+      "brevityPassed": false,
+      "qualityPassed": true,
+      "passed": false,
+      "requiredTermsPassed": true,
+      "validationPassed": true
+    },
+    {
+      "seq": 6,
+      "key": "2::tool-argument::off",
+      "repetition": 2,
+      "category": "tool-argument",
+      "mode": "off",
+      "armPosition": 2,
+      "response": "Configuration remains valid after restart.",
+      "wordCount": 5,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "tool-structure",
+            "passed": true,
+            "detail": "tool 'write_artifact' called with the required input shape."
+          },
+          {
+            "id": "persisted-prose",
+            "passed": true,
+            "detail": "1/1 sentences are full prose."
+          },
+          {
+            "id": "terms",
+            "passed": true,
+            "detail": "all 1 required terms retained"
+          }
+        ]
+      },
+      "usage": {
+        "input": 237,
+        "output": 6,
+        "cacheWrite": 0,
+        "cacheRead": 1024
+      },
+      "rawUsage": {
+        "input": 237,
+        "output": 6,
+        "cacheRead": 1024,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 1267,
+        "cost": {
+          "input": 0.00017775,
+          "output": 0.000027,
+          "cacheRead": 0.0000768,
+          "cacheWrite": 0,
+          "total": 0.00028155
+        }
+      },
+      "costUsd": 0.00028155,
+      "elapsedMs": 6898,
+      "attempts": 1,
+      "toolCall": {
+        "name": "write_artifact",
+        "input": {
+          "content": "Configuration remains valid after restart."
+        }
+      },
+      "toolCallCount": 1,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": null,
+      "tokenRatioToOff": null,
+      "wordRatioToOff": null,
+      "brevityPassed": true,
+      "qualityPassed": true,
+      "passed": true,
+      "requiredTermsPassed": true,
+      "validationPassed": true
+    },
+    {
+      "seq": 7,
+      "key": "3::tool-argument::full",
+      "repetition": 3,
+      "category": "tool-argument",
+      "mode": "full",
+      "armPosition": 0,
+      "response": "Configuration remains valid after restart.",
+      "wordCount": 5,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "tool-structure",
+            "passed": true,
+            "detail": "tool 'write_artifact' called with the required input shape."
+          },
+          {
+            "id": "persisted-prose",
+            "passed": true,
+            "detail": "1/1 sentences are full prose."
+          },
+          {
+            "id": "terms",
+            "passed": true,
+            "detail": "all 1 required terms retained"
+          }
+        ]
+      },
+      "usage": {
+        "input": 317,
+        "output": 6,
+        "cacheWrite": 0,
+        "cacheRead": 1024
+      },
+      "rawUsage": {
+        "input": 317,
+        "output": 6,
+        "cacheRead": 1024,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 1347,
+        "cost": {
+          "input": 0.00023775,
+          "output": 0.000027,
+          "cacheRead": 0.0000768,
+          "cacheWrite": 0,
+          "total": 0.00034155000000000003
+        }
+      },
+      "costUsd": 0.00034155000000000003,
+      "elapsedMs": 6556,
+      "attempts": 1,
+      "toolCall": {
+        "name": "write_artifact",
+        "input": {
+          "content": "Configuration remains valid after restart."
+        }
+      },
+      "toolCallCount": 1,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": {
+        "failed": false,
+        "assignment": {
+          "A": "off",
+          "B": "full"
+        },
+        "verdict": {
+          "A": {
+            "completeness": 2,
+            "correctness": 3,
+            "total": 5
+          },
+          "B": {
+            "completeness": 2,
+            "correctness": 3,
+            "total": 5
+          },
+          "notes": "Both preserve the exact sentence but omit the required write_artifact call."
+        },
+        "offQualityTotal": 5,
+        "activeQualityTotal": 5,
+        "notes": "Both preserve the exact sentence but omit the required write_artifact call.",
+        "usage": {
+          "input": 937,
+          "output": 199,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": {
+          "input": 937,
+          "output": 199,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 152,
+          "totalTokens": 1136,
+          "cost": {
+            "input": 0.004685000000000001,
+            "output": 0.0059700000000000005,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0.010655000000000001
+          }
+        }
+      },
+      "tokenRatioToOff": 1.5,
+      "wordRatioToOff": 1,
+      "brevityPassed": false,
+      "qualityPassed": true,
+      "passed": false,
+      "requiredTermsPassed": true,
+      "validationPassed": true
+    },
+    {
+      "seq": 8,
+      "key": "3::tool-argument::off",
+      "repetition": 3,
+      "category": "tool-argument",
+      "mode": "off",
+      "armPosition": 1,
+      "response": "Configuration remains valid after restart.",
+      "wordCount": 5,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "tool-structure",
+            "passed": true,
+            "detail": "tool 'write_artifact' called with the required input shape."
+          },
+          {
+            "id": "persisted-prose",
+            "passed": true,
+            "detail": "1/1 sentences are full prose."
+          },
+          {
+            "id": "terms",
+            "passed": true,
+            "detail": "all 1 required terms retained"
+          }
+        ]
+      },
+      "usage": {
+        "input": 188,
+        "output": 4,
+        "cacheWrite": 0,
+        "cacheRead": 1024
+      },
+      "rawUsage": {
+        "input": 188,
+        "output": 4,
+        "cacheRead": 1024,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 1216,
+        "cost": {
+          "input": 0.000141,
+          "output": 0.000018,
+          "cacheRead": 0.0000768,
+          "cacheWrite": 0,
+          "total": 0.0002358
+        }
+      },
+      "costUsd": 0.0002358,
+      "elapsedMs": 6596,
+      "attempts": 1,
+      "toolCall": {
+        "name": "write_artifact",
+        "input": {
+          "content": "Configuration remains valid after restart."
+        }
+      },
+      "toolCallCount": 1,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": null,
+      "tokenRatioToOff": null,
+      "wordRatioToOff": null,
+      "brevityPassed": true,
+      "qualityPassed": true,
+      "passed": true,
+      "requiredTermsPassed": true,
+      "validationPassed": true
+    },
+    {
+      "seq": 9,
+      "key": "3::tool-argument::lite",
+      "repetition": 3,
+      "category": "tool-argument",
+      "mode": "lite",
+      "armPosition": 2,
+      "response": "Configuration remains valid after restart.",
+      "wordCount": 5,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "tool-structure",
+            "passed": true,
+            "detail": "tool 'write_artifact' called with the required input shape."
+          },
+          {
+            "id": "persisted-prose",
+            "passed": true,
+            "detail": "1/1 sentences are full prose."
+          },
+          {
+            "id": "terms",
+            "passed": true,
+            "detail": "all 1 required terms retained"
+          }
+        ]
+      },
+      "usage": {
+        "input": 310,
+        "output": 10,
+        "cacheWrite": 0,
+        "cacheRead": 1024
+      },
+      "rawUsage": {
+        "input": 310,
+        "output": 10,
+        "cacheRead": 1024,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 1344,
+        "cost": {
+          "input": 0.0002325,
+          "output": 0.000045,
+          "cacheRead": 0.0000768,
+          "cacheWrite": 0,
+          "total": 0.0003543
+        }
+      },
+      "costUsd": 0.0003543,
+      "elapsedMs": 7786,
+      "attempts": 1,
+      "toolCall": {
+        "name": "write_artifact",
+        "input": {
+          "content": "Configuration remains valid after restart."
+        }
+      },
+      "toolCallCount": 1,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": {
+        "failed": false,
+        "assignment": {
+          "A": "lite",
+          "B": "off"
+        },
+        "verdict": {
+          "A": {
+            "completeness": 2,
+            "correctness": 3,
+            "total": 5
+          },
+          "B": {
+            "completeness": 2,
+            "correctness": 3,
+            "total": 5
+          },
+          "notes": "Both reproduce the exact sentence but do not call write_artifact."
+        },
+        "offQualityTotal": 5,
+        "activeQualityTotal": 5,
+        "notes": "Both reproduce the exact sentence but do not call write_artifact.",
+        "usage": {
+          "input": 937,
+          "output": 152,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": {
+          "input": 937,
+          "output": 152,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 106,
+          "totalTokens": 1089,
+          "cost": {
+            "input": 0.004685000000000001,
+            "output": 0.00456,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0.009245
+          }
+        }
+      },
+      "tokenRatioToOff": 2.5,
+      "wordRatioToOff": 1,
+      "brevityPassed": false,
+      "qualityPassed": true,
+      "passed": false,
+      "requiredTermsPassed": true,
+      "validationPassed": true
+    }
+  ],
+  "aggregates": {
+    "byMode": {
+      "full": {
+        "pairCount": 3,
+        "completePairCount": 3,
+        "incompletePairCount": 0,
+        "outputTokenRatio": {
+          "mean": 1.055556,
+          "median": 1,
+          "count": 3
+        },
+        "deltas": {
+          "inputTokens": {
+            "mean": 106,
+            "median": 103,
+            "count": 3
+          },
+          "cacheWriteTokens": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          },
+          "cacheReadTokens": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          },
+          "outputTokens": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          },
+          "costUsd": null,
+          "latencyMs": {
+            "mean": -204.333333,
+            "median": -40,
+            "count": 3
+          },
+          "qualityTotal": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          }
+        },
+        "validationPassed": true,
+        "brevityPassed": false,
+        "qualityPassed": true
+      },
+      "lite": {
+        "pairCount": 3,
+        "completePairCount": 3,
+        "incompletePairCount": 0,
+        "outputTokenRatio": {
+          "mean": 1.388889,
+          "median": 1,
+          "count": 3
+        },
+        "deltas": {
+          "inputTokens": {
+            "mean": 99.666667,
+            "median": 98,
+            "count": 3
+          },
+          "cacheWriteTokens": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          },
+          "cacheReadTokens": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          },
+          "outputTokens": {
+            "mean": 1.333333,
+            "median": 0,
+            "count": 3
+          },
+          "costUsd": null,
+          "latencyMs": {
+            "mean": -120.666667,
+            "median": -44,
+            "count": 3
+          },
+          "qualityTotal": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          }
+        },
+        "validationPassed": true,
+        "brevityPassed": false,
+        "qualityPassed": true
+      }
+    },
+    "byModeCategory": {
+      "full::tool-argument": {
+        "pairCount": 3,
+        "completePairCount": 3,
+        "incompletePairCount": 0,
+        "outputTokenRatio": {
+          "mean": 1.055556,
+          "median": 1,
+          "count": 3
+        },
+        "deltas": {
+          "inputTokens": {
+            "mean": 106,
+            "median": 103,
+            "count": 3
+          },
+          "cacheWriteTokens": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          },
+          "cacheReadTokens": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          },
+          "outputTokens": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          },
+          "costUsd": null,
+          "latencyMs": {
+            "mean": -204.333333,
+            "median": -40,
+            "count": 3
+          },
+          "qualityTotal": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          }
+        },
+        "validationPassed": true,
+        "brevityPassed": false,
+        "qualityPassed": true
+      },
+      "lite::tool-argument": {
+        "pairCount": 3,
+        "completePairCount": 3,
+        "incompletePairCount": 0,
+        "outputTokenRatio": {
+          "mean": 1.388889,
+          "median": 1,
+          "count": 3
+        },
+        "deltas": {
+          "inputTokens": {
+            "mean": 99.666667,
+            "median": 98,
+            "count": 3
+          },
+          "cacheWriteTokens": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          },
+          "cacheReadTokens": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          },
+          "outputTokens": {
+            "mean": 1.333333,
+            "median": 0,
+            "count": 3
+          },
+          "costUsd": null,
+          "latencyMs": {
+            "mean": -120.666667,
+            "median": -44,
+            "count": 3
+          },
+          "qualityTotal": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          }
+        },
+        "validationPassed": true,
+        "brevityPassed": false,
+        "qualityPassed": true
+      }
+    }
+  },
+  "failures": [],
+  "judgeFailures": 0,
+  "primaryUsageComplete": true,
+  "passed": false
+}

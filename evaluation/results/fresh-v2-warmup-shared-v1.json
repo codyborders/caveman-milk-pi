@@ -1,0 +1,1532 @@
+{
+  "schemaVersion": 4,
+  "fixtureVersion": 5,
+  "fixtureSet": "fresh-v2",
+  "fixtureHash": "8bd5776b40800d69e238100bfe5ccddf00e6d5ab826919c8c400835f9caf353a",
+  "provider": "pi",
+  "runner": "pi",
+  "model": "z-ai/glm-5.3",
+  "tokenAccounting": {
+    "method": "provider-count-endpoint",
+    "endpointPath": "/v1/messages/count_tokens",
+    "status": "not-run",
+    "model": "z-ai/glm-5.3",
+    "totalRequestInputTokens": {},
+    "incrementalActiveMinusOffTokens": {},
+    "exactCounts": {}
+  },
+  "judge": {
+    "enabled": false,
+    "model": null,
+    "tolerance": 0
+  },
+  "gate": null,
+  "pricing": null,
+  "validatorVersion": "schema5-protected-facts-v13",
+  "seed": "0xc0ffee10",
+  "runId": "caveman-eval-05e7d928c24c0dea",
+  "runIdentity": {
+    "provider": "pi",
+    "endpoint": "https://api.anthropic.com/v1/messages",
+    "model": "z-ai/glm-5.3",
+    "thinkingLevel": "medium",
+    "judge": false,
+    "judgeModel": null,
+    "gate": null,
+    "pricing": null,
+    "validatorVersion": "schema5-protected-facts-v13",
+    "fixtureVersion": 5,
+    "fixtureSet": "fresh-v2",
+    "fixtureHash": "8bd5776b40800d69e238100bfe5ccddf00e6d5ab826919c8c400835f9caf353a",
+    "commit": "f11b09917cafbe0a1bb482cb2e049cbeb596d394",
+    "modes": [
+      "off",
+      "lite"
+    ],
+    "categories": [
+      "v2-exact-facts"
+    ],
+    "repetitions": 3,
+    "seed": "0xc0ffee10",
+    "pairOrderStrategy": "alternating",
+    "cacheCondition": "warm",
+    "cachePromptStrategy": "shared",
+    "baseSystemPromptHash": "50fa36792a831a710bce59bf9c130272ebd7577a281e23f611fa299c71b87cae",
+    "promptContractHash": "3611fa174ef844d6323a1e1f28428c78d00316588607d6f0b68df62e58734d49",
+    "runtimePromptHash": "29742fac18006c7b1b0d1ba6e15f6b559c46a7d409e18695d9950f763a0ae6e3"
+  },
+  "generatedAt": "2026-08-29T23:23:28.901Z",
+  "environment": {
+    "node": "v25.8.2",
+    "platform": "darwin",
+    "arch": "arm64",
+    "commit": "f11b09917cafbe0a1bb482cb2e049cbeb596d394",
+    "piVersion": "0.84.3",
+    "provider": "pi",
+    "runner": "pi",
+    "model": "z-ai/glm-5.3",
+    "thinkingLevel": "medium",
+    "fixtureVersion": 5,
+    "pricing": null,
+    "seed": "0xc0ffee10",
+    "generatedAt": "2026-08-29T23:22:49.476Z"
+  },
+  "repetitions": 3,
+  "modes": [
+    "off",
+    "lite"
+  ],
+  "categories": [
+    "v2-exact-facts"
+  ],
+  "plannedCalls": 6,
+  "plannedProviderCalls": 6,
+  "plannedJudgeCalls": 0,
+  "paidCallAccounting": {
+    "cap": 8,
+    "planned": {
+      "provider": 6,
+      "judge": 0,
+      "countEndpoint": 0,
+      "total": 6
+    },
+    "actual": {
+      "provider": 6,
+      "judge": 0,
+      "countEndpoint": 0,
+      "total": 6
+    },
+    "invocation": {
+      "provider": 6,
+      "judge": 0,
+      "countEndpoint": 0,
+      "total": 6
+    }
+  },
+  "caseCount": 6,
+  "runOrder": [
+    {
+      "seq": 1,
+      "key": "1::v2-exact-facts::off",
+      "repetition": 1,
+      "category": "v2-exact-facts",
+      "mode": "off",
+      "armPosition": 0,
+      "resumed": false
+    },
+    {
+      "seq": 2,
+      "key": "1::v2-exact-facts::lite",
+      "repetition": 1,
+      "category": "v2-exact-facts",
+      "mode": "lite",
+      "armPosition": 1,
+      "resumed": false
+    },
+    {
+      "seq": 3,
+      "key": "2::v2-exact-facts::lite",
+      "repetition": 2,
+      "category": "v2-exact-facts",
+      "mode": "lite",
+      "armPosition": 0,
+      "resumed": false
+    },
+    {
+      "seq": 4,
+      "key": "2::v2-exact-facts::off",
+      "repetition": 2,
+      "category": "v2-exact-facts",
+      "mode": "off",
+      "armPosition": 1,
+      "resumed": false
+    },
+    {
+      "seq": 5,
+      "key": "3::v2-exact-facts::off",
+      "repetition": 3,
+      "category": "v2-exact-facts",
+      "mode": "off",
+      "armPosition": 0,
+      "resumed": false
+    },
+    {
+      "seq": 6,
+      "key": "3::v2-exact-facts::lite",
+      "repetition": 3,
+      "category": "v2-exact-facts",
+      "mode": "lite",
+      "armPosition": 1,
+      "resumed": false
+    }
+  ],
+  "results": [
+    {
+      "seq": 1,
+      "key": "1::v2-exact-facts::off",
+      "repetition": 1,
+      "category": "v2-exact-facts",
+      "mode": "off",
+      "armPosition": 0,
+      "pairOrder": {
+        "order": [
+          "off",
+          "lite"
+        ],
+        "position": 0,
+        "ranFirst": true
+      },
+      "response": "Connection setup for `JOB-9F2`:\n\n1. **Socket path:** The service listens on the Unix domain socket at `/tmp/caveman.sock`.\n\n2. **Socket permissions:** After creation, restrict access with `chmod 0600 /tmp/caveman.sock` so only the owning user may read and write the socket.\n\n3. **Parent directory permissions:** Ensure `/tmp` access is controlled per your site policy; the recommended mode for the enclosing directory is `750` so that only the owner and group can traverse into it.\n\n4. **Transport restriction:** Do not expose the socket over TCP.\n\n5. **Client connection:** Clients for `JOB-9F2` connect via `unix:///tmp/caveman.sock` (Unix domain socket), not a TCP host/port pair.",
+      "validationText": "Connection setup for `JOB-9F2`:\n\n1. **Socket path:** The service listens on the Unix domain socket at `/tmp/caveman.sock`.\n\n2. **Socket permissions:** After creation, restrict access with `chmod 0600 /tmp/caveman.sock` so only the owning user may read and write the socket.\n\n3. **Parent directory permissions:** Ensure `/tmp` access is controlled per your site policy; the recommended mode for the enclosing directory is `750` so that only the owner and group can traverse into it.\n\n4. **Transport restriction:** Do not expose the socket over TCP.\n\n5. **Client connection:** Clients for `JOB-9F2` connect via `unix:///tmp/caveman.sock` (Unix domain socket), not a TCP host/port pair.",
+      "wordCount": 106,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "groups": {
+          "correctnessPass": true,
+          "groundednessPass": true,
+          "contractPass": true,
+          "safetyPass": true
+        },
+        "protectedContent": [
+          "Do not expose the socket over TCP.",
+          "JOB-9F2",
+          "/tmp/caveman.sock",
+          "chmod 0600 /tmp/caveman.sock",
+          "750"
+        ],
+        "checks": [
+          {
+            "id": "protected",
+            "passed": true,
+            "findings": [],
+            "summary": {
+              "requiredClaims": 0,
+              "negatedClaims": 1,
+              "warnings": 0,
+              "identifiers": 1,
+              "paths": 1,
+              "commands": 1,
+              "numbers": 1,
+              "orderedActions": 0,
+              "knownGaps": 0,
+              "criticalOmissions": 0,
+              "noncriticalOmissions": 0,
+              "alteredFacts": 0,
+              "unsupportedClaims": 0,
+              "orderingErrors": 0
+            },
+            "detail": "all 5 declared facts verified.",
+            "hardGroup": "correctness"
+          }
+        ]
+      },
+      "protectedFactManifest": {
+        "requiredClaims": [],
+        "negatedClaims": [
+          {
+            "id": "tcp",
+            "sentence": "Do not expose the socket over TCP.",
+            "core": "expose the socket over TCP"
+          }
+        ],
+        "warnings": [],
+        "identifiers": [
+          {
+            "id": "job",
+            "value": "JOB-9F2"
+          }
+        ],
+        "paths": [
+          {
+            "id": "socket",
+            "value": "/tmp/caveman.sock"
+          }
+        ],
+        "commands": [
+          {
+            "id": "permission",
+            "value": "chmod 0600 /tmp/caveman.sock"
+          }
+        ],
+        "numbers": [
+          {
+            "id": "timeout",
+            "value": 750
+          }
+        ],
+        "orderedActions": [],
+        "knownGaps": []
+      },
+      "preservation": {
+        "criticalOmissionCount": 0,
+        "noncriticalOmissionCount": 0,
+        "alteredFactCount": 0,
+        "unsupportedClaimCount": 0,
+        "orderingErrorCount": 0,
+        "findings": []
+      },
+      "usage": {
+        "input": 499,
+        "output": 286,
+        "cacheWrite": 0,
+        "cacheRead": 0
+      },
+      "rawUsage": {
+        "input": 499,
+        "output": 286,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "totalTokens": 785,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        },
+        "cacheWrite1h": 0
+      },
+      "rawUsageTurns": [
+        {
+          "input": 499,
+          "output": 286,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "totalTokens": 785,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        }
+      ],
+      "usageTurns": [
+        {
+          "input": 499,
+          "output": 286,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        }
+      ],
+      "assistantTurns": 1,
+      "toolCalls": [],
+      "timing": {
+        "timeToFirstTokenMs": 468,
+        "generationDurationMs": 6319,
+        "totalElapsedMs": 6787
+      },
+      "toolMetrics": {
+        "toolCalls": 0,
+        "toolDurationMs": null,
+        "retries": null,
+        "rereads": null,
+        "correctiveTurns": 0,
+        "failedTestsWithoutCorrectiveTurn": null
+      },
+      "cacheCondition": {
+        "label": "warm",
+        "promptCacheEligible": true,
+        "promptStrategy": "shared",
+        "cacheReadTokens": 0,
+        "cacheWriteTokens": 0
+      },
+      "compressionPolicy": {
+        "eligible": false,
+        "reason": "exact facts"
+      },
+      "costUsd": null,
+      "providerReportedCostUsd": 0,
+      "elapsedMs": 6787,
+      "attempts": 1,
+      "toolCall": null,
+      "toolCallCount": 0,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": null,
+      "tokenRatioToOff": null,
+      "wordRatioToOff": null,
+      "passed": true,
+      "validationPassed": true,
+      "correctnessPass": true,
+      "groundednessPass": true,
+      "contractPass": true,
+      "safetyPass": true,
+      "behavioralPassed": true,
+      "qualityScore": null,
+      "groundingScore": null,
+      "requiredTermsPassed": null,
+      "compressionRatio": null,
+      "brevityScore": null
+    },
+    {
+      "seq": 2,
+      "key": "1::v2-exact-facts::lite",
+      "repetition": 1,
+      "category": "v2-exact-facts",
+      "mode": "lite",
+      "armPosition": 1,
+      "pairOrder": {
+        "order": [
+          "off",
+          "lite"
+        ],
+        "position": 1,
+        "ranFirst": false
+      },
+      "response": "Connection setup for `JOB-9F2`:\n\n1. Create the socket at `/tmp/caveman.sock`.\n2. Set directory permissions to `750`.\n3. Set socket permissions: `chmod 0600 /tmp/caveman.sock`.\n4. Connect via the local socket at `/tmp/caveman.sock`.\n\nDo not expose the socket over TCP.",
+      "validationText": "Connection setup for `JOB-9F2`:\n\n1. Create the socket at `/tmp/caveman.sock`.\n2. Set directory permissions to `750`.\n3. Set socket permissions: `chmod 0600 /tmp/caveman.sock`.\n4. Connect via the local socket at `/tmp/caveman.sock`.\n\nDo not expose the socket over TCP.",
+      "wordCount": 42,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "groups": {
+          "correctnessPass": true,
+          "groundednessPass": true,
+          "contractPass": true,
+          "safetyPass": true
+        },
+        "protectedContent": [
+          "Do not expose the socket over TCP.",
+          "JOB-9F2",
+          "/tmp/caveman.sock",
+          "chmod 0600 /tmp/caveman.sock",
+          "750"
+        ],
+        "checks": [
+          {
+            "id": "protected",
+            "passed": true,
+            "findings": [],
+            "summary": {
+              "requiredClaims": 0,
+              "negatedClaims": 1,
+              "warnings": 0,
+              "identifiers": 1,
+              "paths": 1,
+              "commands": 1,
+              "numbers": 1,
+              "orderedActions": 0,
+              "knownGaps": 0,
+              "criticalOmissions": 0,
+              "noncriticalOmissions": 0,
+              "alteredFacts": 0,
+              "unsupportedClaims": 0,
+              "orderingErrors": 0
+            },
+            "detail": "all 5 declared facts verified.",
+            "hardGroup": "correctness"
+          }
+        ]
+      },
+      "protectedFactManifest": {
+        "requiredClaims": [],
+        "negatedClaims": [
+          {
+            "id": "tcp",
+            "sentence": "Do not expose the socket over TCP.",
+            "core": "expose the socket over TCP"
+          }
+        ],
+        "warnings": [],
+        "identifiers": [
+          {
+            "id": "job",
+            "value": "JOB-9F2"
+          }
+        ],
+        "paths": [
+          {
+            "id": "socket",
+            "value": "/tmp/caveman.sock"
+          }
+        ],
+        "commands": [
+          {
+            "id": "permission",
+            "value": "chmod 0600 /tmp/caveman.sock"
+          }
+        ],
+        "numbers": [
+          {
+            "id": "timeout",
+            "value": 750
+          }
+        ],
+        "orderedActions": [],
+        "knownGaps": []
+      },
+      "preservation": {
+        "criticalOmissionCount": 0,
+        "noncriticalOmissionCount": 0,
+        "alteredFactCount": 0,
+        "unsupportedClaimCount": 0,
+        "orderingErrorCount": 0,
+        "findings": []
+      },
+      "usage": {
+        "input": 601,
+        "output": 164,
+        "cacheWrite": 0,
+        "cacheRead": 0
+      },
+      "rawUsage": {
+        "input": 601,
+        "output": 164,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "totalTokens": 765,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        },
+        "cacheWrite1h": 0
+      },
+      "rawUsageTurns": [
+        {
+          "input": 601,
+          "output": 164,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "totalTokens": 765,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        }
+      ],
+      "usageTurns": [
+        {
+          "input": 601,
+          "output": 164,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        }
+      ],
+      "assistantTurns": 1,
+      "toolCalls": [],
+      "timing": {
+        "timeToFirstTokenMs": 383,
+        "generationDurationMs": 2301,
+        "totalElapsedMs": 2684
+      },
+      "toolMetrics": {
+        "toolCalls": 0,
+        "toolDurationMs": null,
+        "retries": null,
+        "rereads": null,
+        "correctiveTurns": 0,
+        "failedTestsWithoutCorrectiveTurn": null
+      },
+      "cacheCondition": {
+        "label": "warm",
+        "promptCacheEligible": true,
+        "promptStrategy": "shared",
+        "cacheReadTokens": 0,
+        "cacheWriteTokens": 0
+      },
+      "compressionPolicy": {
+        "eligible": false,
+        "reason": "exact facts"
+      },
+      "costUsd": null,
+      "providerReportedCostUsd": 0,
+      "elapsedMs": 2684,
+      "attempts": 1,
+      "toolCall": null,
+      "toolCallCount": 0,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": null,
+      "tokenRatioToOff": null,
+      "wordRatioToOff": null,
+      "passed": true,
+      "validationPassed": true,
+      "correctnessPass": true,
+      "groundednessPass": true,
+      "contractPass": true,
+      "safetyPass": true,
+      "behavioralPassed": true,
+      "qualityScore": null,
+      "groundingScore": null,
+      "requiredTermsPassed": null,
+      "compressionRatio": null,
+      "brevityScore": null
+    },
+    {
+      "seq": 3,
+      "key": "2::v2-exact-facts::lite",
+      "repetition": 2,
+      "category": "v2-exact-facts",
+      "mode": "lite",
+      "armPosition": 0,
+      "pairOrder": {
+        "order": [
+          "lite",
+          "off"
+        ],
+        "position": 0,
+        "ranFirst": true
+      },
+      "response": "Connection setup for `JOB-9F2`:\n\n- Socket path: `/tmp/caveman.sock`\n- Socket permissions: run `chmod 0600 /tmp/caveman.sock`\n- Socket directory permissions: `750`\n- Do not expose the socket over TCP.\n\nNo other facts supplied.",
+      "validationText": "Connection setup for `JOB-9F2`:\n\n- Socket path: `/tmp/caveman.sock`\n- Socket permissions: run `chmod 0600 /tmp/caveman.sock`\n- Socket directory permissions: `750`\n- Do not expose the socket over TCP.\n\nNo other facts supplied.",
+      "wordCount": 31,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "groups": {
+          "correctnessPass": true,
+          "groundednessPass": true,
+          "contractPass": true,
+          "safetyPass": true
+        },
+        "protectedContent": [
+          "Do not expose the socket over TCP.",
+          "JOB-9F2",
+          "/tmp/caveman.sock",
+          "chmod 0600 /tmp/caveman.sock",
+          "750"
+        ],
+        "checks": [
+          {
+            "id": "protected",
+            "passed": true,
+            "findings": [],
+            "summary": {
+              "requiredClaims": 0,
+              "negatedClaims": 1,
+              "warnings": 0,
+              "identifiers": 1,
+              "paths": 1,
+              "commands": 1,
+              "numbers": 1,
+              "orderedActions": 0,
+              "knownGaps": 0,
+              "criticalOmissions": 0,
+              "noncriticalOmissions": 0,
+              "alteredFacts": 0,
+              "unsupportedClaims": 0,
+              "orderingErrors": 0
+            },
+            "detail": "all 5 declared facts verified.",
+            "hardGroup": "correctness"
+          }
+        ]
+      },
+      "protectedFactManifest": {
+        "requiredClaims": [],
+        "negatedClaims": [
+          {
+            "id": "tcp",
+            "sentence": "Do not expose the socket over TCP.",
+            "core": "expose the socket over TCP"
+          }
+        ],
+        "warnings": [],
+        "identifiers": [
+          {
+            "id": "job",
+            "value": "JOB-9F2"
+          }
+        ],
+        "paths": [
+          {
+            "id": "socket",
+            "value": "/tmp/caveman.sock"
+          }
+        ],
+        "commands": [
+          {
+            "id": "permission",
+            "value": "chmod 0600 /tmp/caveman.sock"
+          }
+        ],
+        "numbers": [
+          {
+            "id": "timeout",
+            "value": 750
+          }
+        ],
+        "orderedActions": [],
+        "knownGaps": []
+      },
+      "preservation": {
+        "criticalOmissionCount": 0,
+        "noncriticalOmissionCount": 0,
+        "alteredFactCount": 0,
+        "unsupportedClaimCount": 0,
+        "orderingErrorCount": 0,
+        "findings": []
+      },
+      "usage": {
+        "input": 25,
+        "output": 302,
+        "cacheWrite": 0,
+        "cacheRead": 576
+      },
+      "rawUsage": {
+        "input": 25,
+        "output": 302,
+        "cacheRead": 576,
+        "cacheWrite": 0,
+        "totalTokens": 903,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        },
+        "cacheWrite1h": 0
+      },
+      "rawUsageTurns": [
+        {
+          "input": 25,
+          "output": 302,
+          "cacheRead": 576,
+          "cacheWrite": 0,
+          "totalTokens": 903,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        }
+      ],
+      "usageTurns": [
+        {
+          "input": 25,
+          "output": 302,
+          "cacheWrite": 0,
+          "cacheRead": 576
+        }
+      ],
+      "assistantTurns": 1,
+      "toolCalls": [],
+      "timing": {
+        "timeToFirstTokenMs": 447,
+        "generationDurationMs": 5587,
+        "totalElapsedMs": 6034
+      },
+      "toolMetrics": {
+        "toolCalls": 0,
+        "toolDurationMs": null,
+        "retries": null,
+        "rereads": null,
+        "correctiveTurns": 0,
+        "failedTestsWithoutCorrectiveTurn": null
+      },
+      "cacheCondition": {
+        "label": "warm",
+        "promptCacheEligible": true,
+        "promptStrategy": "shared",
+        "cacheReadTokens": 576,
+        "cacheWriteTokens": 0
+      },
+      "compressionPolicy": {
+        "eligible": false,
+        "reason": "exact facts"
+      },
+      "costUsd": null,
+      "providerReportedCostUsd": 0,
+      "elapsedMs": 6034,
+      "attempts": 1,
+      "toolCall": null,
+      "toolCallCount": 0,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": null,
+      "tokenRatioToOff": null,
+      "wordRatioToOff": null,
+      "passed": true,
+      "validationPassed": true,
+      "correctnessPass": true,
+      "groundednessPass": true,
+      "contractPass": true,
+      "safetyPass": true,
+      "behavioralPassed": true,
+      "qualityScore": null,
+      "groundingScore": null,
+      "requiredTermsPassed": null,
+      "compressionRatio": null,
+      "brevityScore": null
+    },
+    {
+      "seq": 4,
+      "key": "2::v2-exact-facts::off",
+      "repetition": 2,
+      "category": "v2-exact-facts",
+      "mode": "off",
+      "armPosition": 1,
+      "pairOrder": {
+        "order": [
+          "lite",
+          "off"
+        ],
+        "position": 1,
+        "ranFirst": false
+      },
+      "response": "**Connection Setup — JOB-9F2**\n\n1. The worker for `JOB-9F2` listens exclusively on the Unix domain socket `/tmp/caveman.sock`; no TCP listener is started.\n2. Create the socket's parent directory with mode `750` so only the service user and its group may traverse it.\n3. After the socket is bound, run `chmod 0600 /tmp/caveman.sock` so only the owning user may read from and write to the socket.\n4. Do not expose the socket over TCP.\n\nAll supplied facts are used: the job ID (`JOB-9F2`), the socket path (`/tmp/caveman.sock`), the hardening command (`chmod 0600 /tmp/caveman.sock`), the directory permission (`750`), and the exact sentence `Do not expose the socket over TCP.`",
+      "validationText": "**Connection Setup — JOB-9F2**\n\n1. The worker for `JOB-9F2` listens exclusively on the Unix domain socket `/tmp/caveman.sock`; no TCP listener is started.\n2. Create the socket's parent directory with mode `750` so only the service user and its group may traverse it.\n3. After the socket is bound, run `chmod 0600 /tmp/caveman.sock` so only the owning user may read from and write to the socket.\n4. Do not expose the socket over TCP.\n\nAll supplied facts are used: the job ID (`JOB-9F2`), the socket path (`/tmp/caveman.sock`), the hardening command (`chmod 0600 /tmp/caveman.sock`), the directory permission (`750`), and the exact sentence `Do not expose the socket over TCP.`",
+      "wordCount": 113,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "groups": {
+          "correctnessPass": true,
+          "groundednessPass": true,
+          "contractPass": true,
+          "safetyPass": true
+        },
+        "protectedContent": [
+          "Do not expose the socket over TCP.",
+          "JOB-9F2",
+          "/tmp/caveman.sock",
+          "chmod 0600 /tmp/caveman.sock",
+          "750"
+        ],
+        "checks": [
+          {
+            "id": "protected",
+            "passed": true,
+            "findings": [],
+            "summary": {
+              "requiredClaims": 0,
+              "negatedClaims": 1,
+              "warnings": 0,
+              "identifiers": 1,
+              "paths": 1,
+              "commands": 1,
+              "numbers": 1,
+              "orderedActions": 0,
+              "knownGaps": 0,
+              "criticalOmissions": 0,
+              "noncriticalOmissions": 0,
+              "alteredFacts": 0,
+              "unsupportedClaims": 0,
+              "orderingErrors": 0
+            },
+            "detail": "all 5 declared facts verified.",
+            "hardGroup": "correctness"
+          }
+        ]
+      },
+      "protectedFactManifest": {
+        "requiredClaims": [],
+        "negatedClaims": [
+          {
+            "id": "tcp",
+            "sentence": "Do not expose the socket over TCP.",
+            "core": "expose the socket over TCP"
+          }
+        ],
+        "warnings": [],
+        "identifiers": [
+          {
+            "id": "job",
+            "value": "JOB-9F2"
+          }
+        ],
+        "paths": [
+          {
+            "id": "socket",
+            "value": "/tmp/caveman.sock"
+          }
+        ],
+        "commands": [
+          {
+            "id": "permission",
+            "value": "chmod 0600 /tmp/caveman.sock"
+          }
+        ],
+        "numbers": [
+          {
+            "id": "timeout",
+            "value": 750
+          }
+        ],
+        "orderedActions": [],
+        "knownGaps": []
+      },
+      "preservation": {
+        "criticalOmissionCount": 0,
+        "noncriticalOmissionCount": 0,
+        "alteredFactCount": 0,
+        "unsupportedClaimCount": 0,
+        "orderingErrorCount": 0,
+        "findings": []
+      },
+      "usage": {
+        "input": 51,
+        "output": 577,
+        "cacheWrite": 0,
+        "cacheRead": 448
+      },
+      "rawUsage": {
+        "input": 51,
+        "output": 577,
+        "cacheRead": 448,
+        "cacheWrite": 0,
+        "totalTokens": 1076,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        },
+        "cacheWrite1h": 0
+      },
+      "rawUsageTurns": [
+        {
+          "input": 51,
+          "output": 577,
+          "cacheRead": 448,
+          "cacheWrite": 0,
+          "totalTokens": 1076,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        }
+      ],
+      "usageTurns": [
+        {
+          "input": 51,
+          "output": 577,
+          "cacheWrite": 0,
+          "cacheRead": 448
+        }
+      ],
+      "assistantTurns": 1,
+      "toolCalls": [],
+      "timing": {
+        "timeToFirstTokenMs": 390,
+        "generationDurationMs": 9178,
+        "totalElapsedMs": 9568
+      },
+      "toolMetrics": {
+        "toolCalls": 0,
+        "toolDurationMs": null,
+        "retries": null,
+        "rereads": null,
+        "correctiveTurns": 0,
+        "failedTestsWithoutCorrectiveTurn": null
+      },
+      "cacheCondition": {
+        "label": "warm",
+        "promptCacheEligible": true,
+        "promptStrategy": "shared",
+        "cacheReadTokens": 448,
+        "cacheWriteTokens": 0
+      },
+      "compressionPolicy": {
+        "eligible": false,
+        "reason": "exact facts"
+      },
+      "costUsd": null,
+      "providerReportedCostUsd": 0,
+      "elapsedMs": 9568,
+      "attempts": 1,
+      "toolCall": null,
+      "toolCallCount": 0,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": null,
+      "tokenRatioToOff": null,
+      "wordRatioToOff": null,
+      "passed": true,
+      "validationPassed": true,
+      "correctnessPass": true,
+      "groundednessPass": true,
+      "contractPass": true,
+      "safetyPass": true,
+      "behavioralPassed": true,
+      "qualityScore": null,
+      "groundingScore": null,
+      "requiredTermsPassed": null,
+      "compressionRatio": null,
+      "brevityScore": null
+    },
+    {
+      "seq": 5,
+      "key": "3::v2-exact-facts::off",
+      "repetition": 3,
+      "category": "v2-exact-facts",
+      "mode": "off",
+      "armPosition": 0,
+      "pairOrder": {
+        "order": [
+          "off",
+          "lite"
+        ],
+        "position": 0,
+        "ranFirst": true
+      },
+      "response": "**Connection setup for JOB-9F2:**\n\n1. The JOB-9F2 worker binds to the Unix domain socket at `/tmp/caveman.sock`.\n2. Immediately after binding, run `chmod 0600 /tmp/caveman.sock` so only the owning user can read from and write to the socket.\n3. The socket's parent directory is held at mode `750`, restricting traversal to the owner and group.\n4. Do not expose the socket over TCP.\n\nEvery supplied fact is used: `JOB-9F2` identifies the job, `/tmp/caveman.sock` is the endpoint, `chmod 0600 /tmp/caveman.sock` locks down the socket file, `750` governs the parent directory, and the TCP warning appears verbatim.",
+      "validationText": "**Connection setup for JOB-9F2:**\n\n1. The JOB-9F2 worker binds to the Unix domain socket at `/tmp/caveman.sock`.\n2. Immediately after binding, run `chmod 0600 /tmp/caveman.sock` so only the owning user can read from and write to the socket.\n3. The socket's parent directory is held at mode `750`, restricting traversal to the owner and group.\n4. Do not expose the socket over TCP.\n\nEvery supplied fact is used: `JOB-9F2` identifies the job, `/tmp/caveman.sock` is the endpoint, `chmod 0600 /tmp/caveman.sock` locks down the socket file, `750` governs the parent directory, and the TCP warning appears verbatim.",
+      "wordCount": 101,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "groups": {
+          "correctnessPass": true,
+          "groundednessPass": true,
+          "contractPass": true,
+          "safetyPass": true
+        },
+        "protectedContent": [
+          "Do not expose the socket over TCP.",
+          "JOB-9F2",
+          "/tmp/caveman.sock",
+          "chmod 0600 /tmp/caveman.sock",
+          "750"
+        ],
+        "checks": [
+          {
+            "id": "protected",
+            "passed": true,
+            "findings": [],
+            "summary": {
+              "requiredClaims": 0,
+              "negatedClaims": 1,
+              "warnings": 0,
+              "identifiers": 1,
+              "paths": 1,
+              "commands": 1,
+              "numbers": 1,
+              "orderedActions": 0,
+              "knownGaps": 0,
+              "criticalOmissions": 0,
+              "noncriticalOmissions": 0,
+              "alteredFacts": 0,
+              "unsupportedClaims": 0,
+              "orderingErrors": 0
+            },
+            "detail": "all 5 declared facts verified.",
+            "hardGroup": "correctness"
+          }
+        ]
+      },
+      "protectedFactManifest": {
+        "requiredClaims": [],
+        "negatedClaims": [
+          {
+            "id": "tcp",
+            "sentence": "Do not expose the socket over TCP.",
+            "core": "expose the socket over TCP"
+          }
+        ],
+        "warnings": [],
+        "identifiers": [
+          {
+            "id": "job",
+            "value": "JOB-9F2"
+          }
+        ],
+        "paths": [
+          {
+            "id": "socket",
+            "value": "/tmp/caveman.sock"
+          }
+        ],
+        "commands": [
+          {
+            "id": "permission",
+            "value": "chmod 0600 /tmp/caveman.sock"
+          }
+        ],
+        "numbers": [
+          {
+            "id": "timeout",
+            "value": 750
+          }
+        ],
+        "orderedActions": [],
+        "knownGaps": []
+      },
+      "preservation": {
+        "criticalOmissionCount": 0,
+        "noncriticalOmissionCount": 0,
+        "alteredFactCount": 0,
+        "unsupportedClaimCount": 0,
+        "orderingErrorCount": 0,
+        "findings": []
+      },
+      "usage": {
+        "input": 51,
+        "output": 479,
+        "cacheWrite": 0,
+        "cacheRead": 448
+      },
+      "rawUsage": {
+        "input": 51,
+        "output": 479,
+        "cacheRead": 448,
+        "cacheWrite": 0,
+        "totalTokens": 978,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        },
+        "cacheWrite1h": 0
+      },
+      "rawUsageTurns": [
+        {
+          "input": 51,
+          "output": 479,
+          "cacheRead": 448,
+          "cacheWrite": 0,
+          "totalTokens": 978,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        }
+      ],
+      "usageTurns": [
+        {
+          "input": 51,
+          "output": 479,
+          "cacheWrite": 0,
+          "cacheRead": 448
+        }
+      ],
+      "assistantTurns": 1,
+      "toolCalls": [],
+      "timing": {
+        "timeToFirstTokenMs": 431,
+        "generationDurationMs": 8110,
+        "totalElapsedMs": 8541
+      },
+      "toolMetrics": {
+        "toolCalls": 0,
+        "toolDurationMs": null,
+        "retries": null,
+        "rereads": null,
+        "correctiveTurns": 0,
+        "failedTestsWithoutCorrectiveTurn": null
+      },
+      "cacheCondition": {
+        "label": "warm",
+        "promptCacheEligible": true,
+        "promptStrategy": "shared",
+        "cacheReadTokens": 448,
+        "cacheWriteTokens": 0
+      },
+      "compressionPolicy": {
+        "eligible": false,
+        "reason": "exact facts"
+      },
+      "costUsd": null,
+      "providerReportedCostUsd": 0,
+      "elapsedMs": 8541,
+      "attempts": 1,
+      "toolCall": null,
+      "toolCallCount": 0,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": null,
+      "tokenRatioToOff": null,
+      "wordRatioToOff": null,
+      "passed": true,
+      "validationPassed": true,
+      "correctnessPass": true,
+      "groundednessPass": true,
+      "contractPass": true,
+      "safetyPass": true,
+      "behavioralPassed": true,
+      "qualityScore": null,
+      "groundingScore": null,
+      "requiredTermsPassed": null,
+      "compressionRatio": null,
+      "brevityScore": null
+    },
+    {
+      "seq": 6,
+      "key": "3::v2-exact-facts::lite",
+      "repetition": 3,
+      "category": "v2-exact-facts",
+      "mode": "lite",
+      "armPosition": 1,
+      "pairOrder": {
+        "order": [
+          "off",
+          "lite"
+        ],
+        "position": 1,
+        "ranFirst": false
+      },
+      "response": "## Connection setup — `JOB-9F2`\n\n1. Socket path: `/tmp/caveman.sock`\n2. Parent directory permissions: `750`\n3. Socket permissions: `chmod 0600 /tmp/caveman.sock`\n4. Do not expose the socket over TCP.",
+      "validationText": "## Connection setup — `JOB-9F2`\n\n1. Socket path: `/tmp/caveman.sock`\n2. Parent directory permissions: `750`\n3. Socket permissions: `chmod 0600 /tmp/caveman.sock`\n4. Do not expose the socket over TCP.",
+      "wordCount": 29,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "groups": {
+          "correctnessPass": true,
+          "groundednessPass": true,
+          "contractPass": true,
+          "safetyPass": true
+        },
+        "protectedContent": [
+          "Do not expose the socket over TCP.",
+          "JOB-9F2",
+          "/tmp/caveman.sock",
+          "chmod 0600 /tmp/caveman.sock",
+          "750"
+        ],
+        "checks": [
+          {
+            "id": "protected",
+            "passed": true,
+            "findings": [],
+            "summary": {
+              "requiredClaims": 0,
+              "negatedClaims": 1,
+              "warnings": 0,
+              "identifiers": 1,
+              "paths": 1,
+              "commands": 1,
+              "numbers": 1,
+              "orderedActions": 0,
+              "knownGaps": 0,
+              "criticalOmissions": 0,
+              "noncriticalOmissions": 0,
+              "alteredFacts": 0,
+              "unsupportedClaims": 0,
+              "orderingErrors": 0
+            },
+            "detail": "all 5 declared facts verified.",
+            "hardGroup": "correctness"
+          }
+        ]
+      },
+      "protectedFactManifest": {
+        "requiredClaims": [],
+        "negatedClaims": [
+          {
+            "id": "tcp",
+            "sentence": "Do not expose the socket over TCP.",
+            "core": "expose the socket over TCP"
+          }
+        ],
+        "warnings": [],
+        "identifiers": [
+          {
+            "id": "job",
+            "value": "JOB-9F2"
+          }
+        ],
+        "paths": [
+          {
+            "id": "socket",
+            "value": "/tmp/caveman.sock"
+          }
+        ],
+        "commands": [
+          {
+            "id": "permission",
+            "value": "chmod 0600 /tmp/caveman.sock"
+          }
+        ],
+        "numbers": [
+          {
+            "id": "timeout",
+            "value": 750
+          }
+        ],
+        "orderedActions": [],
+        "knownGaps": []
+      },
+      "preservation": {
+        "criticalOmissionCount": 0,
+        "noncriticalOmissionCount": 0,
+        "alteredFactCount": 0,
+        "unsupportedClaimCount": 0,
+        "orderingErrorCount": 0,
+        "findings": []
+      },
+      "usage": {
+        "input": 25,
+        "output": 269,
+        "cacheWrite": 0,
+        "cacheRead": 576
+      },
+      "rawUsage": {
+        "input": 25,
+        "output": 269,
+        "cacheRead": 576,
+        "cacheWrite": 0,
+        "totalTokens": 870,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        },
+        "cacheWrite1h": 0
+      },
+      "rawUsageTurns": [
+        {
+          "input": 25,
+          "output": 269,
+          "cacheRead": 576,
+          "cacheWrite": 0,
+          "totalTokens": 870,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          },
+          "cacheWrite1h": 0
+        }
+      ],
+      "usageTurns": [
+        {
+          "input": 25,
+          "output": 269,
+          "cacheWrite": 0,
+          "cacheRead": 576
+        }
+      ],
+      "assistantTurns": 1,
+      "toolCalls": [],
+      "timing": {
+        "timeToFirstTokenMs": 388,
+        "generationDurationMs": 5380,
+        "totalElapsedMs": 5768
+      },
+      "toolMetrics": {
+        "toolCalls": 0,
+        "toolDurationMs": null,
+        "retries": null,
+        "rereads": null,
+        "correctiveTurns": 0,
+        "failedTestsWithoutCorrectiveTurn": null
+      },
+      "cacheCondition": {
+        "label": "warm",
+        "promptCacheEligible": true,
+        "promptStrategy": "shared",
+        "cacheReadTokens": 576,
+        "cacheWriteTokens": 0
+      },
+      "compressionPolicy": {
+        "eligible": false,
+        "reason": "exact facts"
+      },
+      "costUsd": null,
+      "providerReportedCostUsd": 0,
+      "elapsedMs": 5768,
+      "attempts": 1,
+      "toolCall": null,
+      "toolCallCount": 0,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": null,
+      "tokenRatioToOff": null,
+      "wordRatioToOff": null,
+      "passed": true,
+      "validationPassed": true,
+      "correctnessPass": true,
+      "groundednessPass": true,
+      "contractPass": true,
+      "safetyPass": true,
+      "behavioralPassed": true,
+      "qualityScore": null,
+      "groundingScore": null,
+      "requiredTermsPassed": null,
+      "compressionRatio": null,
+      "brevityScore": null
+    }
+  ],
+  "aggregates": {
+    "byMode": {
+      "lite": {
+        "pairCount": 3,
+        "completePairCount": 3,
+        "incompletePairCount": 0,
+        "outputTokenRatio": {
+          "mean": 0.552803,
+          "median": 0.561587,
+          "count": 3
+        },
+        "deltas": {
+          "inputTokens": {
+            "mean": 16.666667,
+            "median": -26,
+            "count": 3
+          },
+          "cacheWriteTokens": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          },
+          "cacheReadTokens": {
+            "mean": 85.333333,
+            "median": 128,
+            "count": 3
+          },
+          "outputTokens": {
+            "mean": -202.333333,
+            "median": -210,
+            "count": 3
+          },
+          "costUsd": null,
+          "latencyMs": {
+            "mean": -3470,
+            "median": -3534,
+            "count": 3
+          },
+          "qualityTotal": null
+        },
+        "behavioralPassed": true
+      }
+    },
+    "byModeCategory": {
+      "lite::v2-exact-facts": {
+        "pairCount": 3,
+        "completePairCount": 3,
+        "incompletePairCount": 0,
+        "outputTokenRatio": {
+          "mean": 0.552803,
+          "median": 0.561587,
+          "count": 3
+        },
+        "deltas": {
+          "inputTokens": {
+            "mean": 16.666667,
+            "median": -26,
+            "count": 3
+          },
+          "cacheWriteTokens": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          },
+          "cacheReadTokens": {
+            "mean": 85.333333,
+            "median": 128,
+            "count": 3
+          },
+          "outputTokens": {
+            "mean": -202.333333,
+            "median": -210,
+            "count": 3
+          },
+          "costUsd": null,
+          "latencyMs": {
+            "mean": -3470,
+            "median": -3534,
+            "count": 3
+          },
+          "qualityTotal": null
+        },
+        "behavioralPassed": true
+      }
+    }
+  },
+  "attribution": {
+    "byMode": {
+      "lite": {
+        "overall": {
+          "activeFailedOffPassed": 0,
+          "activePassedOffFailed": 0,
+          "bothFailed": 0,
+          "bothPassed": 3
+        },
+        "byCategory": {
+          "v2-exact-facts": {
+            "activeFailedOffPassed": 0,
+            "activePassedOffFailed": 0,
+            "bothFailed": 0,
+            "bothPassed": 3,
+            "overall": {
+              "activeFailedOffPassed": 0,
+              "activePassedOffFailed": 0,
+              "bothFailed": 0,
+              "bothPassed": 3
+            },
+            "correctness": {
+              "activeFailedOffPassed": 0,
+              "activePassedOffFailed": 0,
+              "bothFailed": 0,
+              "bothPassed": 3
+            },
+            "groundedness": {
+              "activeFailedOffPassed": 0,
+              "activePassedOffFailed": 0,
+              "bothFailed": 0,
+              "bothPassed": 3
+            },
+            "contract": {
+              "activeFailedOffPassed": 0,
+              "activePassedOffFailed": 0,
+              "bothFailed": 0,
+              "bothPassed": 3
+            },
+            "safety": {
+              "activeFailedOffPassed": 0,
+              "activePassedOffFailed": 0,
+              "bothFailed": 0,
+              "bothPassed": 3
+            }
+          }
+        }
+      }
+    }
+  },
+  "compression": {
+    "byMode": {
+      "lite": {
+        "pairCount": 3,
+        "eligiblePairCount": 0,
+        "excludedHardFailureCount": 0,
+        "excludedPolicyCount": 3,
+        "excludedInvalidUsageCount": 0,
+        "compressionRatio": {
+          "mean": null,
+          "median": null,
+          "count": 0
+        },
+        "brevityScore": {
+          "mean": null,
+          "median": null,
+          "count": 0
+        }
+      }
+    }
+  },
+  "failures": [],
+  "judgeFailures": 0,
+  "primaryUsageComplete": true,
+  "passed": true
+}

@@ -9,7 +9,9 @@ import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fixturePath = path.join(here, "evaluation-fixtures.json");
+const fixtureManifestPath = path.join(here, "..", "evaluation", "fixture-manifest.json");
 const contractPath = path.join(here, "..", "src", "prompt-contract.json");
+const liveValidatorVersion = "schema5-task-success-v14";
 
 function loadPromptContract() {
   const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"));
@@ -47,6 +49,8 @@ function createRuntimePrompts(modes, contract) {
 
 export const SUPPORTED_PROVIDERS = ["offline", "anthropic", "pi"];
 
+export { summarizeReport } from "./eval/report-summary.mjs";
+
 export function validateProviderName(provider) {
   if (!SUPPORTED_PROVIDERS.includes(provider)) {
     throw new Error(
@@ -79,14 +83,63 @@ export function validateRunConfiguration({ modes, repetitions, plannedCalls, max
   return true;
 }
 
-export function loadFixtures() {
-  const fixtures = JSON.parse(fs.readFileSync(fixturePath, "utf8"));
+// Preflight validation of selected schema-4 categories. Paragraph-count
+// requirements own the document boundary shared with persisted-prose, so a
+// category may declare at most one, and its includeHeadings flag, when
+// supplied, must be Boolean. Rejecting here keeps every invalid shape away
+// from plan construction, checkpoints, and paid calls.
+export function validateSelectedCategories(categories) {
+  for (const category of categories) {
+    const paragraphRequirements = (category.requirements ?? []).filter(
+      (requirement) => requirement?.kind === "paragraph-count",
+    );
+    if (paragraphRequirements.length > 1) {
+      throw new Error(
+        `Category '${category.id}' declares ${paragraphRequirements.length} paragraph-count requirements; at most one is allowed.`,
+      );
+    }
+    for (const requirement of paragraphRequirements) {
+      if (
+        requirement.includeHeadings !== undefined &&
+        typeof requirement.includeHeadings !== "boolean"
+      ) {
+        throw new Error(
+          `Category '${category.id}' declares a paragraph-count requirement whose includeHeadings is not Boolean.`,
+        );
+      }
+    }
+  }
+  return true;
+}
+
+export function hashFixtureContent(content) {
+  const normalized = String(content).replaceAll("\r\n", "\n");
+  return crypto.createHash("sha256").update(normalized).digest("hex");
+}
+
+export function loadFixtures(fixtureSetOption) {
+  const manifest = JSON.parse(fs.readFileSync(fixtureManifestPath, "utf8"));
+  const requestedSet = fixtureSetOption ?? "pilot-v1";
+  const entry = manifest.fixtureSets?.[requestedSet];
+  if (typeof entry?.path !== "string" || typeof entry.sha256 !== "string") {
+    throw new Error(`Fixture manifest has no verified entry for '${requestedSet}'.`);
+  }
+  const selectedPath = path.resolve(here, "..", entry.path);
+  const fixtureBytes = fs.readFileSync(selectedPath, "utf8");
+  const fixtureHash = hashFixtureContent(fixtureBytes);
+  if (fixtureHash !== entry.sha256) {
+    throw new Error(`Fixture set '${requestedSet}' hash mismatch: expected ${entry.sha256}, got ${fixtureHash}.`);
+  }
+  const fixtures = JSON.parse(fixtureBytes);
+  const fixtureSet = fixtures.fixtureSet ?? requestedSet;
   if (!Array.isArray(fixtures.modes) || !Array.isArray(fixtures.categories)) {
     throw new Error("Evaluation fixture must define modes and categories.");
   }
   const promptContract = loadPromptContract();
   return {
     ...fixtures,
+    fixtureSet,
+    fixtureHash,
     promptContract,
     runtimePrompts: createRuntimePrompts(fixtures.modes, promptContract),
   };
@@ -111,6 +164,81 @@ function scoreRequiredTerms(text, requiredTerms) {
   if (requiredTerms.length === 0) return 1;
   const retained = requiredTerms.filter((term) => text.includes(term)).length;
   return retained / requiredTerms.length;
+}
+
+function compressionStat(values) {
+  if (values.length === 0) return { mean: null, median: null, count: 0 };
+  const ordered = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(ordered.length / 2);
+  const median = ordered.length % 2 === 0
+    ? (ordered[middle - 1] + ordered[middle]) / 2
+    : ordered[middle];
+  return {
+    mean: values.reduce((sum, value) => sum + value, 0) / values.length,
+    median,
+    count: values.length,
+  };
+}
+
+export function scoreCompressionPair({ off, active }) {
+  if (off?.behavioralPassed === false || active?.behavioralPassed === false) {
+    return { eligible: false, compressionRatio: null, brevityScore: null, exclusionReason: "hard-behavior-failure" };
+  }
+  if (off?.compressionPolicy?.eligible === false || active?.compressionPolicy?.eligible === false) {
+    return { eligible: false, compressionRatio: null, brevityScore: null, exclusionReason: "task-policy-exempt" };
+  }
+  const offOutput = off?.usage?.output;
+  const activeOutput = active?.usage?.output;
+  if (!Number.isFinite(offOutput) || !Number.isFinite(activeOutput) || offOutput <= 0 || activeOutput <= 0) {
+    return { eligible: false, compressionRatio: null, brevityScore: null, exclusionReason: "invalid-output-usage" };
+  }
+  const compressionRatio = activeOutput / offOutput;
+  const targetRatio = active?.compressionPolicy?.targetRatio ?? off?.compressionPolicy?.targetRatio;
+  const normalizedTarget = Number.isFinite(targetRatio) && targetRatio > 0 ? targetRatio : 1;
+  const brevityScore = Math.max(0, Math.min(1, normalizedTarget / compressionRatio));
+  return { eligible: true, compressionRatio, brevityScore, exclusionReason: null };
+}
+
+export function aggregateCompressionResults(results = []) {
+  const byMode = new Map();
+  const pairs = new Map();
+  for (const result of results) {
+    if (result?.mode === "off") continue;
+    const key = `${result.mode}::${result.category}::${result.repetition}`;
+    const pair = pairs.get(key) ?? { active: result, off: null };
+    pair.active = result;
+    pairs.set(key, pair);
+  }
+  for (const result of results) {
+    if (result?.mode !== "off") continue;
+    for (const pair of pairs.values()) {
+      if (pair.active?.category === result.category && pair.active?.repetition === result.repetition) pair.off = result;
+    }
+  }
+  for (const pair of pairs.values()) {
+    if (pair.off === null) continue;
+    const mode = pair.active.mode;
+    const current = byMode.get(mode) ?? { pairCount: 0, eligiblePairCount: 0, excludedHardFailureCount: 0, excludedPolicyCount: 0, excludedInvalidUsageCount: 0, ratios: [], scores: [] };
+    current.pairCount += 1;
+    const scored = scoreCompressionPair(pair);
+    if (scored.eligible) {
+      current.eligiblePairCount += 1;
+      current.ratios.push(scored.compressionRatio);
+      current.scores.push(scored.brevityScore);
+    } else if (scored.exclusionReason === "hard-behavior-failure") current.excludedHardFailureCount += 1;
+    else if (scored.exclusionReason === "task-policy-exempt") current.excludedPolicyCount += 1;
+    else if (scored.exclusionReason === "invalid-output-usage") current.excludedInvalidUsageCount += 1;
+    byMode.set(mode, current);
+  }
+  return Object.fromEntries([...byMode.entries()].map(([mode, value]) => [mode, {
+    pairCount: value.pairCount,
+    eligiblePairCount: value.eligiblePairCount,
+    excludedHardFailureCount: value.excludedHardFailureCount,
+    excludedPolicyCount: value.excludedPolicyCount,
+    excludedInvalidUsageCount: value.excludedInvalidUsageCount,
+    compressionRatio: compressionStat(value.ratios),
+    brevityScore: compressionStat(value.scores),
+  }]));
 }
 
 function parseSeed(seedOption) {
@@ -171,6 +299,15 @@ function computeCostUsd(usage, pricing) {
   return Number(cost.toFixed(8));
 }
 
+// Explicit rates are the recorded cost. Provider-reported cost stays in its
+// own raw field, and an unpriced provider-reported zero never becomes a
+// costUsd total: zero means unknown here, not free.
+export function resolveCostUsd({ computedCostUsd, providerReportedCostUsd }) {
+  if (computedCostUsd !== null && computedCostUsd !== undefined) return computedCostUsd;
+  if (providerReportedCostUsd === null || providerReportedCostUsd === undefined) return null;
+  return providerReportedCostUsd > 0 ? providerReportedCostUsd : null;
+}
+
 function defaultExecGit() {
   return execFileSync("git", ["rev-parse", "HEAD"], {
     cwd: path.resolve(here, ".."),
@@ -191,6 +328,7 @@ function collectEnvironment({
   provider,
   runner,
   model,
+  thinkingLevel,
   fixtureVersion,
   pricing,
   seed,
@@ -222,6 +360,7 @@ function collectEnvironment({
     provider,
     runner,
     model,
+    thinkingLevel: thinkingLevel ?? null,
     fixtureVersion,
     pricing,
     seed,
@@ -253,7 +392,65 @@ function pairedDelta(pairs, read) {
   return stats(values);
 }
 
-function aggregatePairs(pairs, pricing, judgeEnabled) {
+function behaviorOutcome(activePassed, offPassed) {
+  if (activePassed && offPassed) return "bothPassed";
+  if (activePassed && !offPassed) return "activePassedOffFailed";
+  if (!activePassed && offPassed) return "activeFailedOffPassed";
+  return "bothFailed";
+}
+
+function countBehaviorOutcomes(pairs, read) {
+  const counts = {
+    activeFailedOffPassed: 0,
+    activePassedOffFailed: 0,
+    bothFailed: 0,
+    bothPassed: 0,
+  };
+  for (const pair of pairs) {
+    counts[behaviorOutcome(read(pair.active) === true, read(pair.off) === true)] += 1;
+  }
+  return counts;
+}
+
+export function attributeBehaviorPairs(results = []) {
+  const byMode = {};
+  const offByPair = new Map(
+    results
+      .filter((result) => result?.mode === "off")
+      .map((result) => [`${result.repetition}::${result.category}`, result]),
+  );
+  const activeModes = [...new Set(results.map((result) => result?.mode))].filter((mode) => mode && mode !== "off");
+  const dimensions = [
+    ["correctness", (result) => result?.correctnessPass],
+    ["groundedness", (result) => result?.groundednessPass],
+    ["contract", (result) => result?.contractPass],
+    ["safety", (result) => result?.safetyPass],
+  ];
+  for (const mode of activeModes) {
+    const pairs = results
+      .filter((result) => result?.mode === mode)
+      .map((active) => ({ active, off: offByPair.get(`${active.repetition}::${active.category}`) }))
+      .filter((pair) => pair.off !== undefined);
+    const categories = [...new Set(pairs.map((pair) => pair.active.category))];
+    const byCategory = {};
+    for (const category of categories) {
+      const categoryPairs = pairs.filter((pair) => pair.active.category === category);
+      const categorySummary = countBehaviorOutcomes(categoryPairs, (result) => result?.behavioralPassed);
+      categorySummary.overall = { ...categorySummary };
+      for (const [name, read] of dimensions) {
+        categorySummary[name] = countBehaviorOutcomes(categoryPairs, read);
+      }
+      byCategory[category] = categorySummary;
+    }
+    byMode[mode] = {
+      overall: countBehaviorOutcomes(pairs, (result) => result?.behavioralPassed),
+      byCategory,
+    };
+  }
+  return { byMode };
+}
+
+function aggregatePairs(pairs, pricing, judgeEnabled, schema4) {
   const completePairs = pairs.filter(
     (pair) =>
       isPositiveIntegerOutput(pair.off.usage.output) &&
@@ -264,7 +461,7 @@ function aggregatePairs(pairs, pricing, judgeEnabled) {
   );
   const judgeOk =
     judgeEnabled && pairs.every((pair) => pair.active.judge !== null && pair.active.judge.failed !== true);
-  return {
+  const summary = {
     pairCount: pairs.length,
     completePairCount: completePairs.length,
     incompletePairCount: pairs.length - completePairs.length,
@@ -287,6 +484,15 @@ function aggregatePairs(pairs, pricing, judgeEnabled) {
           )
         : null,
     },
+  };
+  if (schema4) {
+    return {
+      ...summary,
+      behavioralPassed: pairs.every((pair) => pair.active.behavioralPassed),
+    };
+  }
+  return {
+    ...summary,
     validationPassed: pairs.every((pair) => pair.active.validation.passed),
     brevityPassed: pairs.every((pair) => pair.active.brevityPassed),
     qualityPassed: judgeEnabled
@@ -300,7 +506,7 @@ function aggregatePairs(pairs, pricing, judgeEnabled) {
   };
 }
 
-function aggregateResults(results, { pricing, judgeEnabled }) {
+export function aggregateResults(results, { pricing, judgeEnabled, schema4 = false }) {
   const byMode = {};
   const byModeCategory = {};
   const offResults = new Map(
@@ -316,12 +522,13 @@ function aggregateResults(results, { pricing, judgeEnabled }) {
         return off === undefined ? null : { off, active: result };
       })
       .filter((pair) => pair !== null);
-    byMode[activeMode] = aggregatePairs(pairs, pricing, judgeEnabled);
+    byMode[activeMode] = aggregatePairs(pairs, pricing, judgeEnabled, schema4);
     for (const category of [...new Set(pairs.map((pair) => pair.active.category))]) {
       byModeCategory[`${activeMode}::${category}`] = aggregatePairs(
         pairs.filter((pair) => pair.active.category === category),
         pricing,
         judgeEnabled,
+        schema4,
       );
     }
   }
@@ -347,17 +554,27 @@ export function parseJudgeVerdict(text) {
         const score = (arm) => {
           const completeness = parsed.completeness?.[arm];
           const correctness = parsed.correctness?.[arm];
+          const groundedness = parsed.groundedness?.[arm];
           if (
             typeof completeness !== "number" ||
             typeof correctness !== "number" ||
+            typeof groundedness !== "number" ||
             completeness < 0 ||
             completeness > 4 ||
             correctness < 0 ||
-            correctness > 4
+            correctness > 4 ||
+            groundedness < 0 ||
+            groundedness > 4
           ) {
             throw new Error(`judge scores for arm ${arm} are missing or out of range.`);
           }
-          return { completeness, correctness, total: completeness + correctness };
+          return {
+            completeness,
+            correctness,
+            groundedness,
+            total: completeness + correctness,
+            groundednessTotal: groundedness,
+          };
         };
         return {
           A: score("A"),
@@ -438,17 +655,22 @@ function derivePairSeed(seed, repetition, categoryId) {
   return (hashToUint32(`${seed}:${repetition}:${categoryId}`) ^ (seed >>> 0)) >>> 0;
 }
 
-function buildPlan({ modes, categories, repetitions, seed }) {
+function buildPlan({ modes, categories, repetitions, seed, pairOrderStrategy = "seeded" }) {
   const plan = [];
+  let pairIndex = 0;
   for (let repetition = 1; repetition <= repetitions; repetition += 1) {
     for (const category of categories) {
-      const armOrder = createArmOrder(modes, derivePairSeed(seed, repetition, category.id));
+      const armOrder = pairOrderStrategy === "alternating"
+        ? (pairIndex % 2 === 0 ? [...modes] : [...modes].reverse())
+        : createArmOrder(modes, derivePairSeed(seed, repetition, category.id));
+      pairIndex += 1;
       plan.push(
         ...armOrder.map((mode, armPosition) => ({
           repetition,
           category: category.id,
           mode,
           armPosition,
+          pairOrder: { order: [...armOrder], position: armPosition, ranFirst: armPosition === 0 },
           key: `${repetition}::${category.id}::${mode}`,
         })),
       );
@@ -523,17 +745,28 @@ function createRequestBody({ model, systemBlocks, messages, category, metadata }
 
 function extractResponseText(payload, expectsTool) {
   if (expectsTool) {
-    const toolBlock = payload.content?.find((block) => block.type === "tool_use");
+    const toolBlocks = (payload.content ?? []).filter((block) => block.type === "tool_use");
+    const toolBlock =
+      toolBlocks.find((block) => block.name === "write_artifact") ?? toolBlocks[0];
     if (typeof toolBlock?.input?.content !== "string") {
       throw new Error("Provider response did not contain write_artifact content.");
     }
-    return { text: toolBlock.input.content, toolCallCount: 1 };
+    const text = (payload.content ?? [])
+      .filter((block) => block.type === "text")
+      .map((block) => block.text)
+      .join("");
+    return {
+      text,
+      validationText: toolBlock.input.content,
+      toolCall: { name: toolBlock.name, input: toolBlock.input },
+      toolCallCount: toolBlocks.length,
+    };
   }
   const text = payload.content?.find((block) => block.type === "text")?.text;
   if (typeof text !== "string") {
     throw new Error("Provider response did not contain a text block.");
   }
-  return { text, toolCallCount: 0 };
+  return { text, validationText: text, toolCall: null, toolCallCount: 0 };
 }
 
 export function createOfflineReport(fixtures = loadFixtures()) {
@@ -545,6 +778,8 @@ export function createOfflineReport(fixtures = loadFixtures()) {
   );
   return {
     fixtureVersion: fixtures.version,
+    fixtureSet: fixtures.fixtureSet,
+    fixtureHash: fixtures.fixtureHash,
     provider: "offline",
     tokenAccounting: fixtures.promptContract?.tokenAccounting ?? {
       method: "provider-count-endpoint",
@@ -591,6 +826,7 @@ export async function runProviderEvaluation(options) {
     judgeFetchImpl,
     spawnImpl,
     piBinOption,
+    thinkingLevel,
     execGit,
     commitOverride,
     readPiVersion,
@@ -598,6 +834,9 @@ export async function runProviderEvaluation(options) {
     timeoutMs,
     maxAttempts,
     sleepImpl,
+    pairOrderStrategy = "seeded",
+    cacheCondition = "observed",
+    cachePromptStrategy = "observed",
   } = options;
 
   if (checkpointPath !== undefined && seedOption === undefined) {
@@ -610,22 +849,286 @@ export async function runProviderEvaluation(options) {
   if (provider !== "pi" && (typeof apiKey !== "string" || apiKey.length === 0)) {
     throw new Error("Provider evaluation requires ANTHROPIC_API_KEY.");
   }
-  if (judge === true && (typeof apiKey !== "string" || apiKey.length === 0)) {
+  if (
+    judge === true &&
+    provider !== "pi" &&
+    (typeof apiKey !== "string" || apiKey.length === 0)
+  ) {
     throw new Error("Blinded judge evaluation requires ANTHROPIC_API_KEY.");
   }
   if (typeof model !== "string" || model.length === 0) {
     throw new Error("Provider evaluation requires CAVEMAN_EVAL_MODEL.");
   }
+  if (
+    thinkingLevel !== undefined &&
+    !["off", "minimal", "low", "medium", "high", "xhigh", "max"].includes(thinkingLevel)
+  ) {
+    throw new Error(`Unsupported CAVEMAN_EVAL_THINKING_LEVEL '${thinkingLevel}'.`);
+  }
   if (typeof fetchImpl !== "function") {
     throw new Error("Provider evaluation requires fetch support.");
+  }
+  if ((options.gate === "cost" || options.gate === "release") && options.pricing == null) {
+    throw new Error(`CAVEMAN_EVAL_GATE=${options.gate} requires CAVEMAN_EVAL_PRICING with schemaVersion 1 and an entry for every primary and judge model before any paid process starts.`);
+  }
+  if (
+    options.gate !== "cost" &&
+    options.gate !== "release" &&
+    options.gate !== undefined &&
+    options.gate !== null
+  ) {
+    throw new Error(`CAVEMAN_EVAL_GATE must be 'cost' or 'release'; got '${options.gate}'.`);
+  }
+  if (
+    options.gate !== "cost" &&
+    options.gate !== "release" &&
+    options.pricing !== undefined &&
+    options.pricing !== null &&
+    typeof options.pricing === "object" &&
+    !Array.isArray(options.pricing) &&
+    (options.pricing.schemaVersion !== undefined || options.pricing.models !== undefined)
+  ) {
+    throw new Error(
+      "Structured CAVEMAN_EVAL_PRICING requires CAVEMAN_EVAL_GATE=cost or release.",
+    );
+  }
+  let gatePricing = null;
+  if (options.gate === "cost" || options.gate === "release") {
+    if (options.pricing.schemaVersion !== 1) {
+      throw new Error(`Structured CAVEMAN_EVAL_PRICING requires schemaVersion 1; got ${JSON.stringify(options.pricing.schemaVersion)}.`);
+    }
+    const rawModels = options.pricing.models;
+    if (typeof rawModels !== "object" || rawModels === null) {
+      throw new Error(
+        "Structured CAVEMAN_EVAL_PRICING requires a models table keyed by model name or a list of entries with a model field.",
+      );
+    }
+    const rawEntries = Array.isArray(rawModels)
+      ? rawModels.map((entry) => [undefined, entry])
+      : Object.entries(rawModels);
+    const models = {};
+    for (const [key, entry] of rawEntries) {
+      const modelName =
+        typeof key === "string" && key.length > 0
+          ? key
+          : entry && typeof entry.model === "string" && entry.model.length > 0
+            ? entry.model
+            : null;
+      if (modelName === null) {
+        throw new Error(
+          "Every CAVEMAN_EVAL_PRICING entry needs its model name through the table key or a model field.",
+        );
+      }
+      if (typeof key === "string" && typeof entry?.model === "string" && entry.model !== key) {
+        throw new Error(
+          `Pricing entry keyed '${key}' declares a conflicting model field '${entry.model}'.`,
+        );
+      }
+      models[modelName] = entry;
+    }
+    if (Object.keys(models).length === 0) {
+      throw new Error("Structured CAVEMAN_EVAL_PRICING has an empty models table.");
+    }
+    gatePricing = { schemaVersion: 1, models };
+    const requiredPricingModels = [
+      ...new Set(
+        options.judge === true
+          ? [options.model, options.judgeModel ?? options.model]
+          : [options.model],
+      ),
+    ];
+    const missingPricingModels = requiredPricingModels.filter(
+      (modelName) => models[modelName] === undefined,
+    );
+    if (missingPricingModels.length > 0) {
+      throw new Error(
+        `CAVEMAN_EVAL_PRICING is missing entries for required model(s): ${missingPricingModels.join(", ")}.`,
+      );
+    }
+    for (const [modelName, entry] of Object.entries(models)) {
+      if (typeof entry !== "object" || entry === null || Array.isArray(entry)) {
+        throw new Error(`Pricing entry for '${modelName}' must be an object.`);
+      }
+      if (typeof entry.source !== "string" || entry.source.trim().length === 0) {
+        throw new Error(`Pricing entry for '${modelName}' requires a nonempty source.`);
+      }
+      if (
+        typeof entry.effectiveDate !== "string" ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(entry.effectiveDate) ||
+        Number.isNaN(Date.parse(`${entry.effectiveDate}T00:00:00Z`)) ||
+        new Date(`${entry.effectiveDate}T00:00:00Z`).toISOString().substring(0, 10) !== entry.effectiveDate
+      ) {
+        throw new Error(
+          `Pricing entry for '${modelName}' requires effectiveDate as a valid YYYY-MM-DD date.`,
+        );
+      }
+      for (const field of [
+        "inputPerMTok",
+        "cacheWritePerMTok",
+        "cacheReadPerMTok",
+        "outputPerMTok",
+      ]) {
+        const value = entry[field];
+        if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+          throw new Error(
+            `Pricing entry for '${modelName}' field '${field}' must be a finite non-negative number.`,
+          );
+        }
+      }
+      if (
+        entry.inputPerMTok === 0 &&
+        entry.cacheWritePerMTok === 0 &&
+        entry.cacheReadPerMTok === 0 &&
+        entry.outputPerMTok === 0
+      ) {
+        throw new Error(
+          `Pricing entry for '${modelName}' is all zero; a gated run needs real rates or no run.`,
+        );
+      }
+    }
   }
 
   const modes = selectNamedItems(fixtures.modes, modeSelection);
   const categories = selectNamedItems(fixtures.categories, categorySelection);
-  // Attempt guard: the paid cap bounds actual HTTP attempts, not logical
-  // cases. Provider calls, judge calls, and token-count calls all draw from
-  // the same budget, so a retried call consumes budget for every attempt.
-  const attemptState = { provider: 0, judge: 0, countEndpoint: 0 };
+  const activeModes = modes.filter((mode) => mode !== "off");
+  const runnerKind = provider === "pi" ? "pi" : "direct";
+  // Workspace coding cases execute real tools inside a Pi process; any other
+  // provider cannot honor them, so reject before a plan or checkpoint exists.
+  if (runnerKind !== "pi") {
+    const workspaceCategory = categories.find(
+      (category) => category.workspace !== undefined && category.workspace !== null,
+    );
+    if (workspaceCategory !== undefined) {
+      throw new Error(
+        `Workspace category '${workspaceCategory.id}' requires the pi provider; direct providers have no workspace tools.`,
+      );
+    }
+  }
+  const isSchema4 = fixtures.fixtureSet !== undefined && fixtures.fixtureSet !== "pilot-v1";
+  // Preflight guard: invalid schema-4 requirement shapes must reject before
+  // the plan is built, before any checkpoint exists, and before paid traffic.
+  if (isSchema4) {
+    validateSelectedCategories(categories);
+  }
+  if (activeModes.length > 0 && !modes.includes("off")) {
+    throw new Error(
+      `Comparative scoring requires the off baseline arm; selected modes: ${modes.join(", ")}. ` +
+        "Add 'off' to the mode selection.",
+    );
+  }
+  const repetitionCount = repetitions ?? 3;
+  if (!["seeded", "alternating"].includes(pairOrderStrategy)) {
+    throw new Error(`Unsupported pair-order strategy '${pairOrderStrategy}'.`);
+  }
+  if (!["observed", "cold", "warm"].includes(cacheCondition)) {
+    throw new Error(`Unsupported cache condition '${cacheCondition}'.`);
+  }
+  if (!["observed", "unique-arm", "shared"].includes(cachePromptStrategy)) {
+    throw new Error(`Unsupported cache prompt strategy '${cachePromptStrategy}'.`);
+  }
+  const pricing = gatePricing !== null ? gatePricing : validatePricing(pricingOption);
+  // Explicit rates per model: structured tables key by model name, legacy
+  // flat pricing applies one rate set to every model.
+  const ratesFor = (candidateModel) =>
+    pricing === null
+      ? null
+      : pricing.models !== undefined
+        ? pricing.models[candidateModel] ?? null
+        : pricing;
+  const seed = parseSeed(seedOption);
+  const plan = buildPlan({
+    modes,
+    categories,
+    repetitions: repetitionCount,
+    seed,
+    pairOrderStrategy,
+  });
+  const environment = collectEnvironment({
+    provider,
+    runner: runnerKind,
+    model,
+    thinkingLevel,
+    fixtureVersion: fixtures.version,
+    pricing,
+    seed: formatSeed(seed),
+    execGit,
+    commitOverride,
+    readPiVersion,
+  });
+  const nestedCategoryIds = new Set(
+    categories.filter((category) => category.nested === true).map((category) => category.id),
+  );
+  const plannedNestedCalls = plan.filter((call) => nestedCategoryIds.has(call.category)).length;
+  const plannedProviderCalls = plan.length + plannedNestedCalls;
+  const plannedJudgeCalls =
+    judge === true ? activeModes.length * categories.length * repetitionCount : 0;
+  const plannedCountCalls =
+    countTokens === true ? (modes.includes("off") ? modes.length : modes.length + 1) : 0;
+  const plannedPaidCalls = plannedProviderCalls + plannedJudgeCalls + plannedCountCalls;
+  validateRunConfiguration({
+    modes,
+    repetitions: repetitionCount,
+    plannedCalls: plannedPaidCalls,
+    maxPaidCalls,
+    commit: environment.commit,
+  });
+  const baseSystemPrompt = baseSystemPromptOption ?? loadPiBaseSystemPrompt();
+  const runIdentity = {
+    provider,
+    endpoint,
+    model,
+    thinkingLevel: thinkingLevel ?? null,
+    judge: judge === true,
+    judgeModel: judge === true ? (judgeModel ?? model) : null,
+    gate: options.gate ?? null,
+    pricing,
+    validatorVersion: liveValidatorVersion,
+    fixtureVersion: fixtures.version,
+    fixtureSet: fixtures.fixtureSet,
+    fixtureHash: fixtures.fixtureHash,
+    commit: environment.commit,
+    modes,
+    categories: categories.map((category) => category.id),
+    repetitions: repetitionCount,
+    seed: formatSeed(seed),
+    pairOrderStrategy,
+    cacheCondition,
+    cachePromptStrategy,
+    baseSystemPromptHash: crypto
+      .createHash("sha256")
+      .update(baseSystemPrompt)
+      .digest("hex"),
+    promptContractHash: crypto
+      .createHash("sha256")
+      .update(JSON.stringify(fixtures.promptContract ?? null))
+      .digest("hex"),
+    runtimePromptHash: crypto
+      .createHash("sha256")
+      .update(modes.map((mode) => fixtures.runtimePrompts[mode] ?? "").join("\n---\n"))
+      .digest("hex"),
+  };
+  const runId = `caveman-eval-${crypto
+    .createHash("sha256")
+    .update(JSON.stringify(runIdentity))
+    .digest("hex")
+    .substring(0, 16)}`;
+  // The checkpoint opens before any count traffic so every paid attempt,
+  // count requests included, can reserve and persist before it is issued.
+  const checkpoint =
+    checkpointPath !== undefined
+      ? openCheckpoint({
+          path: checkpointPath,
+          runId,
+          owner: { hostname: os.hostname(), pid: process.pid, heartbeatAtMs: nowImpl() },
+          nowImpl,
+        })
+      : createMemoryCheckpoint(runId);
+  // Attempt guard: the paid cap bounds actual attempts, not logical cases,
+  // and it applies cumulatively across invocations. Totals load from the
+  // checkpoint so a resumed run stops before the cumulative total exceeds
+  // the cap, and every reservation persists atomically before the attempt.
+  const attemptState = { ...checkpoint.attemptReservations() };
+  const invocationStart = { ...attemptState };
   const paidAttempts = () =>
     attemptState.provider + attemptState.judge + attemptState.countEndpoint;
   const reservePaidAttempt = (kind) => {
@@ -637,6 +1140,7 @@ export async function runProviderEvaluation(options) {
       );
     }
     attemptState[kind] += 1;
+    checkpoint.recordAttempt(kind);
   };
   const guardPaidAttempt = (kind, baseFetch) => async (url, init) => {
     reservePaidAttempt(kind);
@@ -645,42 +1149,6 @@ export async function runProviderEvaluation(options) {
   const caseFetch = guardPaidAttempt("provider", fetchImpl);
   const judgeFetch = guardPaidAttempt("judge", judgeFetchImpl ?? fetchImpl);
   const countFetch = guardPaidAttempt("countEndpoint", fetchImpl);
-  const activeModes = modes.filter((mode) => mode !== "off");
-  if (activeModes.length > 0 && !modes.includes("off")) {
-    throw new Error(
-      `Comparative scoring requires the off baseline arm; selected modes: ${modes.join(", ")}. ` +
-        "Add 'off' to the mode selection.",
-    );
-  }
-  const repetitionCount = repetitions ?? 3;
-  const pricing = validatePricing(pricingOption);
-  const seed = parseSeed(seedOption);
-  const plan = buildPlan({ modes, categories, repetitions: repetitionCount, seed });
-  const runnerKind = provider === "pi" ? "pi" : "direct";
-  const environment = collectEnvironment({
-    provider,
-    runner: runnerKind,
-    model,
-    fixtureVersion: fixtures.version,
-    pricing,
-    seed: formatSeed(seed),
-    execGit,
-    commitOverride,
-    readPiVersion,
-  });
-  const plannedJudgeCalls =
-    judge === true ? activeModes.length * categories.length * repetitionCount : 0;
-  const plannedCountCalls =
-    countTokens === true ? (modes.includes("off") ? modes.length : modes.length + 1) : 0;
-  const plannedPaidCalls = plan.length + plannedJudgeCalls + plannedCountCalls;
-  validateRunConfiguration({
-    modes,
-    repetitions: repetitionCount,
-    plannedCalls: plannedPaidCalls,
-    maxPaidCalls,
-    commit: environment.commit,
-  });
-  const baseSystemPrompt = baseSystemPromptOption ?? loadPiBaseSystemPrompt();
   // Token counting runs only after every configuration check has passed, so
   // an invalid run can never issue a count request.
   const tokenAccounting = {
@@ -698,6 +1166,14 @@ export async function runProviderEvaluation(options) {
       countEndpoint ?? new URL(tokenAccounting.endpointPath, endpoint).toString();
     const countModes = modes.includes("off") ? modes : ["off", ...modes];
     for (const mode of countModes) {
+      // A stored count result is reused instead of reissuing a paid count
+      // request; reservations from the prior invocation already paid for it.
+      if (checkpoint.completedCount(mode)) {
+        const stored = checkpoint.storedCount(mode);
+        tokenAccounting.totalRequestInputTokens[mode] = stored.inputTokens;
+        tokenAccounting.exactCounts[mode] = stored;
+        continue;
+      }
       const count = await countPromptTokens({
         apiKey,
         model,
@@ -705,6 +1181,7 @@ export async function runProviderEvaluation(options) {
         endpoint: resolvedCountEndpoint,
         fetchImpl: countFetch,
       });
+      checkpoint.recordCount(mode, count);
       tokenAccounting.totalRequestInputTokens[mode] = count.inputTokens;
       tokenAccounting.exactCounts[mode] = count;
     }
@@ -724,51 +1201,13 @@ export async function runProviderEvaluation(options) {
           ...(piBinOption === undefined ? {} : { piBin: piBinOption }),
           extensionPath: path.resolve(here, "..", "index.ts"),
           model,
+          thinkingLevel,
           spawnImpl: spawnImpl ?? defaultSpawn,
           timeoutMs,
           nowImpl,
+          cachePromptStrategy,
         })
       : null;
-
-  const runIdentity = {
-    provider,
-    endpoint,
-    model,
-    judge: judge === true,
-    judgeModel: judge === true ? (judgeModel ?? model) : null,
-    fixtureVersion: fixtures.version,
-    commit: environment.commit,
-    modes,
-    categories: categories.map((category) => category.id),
-    repetitions: repetitionCount,
-    seed: formatSeed(seed),
-    baseSystemPromptHash: crypto
-      .createHash("sha256")
-      .update(baseSystemPrompt)
-      .digest("hex"),
-    promptContractHash: crypto
-      .createHash("sha256")
-      .update(JSON.stringify(fixtures.promptContract ?? null))
-      .digest("hex"),
-    runtimePromptHash: crypto
-      .createHash("sha256")
-      .update(modes.map((mode) => fixtures.runtimePrompts[mode] ?? "").join("\n---\n"))
-      .digest("hex"),
-  };
-  const runId = `caveman-eval-${crypto
-    .createHash("sha256")
-    .update(JSON.stringify(runIdentity))
-    .digest("hex")
-    .substring(0, 16)}`;
-  const checkpoint =
-    checkpointPath !== undefined
-      ? openCheckpoint({
-          path: checkpointPath,
-          runId,
-          owner: { hostname: os.hostname(), pid: process.pid, heartbeatAtMs: nowImpl() },
-          nowImpl,
-        })
-      : createMemoryCheckpoint(runId);
 
   const results = [];
   let seq = 0;
@@ -803,16 +1242,14 @@ export async function runProviderEvaluation(options) {
       }
       const piOutcome = await piRunner.execute({ mode: call.mode, category, repetition: call.repetition });
       payload = {
-        content:
-          piOutcome.toolCall === null
-            ? [{ type: "text", text: piOutcome.text }]
-            : [
-                {
-                  type: "tool_use",
-                  name: piOutcome.toolCall.name,
-                  input: piOutcome.toolCall.input,
-                },
-              ],
+        content: [
+          ...piOutcome.toolCalls.map((call) => ({
+            type: "tool_use",
+            name: call.name,
+            input: call.input,
+          })),
+          { type: "text", text: piOutcome.text },
+        ],
         usage: piOutcome.usage,
       };
       executionExtras = {
@@ -823,6 +1260,14 @@ export async function runProviderEvaluation(options) {
         sessionId: null,
         toolCallCount: piOutcome.toolCallCount,
         rawUsage: piOutcome.rawUsage ?? null,
+        assistantTurns: piOutcome.assistantTurns,
+        rawUsageTurns: piOutcome.rawUsageTurns,
+        toolCalls: piOutcome.toolCalls,
+        timing: piOutcome.timing,
+        toolMetrics: piOutcome.toolMetrics,
+        usageTurns: piOutcome.usageTurns,
+        sessionToolMetrics: piOutcome.sessionToolMetrics,
+        nested: piOutcome.nested ?? null,
       };
     } else {
       const systemBlocks = buildSystemBlocks(baseSystemPrompt, cavemanText);
@@ -865,35 +1310,110 @@ export async function runProviderEvaluation(options) {
         );
       }
       payload = outcome.json;
+      const elapsedMs = nowImpl() - startedAtMs;
       executionExtras = {
         attempts: outcome.attempts,
-        elapsedMs: nowImpl() - startedAtMs,
+        elapsedMs,
         costUsd: null,
         systemPromptSent: systemBlocks.map((block) => block.text).join(""),
         sessionId: null,
         toolCallCount: null,
+        assistantTurns: 1,
+        rawUsageTurns: [outcome.json.usage ?? null],
+        toolCalls: null,
+        timing: {
+          timeToFirstTokenMs: null,
+          generationDurationMs: null,
+          totalElapsedMs: elapsedMs,
+        },
+        toolMetrics: {
+          toolCalls: 0,
+          toolDurationMs: null,
+          rereads: null,
+          correctiveTurns: null,
+          failedTestsWithoutCorrectiveTurn: null,
+          retries: Math.max(0, outcome.attempts - 1),
+        },
+        usageTurns: [normalizeUsage(outcome.json.usage)],
+        sessionToolMetrics: null,
       };
     }
     const extracted = extractResponseText(payload, category.expectsTool === true);
     const usage = normalizeUsage(payload.usage);
-    const costUsd =
-      executionExtras.costUsd !== null && executionExtras.costUsd !== undefined
-        ? executionExtras.costUsd
-        : computeCostUsd(usage, pricing);
-    const { runValidators } = await import("./eval/validators.mjs");
-    const validatorConfigs = [
-      ...(category.validators ?? []),
-      ...((category.requiredTerms ?? []).length > 0 ? [{ id: "terms" }] : []),
-    ];
-    const validation = runValidators(extracted.text, validatorConfigs, {
-      toolCall: extracted.toolCall,
-      expectsTool: category.expectsTool === true,
-      requiredTerms: category.requiredTerms ?? [],
+    // Explicit rates own costUsd. Provider-reported cost stays separate, and
+    // an unpriced provider-reported zero never becomes a monetary total.
+    const providerReportedCostUsd = executionExtras.costUsd ?? null;
+    const costUsd = resolveCostUsd({
+      computedCostUsd: computeCostUsd(usage, ratesFor(model)),
+      providerReportedCostUsd,
     });
+    const resultToolCalls =
+      executionExtras.toolCalls ?? (extracted.toolCall === null ? [] : [extracted.toolCall]);
     const toolCallCount =
       executionExtras.toolCallCount !== null && executionExtras.toolCallCount !== undefined
         ? executionExtras.toolCallCount
         : extracted.toolCallCount;
+    const { runRequirements, runValidators } = await import("./eval/validators.mjs");
+    const validatorConfigs = [
+      ...(category.validators ?? []),
+      ...((category.requiredTerms ?? []).length > 0 ? [{ id: "terms" }] : []),
+    ];
+    const categoryRequirements = category.requirements ?? [];
+    const validation = isSchema4
+      ? runRequirements(extracted.validationText, categoryRequirements, {
+          taskPrompt: category.prompt,
+          taskClass: category.taskClass,
+          artifactText: extracted.validationText,
+          toolCall: extracted.toolCall,
+          toolCalls: resultToolCalls,
+          expectsTool: category.expectsTool === true,
+          sessionToolMetrics: executionExtras.sessionToolMetrics ?? null,
+          nested: executionExtras.nested ?? null,
+        })
+      : runValidators(extracted.validationText, validatorConfigs, {
+          toolCall: extracted.toolCall,
+          expectsTool: category.expectsTool === true,
+          requiredTerms: category.requiredTerms ?? [],
+        });
+    const manifestRequirement = categoryRequirements.find(
+      (requirement) => requirement.kind === "protected-facts",
+    );
+    const protectedFactManifest = manifestRequirement === undefined
+      ? null
+      : Object.fromEntries(
+          [
+            "requiredClaims",
+            "negatedClaims",
+            "warnings",
+            "identifiers",
+            "paths",
+            "commands",
+            "numbers",
+            "orderedActions",
+            "knownGaps",
+          ].map((field) => [field, manifestRequirement[field] ?? []]),
+        );
+    const preservationFindings = validation.checks.flatMap((check) => check.findings ?? []);
+    const countFinding = (types) => preservationFindings.filter(
+      (finding) => types.includes(finding.type),
+    ).length;
+    const preservation = {
+      criticalOmissionCount: countFinding([
+        "critical-omission",
+        "missing-negation",
+        "missing-warning",
+        "missing-identifier",
+        "missing-path",
+        "missing-command",
+        "missing-number",
+        "gap-not-marked",
+      ]),
+      noncriticalOmissionCount: countFinding(["noncritical-omission"]),
+      alteredFactCount: countFinding(["altered-fact"]),
+      unsupportedClaimCount: countFinding(["unsupported-claim"]),
+      orderingErrorCount: countFinding(["ordering-error"]),
+      findings: preservationFindings,
+    };
     results.push({
       seq: (seq += 1),
       key: call.key,
@@ -901,15 +1421,50 @@ export async function runProviderEvaluation(options) {
       category: call.category,
       mode: call.mode,
       armPosition: call.armPosition,
+      pairOrder: call.pairOrder,
       response: extracted.text,
-      wordCount: countWords(extracted.text),
-      requiredTermRatio: scoreRequiredTerms(extracted.text, category.requiredTerms ?? []),
+      validationText: extracted.validationText,
+      wordCount: countWords(extracted.validationText),
+      requiredTermRatio: scoreRequiredTerms(extracted.validationText, category.requiredTerms ?? []),
       validation,
+      protectedFactManifest,
+      preservation,
       usage,
       rawUsage: executionExtras.rawUsage ?? payload.usage ?? null,
+      rawUsageTurns:
+        executionExtras.rawUsageTurns ?? [payload.usage ?? null],
+      usageTurns:
+        executionExtras.usageTurns ?? [normalizeUsage(payload.usage)],
+      assistantTurns: executionExtras.assistantTurns ?? 1,
+      toolCalls: resultToolCalls,
+      timing: executionExtras.timing ?? {
+        timeToFirstTokenMs: null,
+        generationDurationMs: null,
+        totalElapsedMs: executionExtras.elapsedMs,
+      },
+      toolMetrics: executionExtras.toolMetrics ?? {
+        toolCalls: toolCallCount,
+        toolDurationMs: null,
+        rereads: null,
+        correctiveTurns: null,
+        failedTestsWithoutCorrectiveTurn: null,
+        retries: Math.max(0, (executionExtras.attempts ?? 1) - 1),
+      },
+      sessionToolMetrics: executionExtras.sessionToolMetrics ?? null,
+      nested: executionExtras.nested ?? null,
+      cacheCondition: {
+        label: cacheCondition,
+        promptCacheEligible: true,
+        promptStrategy: cachePromptStrategy,
+        cacheReadTokens: usage.cacheRead,
+        cacheWriteTokens: usage.cacheWrite,
+      },
+      compressionPolicy: isSchema4 ? category.compressionPolicy : undefined,
       costUsd,
+      providerReportedCostUsd,
       elapsedMs: executionExtras.elapsedMs,
       attempts: executionExtras.attempts,
+      toolCall: extracted.toolCall,
       toolCallCount,
       systemPromptSent: executionExtras.systemPromptSent,
       sessionId: executionExtras.sessionId,
@@ -935,6 +1490,14 @@ export async function runProviderEvaluation(options) {
       throw new Error("The blinded judge requires paired off and active arms.");
     }
     const judgeClient = async ({ system, user }) => {
+      if (piRunner !== null) {
+        // One reserved shared-cap judge attempt per Pi judge process,
+        // checked immediately before the process starts. Retries inside the
+        // Pi process are not observable here and are never counted.
+        reservePaidAttempt("judge");
+        const judgeOutcome = await piRunner.executeJudge({ system, user, model: judgeModel });
+        return { ...judgeOutcome, providerReportedCostUsd: judgeOutcome.costUsd ?? null };
+      }
       const outcome = await requestJsonWithRetry({
         url: endpoint,
         headers: {
@@ -955,13 +1518,21 @@ export async function runProviderEvaluation(options) {
         nowImpl,
       });
       const text = outcome.json.content?.find((block) => block.type === "text")?.text ?? "";
+      const usage = normalizeUsage(outcome.json.usage);
       return {
         text,
-        usage: normalizeUsage(outcome.json.usage),
+        usage,
         rawUsage: outcome.json.usage ?? null,
+        rawUsageTurns: [outcome.json.usage ?? null],
+        assistantTurns: 1,
+        costUsd: computeCostUsd(usage, ratesFor(judgeModel ?? model)),
+        providerReportedCostUsd: null,
       };
     };
     const { promptText, rubricText } = loadJudgeMaterials();
+    const { buildJudgeUserContent, renderJudgeResponse } = await import("./eval/judge-render.mjs");
+    const renderArm = (result) =>
+      renderJudgeResponse({ text: result.response, toolCalls: result.toolCalls ?? null });
     for (const result of results) {
       if (result.mode === "off") continue;
       const off = offByPair.get(`${result.repetition}::${result.category}`);
@@ -973,11 +1544,11 @@ export async function runProviderEvaluation(options) {
       }
       checkpoint.touchHeartbeat();
       const offIsA = mulberry32(derivePairSeed(seed, result.repetition, `judge:${result.category}:${result.mode}`))() < 0.5;
-      const user = [
-        `Task prompt:\n${categories.find((item) => item.id === result.category).prompt}`,
-        `Response A:\n${offIsA ? off.response : result.response}`,
-        `Response B:\n${offIsA ? result.response : off.response}`,
-      ].join("\n\n---\n\n");
+      const user = buildJudgeUserContent({
+        taskPrompt: categories.find((item) => item.id === result.category).prompt,
+        responseA: offIsA ? renderArm(off) : renderArm(result),
+        responseB: offIsA ? renderArm(result) : renderArm(off),
+      });
       let judgeResult;
       try {
         const outcome = await judgeClient({ system: `${promptText}\n\n${rubricText}`, user });
@@ -990,9 +1561,18 @@ export async function runProviderEvaluation(options) {
           verdict,
           offQualityTotal: offScore.total,
           activeQualityTotal: activeScore.total,
+          offGroundingTotal: offScore.groundednessTotal,
+          activeGroundingTotal: activeScore.groundednessTotal,
           notes: verdict.notes,
           usage: outcome.usage,
           rawUsage: outcome.rawUsage ?? null,
+          rawUsageTurns: outcome.rawUsageTurns ?? [outcome.rawUsage ?? null],
+          assistantTurns: outcome.assistantTurns ?? 1,
+          costUsd: resolveCostUsd({
+            computedCostUsd: computeCostUsd(outcome.usage, ratesFor(judgeModel ?? model)),
+            providerReportedCostUsd: outcome.providerReportedCostUsd ?? null,
+          }),
+          providerReportedCostUsd: outcome.providerReportedCostUsd ?? null,
         };
       } catch (error) {
         if (error instanceof PaidCallBudgetExceededError) {
@@ -1019,9 +1599,102 @@ export async function runProviderEvaluation(options) {
   }
 
   const tolerance = 0;
+  // Controlled cache verification: a labeled cold or warm condition counts
+  // only when observed cache reads prove it on every pair. Mixed or
+  // all-opposite pairs stay in raw results and never silently satisfy a
+  // labeled condition.
+  const cacheVerificationPairs = [];
+  {
+    const byPair = new Map();
+    for (const result of results) {
+      const key = `${result.repetition}::${result.category}`;
+      const pair = byPair.get(key) ?? {};
+      if (result.mode === "off") pair.off = result;
+      else if (pair.active === undefined) pair.active = result;
+      byPair.set(key, pair);
+    }
+    const cacheReadsFor = (result) => [
+      result.usage?.cacheRead,
+      ...(result.nested?.children ?? []).map((child) => child.usage?.cacheRead),
+    ];
+    const cacheState = (result) => {
+      const reads = cacheReadsFor(result);
+      if (reads.length === 0 || reads.some((value) => !Number.isFinite(value))) return "mixed";
+      if (reads.every((value) => value === 0)) return "zero";
+      if (reads.every((value) => value > 0)) return "positive";
+      return "mixed";
+    };
+    for (const [key, pair] of byPair) {
+      if (pair.off === undefined || pair.active === undefined) continue;
+      const offState = cacheState(pair.off);
+      const activeState = cacheState(pair.active);
+      const classification =
+        offState === "zero" && activeState === "zero"
+          ? "both-zero"
+          : offState === "positive" && activeState === "positive"
+            ? "both-positive"
+            : "mixed";
+      const verifiedEligible =
+        cacheCondition === "cold"
+          ? classification === "both-zero"
+          : cacheCondition === "warm"
+            ? classification === "both-positive"
+            : null;
+      cacheVerificationPairs.push({
+        key,
+        category: pair.off.category,
+        repetition: pair.off.repetition,
+        offMode: "off",
+        offCacheRead: pair.off.usage.cacheRead,
+        offNodeCacheReads: cacheReadsFor(pair.off),
+        activeMode: pair.active.mode,
+        activeCacheRead: pair.active.usage.cacheRead,
+        activeNodeCacheReads: cacheReadsFor(pair.active),
+        classification,
+        verifiedEligible,
+      });
+    }
+  }
+  const cacheVerification = {
+    condition: cacheCondition,
+    strategy: cachePromptStrategy,
+    pairOrderStrategy,
+    pairCount: cacheVerificationPairs.length,
+    eligiblePairCount: cacheVerificationPairs.filter((pair) => pair.verifiedEligible === true).length,
+    mixedPairCount: cacheVerificationPairs.filter((pair) => pair.classification === "mixed").length,
+    conditionAchieved:
+      cacheCondition === "observed"
+        ? null
+        : cacheVerificationPairs.length > 0 &&
+          cacheVerificationPairs.every((pair) => pair.verifiedEligible === true),
+    pairs: cacheVerificationPairs,
+  };
   for (const result of results) {
-    result.requiredTermsPassed = result.requiredTermRatio === 1;
     const off = offByPair.get(`${result.repetition}::${result.category}`);
+    const judgeResult = result.mode === "off" ? null : judgeResultsByKey.get(result.key) ?? null;
+    result.judge = judgeResult;
+    result.validationPassed = result.validation.passed;
+    if (isSchema4) {
+      const groups = result.validation.groups;
+      result.correctnessPass = groups.correctnessPass;
+      result.groundednessPass = groups.groundednessPass;
+      result.contractPass = groups.contractPass;
+      result.safetyPass = groups.safetyPass;
+      result.behavioralPassed = result.validation.passed;
+      result.passed = result.behavioralPassed;
+      result.qualityScore = judgeResult === null || judgeResult.failed === true
+        ? null
+        : judgeResult.activeQualityTotal / 8;
+      result.groundingScore = judgeResult === null || judgeResult.failed === true
+        ? null
+        : judgeResult.activeGroundingTotal / 4;
+      result.requiredTermsPassed = null;
+      delete result.brevityPassed;
+      delete result.qualityPassed;
+      continue;
+    }
+
+    result.requiredTermsPassed = result.requiredTermRatio === 1;
     if (result.mode !== "off" && off !== undefined) {
       // An output ratio requires positive integer output usage in both arms.
       // Missing or invalid output usage fails brevity fail-closed instead of
@@ -1040,27 +1713,56 @@ export async function runProviderEvaluation(options) {
           ? true
           : result.tokenRatioToOff !== null && result.tokenRatioToOff <= ratioLimit;
     }
-    const judgeResult = result.mode === "off" ? null : judgeResultsByKey.get(result.key) ?? null;
-    result.judge = judgeResult;
     if (judge === true && result.mode !== "off") {
       result.qualityPassed =
         judgeResult !== null &&
         judgeResult.failed !== true &&
         judgeResult.activeQualityTotal >= judgeResult.offQualityTotal - tolerance;
     }
-    result.validationPassed = result.validation.passed;
     result.passed = result.validationPassed && result.brevityPassed && result.qualityPassed;
   }
 
+  if (isSchema4) {
+    for (const result of results) {
+      const off = offByPair.get(`${result.repetition}::${result.category}`);
+      const scored = result.mode === "off" || off === undefined
+        ? { compressionRatio: null, brevityScore: null }
+        : scoreCompressionPair({ off, active: result });
+      result.compressionRatio = scored.compressionRatio;
+      result.brevityScore = scored.brevityScore;
+    }
+  }
+
+  const childProviderCalls = results.reduce(
+    (sum, result) => sum + (result.nested?.childCount ?? 0),
+    0,
+  );
+  const invocationChildProviderCalls = results.reduce(
+    (sum, result) => sum + (result.resumed === true ? 0 : (result.nested?.childCount ?? 0)),
+    0,
+  );
+  const actualProviderCalls = attemptState.provider + childProviderCalls;
+  const actualPaidCalls = paidAttempts() + childProviderCalls;
+  const invocationParentProviderCalls = attemptState.provider - invocationStart.provider;
+  const invocationProviderCalls = invocationParentProviderCalls + invocationChildProviderCalls;
+  const invocationPaidCalls =
+    paidAttempts() -
+    (invocationStart.provider + invocationStart.judge + invocationStart.countEndpoint) +
+    invocationChildProviderCalls;
+
   return {
-    schemaVersion: 2,
+    schemaVersion: isSchema4 ? 4 : 3,
     fixtureVersion: fixtures.version,
+    fixtureSet: fixtures.fixtureSet,
+    fixtureHash: fixtures.fixtureHash,
     provider,
     runner: runnerKind,
     model,
     tokenAccounting,
     judge: { enabled: judge === true, model: judge === true ? (judgeModel ?? model) : null, tolerance },
+    gate: options.gate ?? null,
     pricing,
+    validatorVersion: liveValidatorVersion,
     seed: formatSeed(seed),
     runId,
     runIdentity,
@@ -1070,24 +1772,43 @@ export async function runProviderEvaluation(options) {
     modes,
     categories: categories.map((category) => category.id),
     plannedCalls: plannedPaidCalls,
-    plannedProviderCalls: plan.length,
+    plannedProviderCalls,
     plannedJudgeCalls,
     paidCallAccounting: {
       cap: maxPaidCalls ?? null,
       planned: {
-        provider: plan.length,
+        provider: plannedProviderCalls,
+        ...(plannedNestedCalls === 0
+          ? {}
+          : { parentProvider: plan.length, childProvider: plannedNestedCalls }),
         judge: plannedJudgeCalls,
         countEndpoint: plannedCountCalls,
         total: plannedPaidCalls,
       },
       actual: {
-        provider: attemptState.provider,
+        provider: actualProviderCalls,
+        ...(plannedNestedCalls === 0
+          ? {}
+          : { parentProvider: attemptState.provider, childProvider: childProviderCalls }),
         judge: attemptState.judge,
         countEndpoint: attemptState.countEndpoint,
-        total: paidAttempts(),
+        total: actualPaidCalls,
+      },
+      invocation: {
+        provider: invocationProviderCalls,
+        ...(plannedNestedCalls === 0
+          ? {}
+          : {
+              parentProvider: invocationParentProviderCalls,
+              childProvider: invocationChildProviderCalls,
+            }),
+        judge: attemptState.judge - invocationStart.judge,
+        countEndpoint: attemptState.countEndpoint - invocationStart.countEndpoint,
+        total: invocationPaidCalls,
       },
     },
     caseCount: results.length,
+    cacheVerification,
     runOrder: results.map((result) => ({
       seq: result.seq,
       key: result.key,
@@ -1098,7 +1819,11 @@ export async function runProviderEvaluation(options) {
       resumed: result.resumed === true,
     })),
     results,
-    aggregates: aggregateResults(results, { judgeEnabled: judge === true, pricing }),
+    aggregates: aggregateResults(results, { judgeEnabled: judge === true, pricing, schema4: isSchema4 }),
+    ...(isSchema4 ? {
+      attribution: attributeBehaviorPairs(results),
+      compression: { byMode: aggregateCompressionResults(results) },
+    } : {}),
     failures: checkpoint.state.failures,
     judgeFailures,
     // Primary usage completeness gates the whole run: every result, off arms
@@ -1266,8 +1991,109 @@ export function createArmOrder(arms, seed) {
   return order;
 }
 
+// Sidecar claim file guarding checkpoint takeover. Installing a claim is
+// an atomic hard-link of a fully written staged file, so exactly one
+// process can hold the claim at a time. Stealing a stale claim uses an
+// atomic rename: only one racer can move the old claim away, and losers
+// re-evaluate the fresh holder on the next loop round.
+function readClaimOwner(claimPath) {
+  try {
+    return JSON.parse(fs.readFileSync(claimPath, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+function claimStillOurs(claimPath, owner) {
+  if (owner === undefined) return true;
+  const holder = readClaimOwner(claimPath);
+  return holder !== null && holder.hostname === owner.hostname && holder.pid === owner.pid;
+}
+
+function latestClaimOwner(claimPath, checkpointPath) {
+  const holder = readClaimOwner(claimPath);
+  if (holder === null) return null;
+  try {
+    const checkpointOwner = JSON.parse(fs.readFileSync(checkpointPath, "utf8")).owner;
+    if (
+      checkpointOwner?.hostname === holder.hostname &&
+      checkpointOwner?.pid === holder.pid &&
+      typeof checkpointOwner.heartbeatAtMs === "number"
+    ) {
+      return checkpointOwner;
+    }
+  } catch {
+    // A missing or incomplete checkpoint cannot refresh the sidecar claim.
+  }
+  return holder;
+}
+
+function releaseClaimIfOurs(claimPath, owner) {
+  if (claimStillOurs(claimPath, owner)) {
+    try {
+      fs.unlinkSync(claimPath);
+    } catch {
+      // Already gone: nothing this process owns remains behind.
+    }
+  }
+}
+
+function claimCheckpointOwnership({ checkpointPath, owner, staleAfterMs, isProcessAlive, nowImpl }) {
+  const claimPath = `${checkpointPath}.claim`;
+  for (let round = 0; round < 100; round += 1) {
+    const staged = `${claimPath}.new-${process.pid}-${crypto.randomBytes(6).toString("hex")}`;
+    fs.writeFileSync(staged, JSON.stringify(owner), { mode: 0o600 });
+    try {
+      fs.linkSync(staged, claimPath);
+      // linkSync keeps the staged hard link; remove its name so only the
+      // claim path remains after acquisition.
+      try {
+        fs.unlinkSync(staged);
+      } catch {
+        // Best effort: a surviving staged twin is harmless residue.
+      }
+      return;
+    } catch (error) {
+      try {
+        fs.unlinkSync(staged);
+      } catch {
+        // The staged file is disposable; failure to remove it is harmless.
+      }
+      if (error?.code !== "EEXIST") throw error;
+    }
+    const holder = latestClaimOwner(claimPath, checkpointPath);
+    if (holder !== null) {
+      if (holder.hostname === owner.hostname && holder.pid === owner.pid) return;
+      if (holder.hostname === owner.hostname) {
+        if (isProcessAlive(holder.pid)) {
+          throw new Error(
+            `checkpoint at ${checkpointPath} is owned by live process ${holder.pid}; refusing concurrent resume.`,
+          );
+        }
+      } else if (nowImpl() - holder.heartbeatAtMs < staleAfterMs) {
+        throw new Error(
+          `checkpoint at ${checkpointPath} is owned by a live remote run on '${holder.hostname}' ` +
+            "with a fresh heartbeat; refusing concurrent resume.",
+        );
+      }
+    }
+    const junk = `${claimPath}.stale-${process.pid}-${crypto.randomBytes(6).toString("hex")}`;
+    try {
+      fs.renameSync(claimPath, junk);
+      fs.rmSync(junk, { force: true });
+    } catch {
+      // Another racer removed the stale claim first; loop and re-read.
+    }
+  }
+  throw new Error(`checkpoint claim at ${claimPath} did not settle after repeated contention.`);
+}
+
 // Incremental checkpoint store. Each completed paid call is persisted with an
 // atomic temp-file rename so an interrupted run resumes without repeating it.
+// Attempt reservations persist the same way, immediately before every paid
+// attempt, so the cumulative cap survives process restarts; each reservation
+// also refreshes the owner heartbeat in that same persisted write. Takeover
+// is guarded by the sidecar claim so two processes can never both resume.
 export function openCheckpoint({
   path: checkpointPath,
   runId,
@@ -1283,70 +2109,143 @@ export function openCheckpoint({
     }
   },
 }) {
-  let state = { runId, completedCalls: {}, runOrder: [], failures: [] };
-  if (owner !== undefined && !fs.existsSync(checkpointPath)) {
-    fs.mkdirSync(path.dirname(checkpointPath), { recursive: true });
-    const initialState = { ...state, owner };
-    try {
-      fs.writeFileSync(checkpointPath, JSON.stringify(initialState, null, 2) + "\n", {
-        encoding: "utf8",
-        flag: "wx",
-        mode: 0o600,
-      });
-    } catch (error) {
-      if (error?.code !== "EEXIST") throw error;
-    }
+  let state = {
+    runId,
+    completedCalls: {},
+    runOrder: [],
+    failures: [],
+    attemptReservations: { provider: 0, judge: 0, countEndpoint: 0 },
+    countResults: {},
+  };
+  const claimPath = `${checkpointPath}.claim`;
+  fs.mkdirSync(path.dirname(checkpointPath), { recursive: true });
+  if (owner !== undefined) {
+    claimCheckpointOwnership({ checkpointPath, owner, staleAfterMs, isProcessAlive, nowImpl });
   }
-  if (fs.existsSync(checkpointPath)) {
-    let parsed;
-    try {
-      parsed = JSON.parse(fs.readFileSync(checkpointPath, "utf8"));
-    } catch (error) {
-      throw new Error(
-        `checkpoint at ${checkpointPath} is corrupt and cannot be parsed ` +
-          `(${error instanceof Error ? error.message : String(error)}). ` +
-          "Move it aside or delete it, then rerun to rebuild progress.",
-      );
+  try {
+    if (owner !== undefined && !fs.existsSync(checkpointPath)) {
+      const initialState = { ...state, owner };
+      try {
+        fs.writeFileSync(checkpointPath, JSON.stringify(initialState, null, 2) + "\n", {
+          encoding: "utf8",
+          flag: "wx",
+          mode: 0o600,
+        });
+      } catch (error) {
+        if (error?.code !== "EEXIST") throw error;
+      }
     }
-    if (
-      typeof parsed !== "object" ||
-      parsed === null ||
-      typeof parsed.runId !== "string" ||
-      typeof parsed.completedCalls !== "object" ||
-      parsed.completedCalls === null
-    ) {
-      throw new Error(
-        `checkpoint at ${checkpointPath} is corrupt (missing runId or completedCalls). ` +
-          "Move it aside or delete it, then rerun to rebuild progress.",
-      );
+    if (fs.existsSync(checkpointPath)) {
+      let parsed;
+      try {
+        parsed = JSON.parse(fs.readFileSync(checkpointPath, "utf8"));
+      } catch (error) {
+        throw new Error(
+          `checkpoint at ${checkpointPath} is corrupt and cannot be parsed ` +
+            `(${error instanceof Error ? error.message : String(error)}). ` +
+            "Move it aside or delete it, then rerun to rebuild progress.",
+        );
+      }
+      if (
+        typeof parsed !== "object" ||
+        parsed === null ||
+        typeof parsed.runId !== "string" ||
+        typeof parsed.completedCalls !== "object" ||
+        parsed.completedCalls === null
+      ) {
+        throw new Error(
+          `checkpoint at ${checkpointPath} is corrupt (missing runId or completedCalls). ` +
+            "Move it aside or delete it, then rerun to rebuild progress.",
+        );
+      }
+      if (parsed.runId !== runId) {
+        throw new Error(
+          `checkpoint at ${checkpointPath} belongs to run '${parsed.runId}', refusing to overwrite for run '${runId}'.`,
+        );
+      }
+      // Ownership rules before taking over the checkpoint: on the same host a
+      // live recorded pid blocks regardless of heartbeat age, because only
+      // process death proves the runner is gone. Across hosts liveness cannot
+      // be probed, so a fresh heartbeat blocks and only an expired one yields.
+      // The sidecar claim enforces the same rules atomically; these checks
+      // defend legacy checkpoints that predate claim files.
+      const recordedOwner = parsed.owner;
+      if (owner !== undefined && recordedOwner !== undefined && recordedOwner.pid !== owner.pid) {
+        if (recordedOwner.hostname === owner.hostname) {
+          if (isProcessAlive(recordedOwner.pid)) {
+            throw new Error(
+              `checkpoint at ${checkpointPath} is owned by live process ${recordedOwner.pid}; refusing concurrent resume.`,
+            );
+          }
+        } else if (nowImpl() - recordedOwner.heartbeatAtMs < staleAfterMs) {
+          throw new Error(
+            `checkpoint at ${checkpointPath} is owned by a live remote run on '${recordedOwner.hostname}' ` +
+              "with a fresh heartbeat; refusing concurrent resume.",
+          );
+        }
+      }
+      state = parsed;
+      // A non-empty legacy checkpoint has no trustworthy attempt total because
+      // retries were not recorded. Refuse resume instead of guessing below the
+      // real spend. An empty checkpoint can safely start with zero reservations.
+      if (state.attemptReservations === undefined) {
+        const hasCompletedCalls = Object.keys(state.completedCalls).length > 0;
+        const hasFailures = Array.isArray(state.failures) && state.failures.length > 0;
+        if (hasCompletedCalls || hasFailures) {
+          throw new Error(
+            `checkpoint at ${checkpointPath} predates cumulative attempt accounting and contains paid work. ` +
+              "Keep it for review, then start a new checkpoint for a safely capped run.",
+          );
+        }
+        state.attemptReservations = { provider: 0, judge: 0, countEndpoint: 0 };
+      } else if (!isValidAttemptReservations(state.attemptReservations)) {
+        throw new Error(
+          `checkpoint at ${checkpointPath} is corrupt (attemptReservations must contain non-negative integers). ` +
+            "Move it aside or delete it, then rerun to rebuild progress.",
+        );
+      }
+      if (state.countResults === undefined) {
+        state.countResults = {};
+      } else if (
+        state.countResults === null ||
+        typeof state.countResults !== "object" ||
+        Array.isArray(state.countResults)
+      ) {
+        throw new Error(
+          `checkpoint at ${checkpointPath} is corrupt (countResults must be an object). ` +
+            "Move it aside or delete it, then rerun to rebuild progress.",
+        );
+      }
     }
-    if (parsed.runId !== runId) {
-      throw new Error(
-        `checkpoint at ${checkpointPath} belongs to run '${parsed.runId}', refusing to overwrite for run '${runId}'.`,
-      );
-    }
-    const recordedOwner = parsed.owner;
-    if (
-      owner !== undefined &&
-      recordedOwner !== undefined &&
-      recordedOwner.pid !== owner.pid &&
-      recordedOwner.hostname === owner.hostname &&
-      nowImpl() - recordedOwner.heartbeatAtMs < staleAfterMs &&
-      isProcessAlive(recordedOwner.pid)
-    ) {
-      throw new Error(
-        `checkpoint at ${checkpointPath} is owned by live process ${recordedOwner.pid}; refusing concurrent resume.`,
-      );
-    }
-    state = parsed;
+  } catch (error) {
+    // A refused open must not leave this process's claim behind to block
+    // the legitimate owner or the next takeover attempt.
+    if (owner !== undefined) releaseClaimIfOurs(claimPath, owner);
+    throw error;
   }
   if (owner !== undefined) {
     state.owner = owner;
   }
+  let writeCounter = 0;
   function persist() {
+    if (owner !== undefined && !claimStillOurs(claimPath, owner)) {
+      throw new Error(
+        `checkpoint at ${checkpointPath} was taken over by another run; ` +
+          "refusing to persist from a dispossessed owner.",
+      );
+    }
     const directory = path.dirname(checkpointPath);
     fs.mkdirSync(directory, { recursive: true });
-    const tempPath = path.join(directory, `.${path.basename(checkpointPath)}.${runId}.tmp`);
+    // Every persisted write stages into a unique temp path: pid separates
+    // processes, the counter and random suffix separate writes within one
+    // process, so concurrent writers can never clobber each other's staging.
+    writeCounter += 1;
+    const tempPath = path.join(
+      directory,
+      `.${path.basename(checkpointPath)}.${runId}.${process.pid}-${writeCounter}-${crypto
+        .randomBytes(4)
+        .toString("hex")}.tmp`,
+    );
     fs.writeFileSync(tempPath, JSON.stringify(state, null, 2) + "\n", { mode: 0o600 });
     fs.renameSync(tempPath, checkpointPath);
   }
@@ -1358,6 +2257,28 @@ export function openCheckpoint({
     },
     stored(key) {
       return state.completedCalls[key];
+    },
+    attemptReservations() {
+      return { ...state.attemptReservations };
+    },
+    recordAttempt(kind) {
+      state.attemptReservations[kind] += 1;
+      // The heartbeat rides the reservation's own persisted write, so a run
+      // that is still spending always advertises a fresh heartbeat.
+      if (state.owner !== undefined) {
+        state.owner.heartbeatAtMs = nowImpl();
+      }
+      persist();
+    },
+    completedCount(mode) {
+      return Object.prototype.hasOwnProperty.call(state.countResults, mode);
+    },
+    storedCount(mode) {
+      return { ...state.countResults[mode] };
+    },
+    recordCount(mode, count) {
+      state.countResults[mode] = { ...count };
+      persist();
     },
     recordCall(key, result) {
       state.completedCalls[key] = result;
@@ -1380,13 +2301,38 @@ export function openCheckpoint({
   };
 }
 
+function isValidAttemptReservations(value) {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  for (const kind of ["provider", "judge", "countEndpoint"]) {
+    const count = value[kind];
+    if (!Number.isSafeInteger(count) || count < 0) return false;
+  }
+  return true;
+}
+
 function createMemoryCheckpoint(runId) {
-  const state = { runId, completedCalls: {}, runOrder: [], failures: [] };
+  const state = {
+    runId,
+    completedCalls: {},
+    runOrder: [],
+    failures: [],
+    attemptReservations: { provider: 0, judge: 0, countEndpoint: 0 },
+    countResults: {},
+  };
   return {
     runId,
     path: null,
     completed: (key) => Object.prototype.hasOwnProperty.call(state.completedCalls, key),
     stored: (key) => state.completedCalls[key],
+    attemptReservations: () => ({ ...state.attemptReservations }),
+    recordAttempt: (kind) => {
+      state.attemptReservations[kind] += 1;
+    },
+    completedCount: (mode) => Object.prototype.hasOwnProperty.call(state.countResults, mode),
+    storedCount: (mode) => ({ ...state.countResults[mode] }),
+    recordCount: (mode, count) => {
+      state.countResults[mode] = { ...count };
+    },
     recordCall: (key, result) => {
       state.completedCalls[key] = result;
       if (!state.runOrder.includes(key)) state.runOrder.push(key);
@@ -1403,6 +2349,10 @@ function createMemoryCheckpoint(runId) {
 // JSON mode with the extension loaded. Every call is single-turn and carries
 // an isolated CAVEMAN_MILK_CONFIG_DIR holding the mode config, so the user's
 // own config is never read or written and no session context accumulates.
+// The blinded judge runs through the same session path: the committed judge
+// prompt plus rubric becomes the Pi system prompt, only the blinded task and
+// responses travel as user content, mode is always off, and no tools are
+// offered so the judge can only reply with verdict text.
 // Production use passes a real spawn; tests inject a fake so no provider
 // call happens.
 export function createPiRunner({
@@ -1418,21 +2368,385 @@ export function createPiRunner({
   ),
   extensionPath,
   toolExtensionPath = path.resolve(here, "eval", "pi-eval-tool.ts"),
+  workspaceExtensionPath = path.resolve(here, "eval", "pi-eval-workspace.ts"),
+  cacheControlExtensionPath = path.resolve(here, "eval", "pi-eval-cache-control.ts"),
+  nestedExtensionPath = path.resolve(here, "eval", "pi-eval-nested.ts"),
+  cachePromptStrategy = "observed",
   model,
+  thinkingLevel,
   spawnImpl = defaultSpawn,
   timeoutMs = 300000,
   nowImpl = Date.now,
   mkdtempImpl = (prefix) => fs.mkdtempSync(path.join(os.tmpdir(), prefix)),
   baseEnv = process.env,
 }) {
+  // Shared single-turn Pi session: isolated config directory holding the
+  // requested mode, exactly one spawned process, documented JSON event
+  // parsing, and best-effort directory removal in a finally block. A
+  // workspace category additionally gets a fresh per-process workspace
+  // directory seeded with the fixture files. Timing is measured from
+  // process start (the initial request) through process exit (the final
+  // response); time to first token and generation duration are derived from
+  // child-reported assistant message timestamps and stay null when the
+  // child reports none.
+  async function runPiSession({ mode, args, workspace = null, cacheNonce = null, nested = null }) {
+    const configDir = mkdtempImpl("caveman-pi-config-");
+    fs.writeFileSync(
+      path.join(configDir, "caveman-milk-pi.json"),
+      JSON.stringify({ schemaVersion: 1, mode, showStatus: false }, null, 2) + "\n",
+      { mode: 0o600 },
+    );
+    const workspaceDir = workspace === null ? null : mkdtempImpl("caveman-pi-workspace-");
+    if (workspace !== null) {
+      for (const [relativePath, content] of Object.entries(workspace.files ?? {})) {
+        const target = path.join(workspaceDir, relativePath);
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, String(content), "utf8");
+      }
+    }
+    try {
+      const startedAtMs = nowImpl();
+      const result = await spawnImpl(args, {
+        env: {
+          ...baseEnv,
+          CAVEMAN_MILK_CONFIG_DIR: configDir,
+          ...(workspaceDir === null ? {} : { CAVEMAN_EVAL_WORKSPACE_DIR: workspaceDir }),
+          ...(cacheNonce === null ? {} : { CAVEMAN_EVAL_CACHE_NONCE: cacheNonce }),
+          ...(nested === null
+            ? {}
+            : {
+                CAVEMAN_EVAL_NESTED_PI_BIN: nested.piBin,
+                CAVEMAN_EVAL_NESTED_MODEL: nested.model,
+                ...(nested.thinkingLevel === undefined
+                  ? {}
+                  : { CAVEMAN_EVAL_NESTED_THINKING: nested.thinkingLevel }),
+                CAVEMAN_EVAL_NESTED_MODE: nested.mode,
+                CAVEMAN_EVAL_NESTED_CAVEMAN_EXTENSION: nested.cavemanExtensionPath,
+                CAVEMAN_EVAL_NESTED_WORKSPACE_EXTENSION: nested.workspaceExtensionPath,
+                ...(nested.cacheControlExtensionPath === undefined
+                  ? {}
+                  : {
+                      CAVEMAN_EVAL_NESTED_CACHE_EXTENSION:
+                        nested.cacheControlExtensionPath,
+                    }),
+                ...(nested.cacheNonce === null
+                  ? {}
+                  : { CAVEMAN_EVAL_NESTED_CACHE_NONCE: nested.cacheNonce }),
+              }),
+        },
+        timeout: timeoutMs,
+      });
+      const elapsedMs = nowImpl() - startedAtMs;
+      if (result.code !== 0) {
+        throw new Error(
+          `pi runner exited with code ${result.code}: ${(result.stderr ?? "").substring(0, 500)}`,
+        );
+      }
+      let text = "";
+      let toolCall = null;
+      let toolCalls = [];
+      let toolCallCount = 0;
+      let assistantTurns = 0;
+      let sawUsage = false;
+      const usageTotals = { input: 0, output: 0, cacheWrite: 0, cacheRead: 0 };
+      const usageComplete = { input: true, output: true, cacheWrite: true, cacheRead: true };
+      let usage = { input: null, output: null, cacheWrite: null, cacheRead: null };
+      let rawUsage = null;
+      let rawUsageTurns = [];
+      const usageTurns = [];
+      let costUsd = null;
+      let providerError = null;
+      let firstAssistantTimestampMs = null;
+      const toolCallIds = [];
+      const toolDurationsById = new Map();
+      const toolDurationsByIndex = new Map();
+      const readPaths = new Map();
+      let rereads = 0;
+      let testsRun = 0;
+      let passingTestRuns = 0;
+      let finalTestRunPassed = null;
+      let failingTestEndSeen = false;
+      let failedTestsWithoutCorrectiveTurn = false;
+      let correctiveTurns = 0;
+      let clarificationTurns = 0;
+      let toolExecutionEndCount = 0;
+      const nestedChildren = [];
+      const rawParentLines = [];
+      for (const line of (result.stdout ?? "").split("\n")) {
+        const trimmed = line.trim();
+        if (trimmed.length === 0) continue;
+        rawParentLines.push(trimmed);
+        let event;
+        try {
+          event = JSON.parse(trimmed);
+        } catch {
+          continue;
+        }
+        if (event.type === "tool_execution_start") {
+          toolCallCount += 1;
+          toolCalls.push({ name: event.toolName, input: event.args });
+          toolCallIds.push(
+            event.toolCallId === undefined || event.toolCallId === null ? null : String(event.toolCallId),
+          );
+          if (event.toolName === "write_artifact" && toolCall === null) {
+            toolCall = { name: event.toolName, input: event.args };
+          }
+          if (event.toolName === "workspace_read") {
+            const readPath = String(event.args?.path ?? "");
+            if (readPaths.has(readPath)) rereads += 1;
+            else readPaths.set(readPath, true);
+          }
+        }
+        if (event.type === "tool_execution_end") {
+          const duration = event.result?.details?.durationMs;
+          if (typeof duration === "number" && Number.isFinite(duration)) {
+            if (event.toolCallId != null) toolDurationsById.set(event.toolCallId, duration);
+            else toolDurationsByIndex.set(toolExecutionEndCount, duration);
+          }
+          const failed = Number(event.result?.details?.failed);
+          if (event.toolName === "workspace_run_tests") {
+            testsRun += 1;
+            if (Number.isFinite(failed) && failed > 0) {
+              finalTestRunPassed = false;
+              failingTestEndSeen = true;
+            } else if (failed === 0) {
+              passingTestRuns += 1;
+              finalTestRunPassed = true;
+            } else {
+              finalTestRunPassed = null;
+            }
+          }
+          toolExecutionEndCount += 1;
+        }
+        if (event.type === "tool_execution_end" && event.toolName === "delegate_eval_child") {
+          const details = event.result?.details ?? {};
+          nestedChildren.push({
+            nodeId: details.nodeId ?? null,
+            parentId: details.parentId ?? "root",
+            task: details.task ?? null,
+            responseText:
+              typeof details.responseText === "string" && details.responseText.length > 0
+                ? details.responseText
+                : String(event.result?.content?.[0]?.text ?? ""),
+            childLatencyMs: typeof details.childLatencyMs === "number" ? details.childLatencyMs : null,
+            timing: details.timing ?? { timeToFirstTokenMs: null, generationDurationMs: null },
+            usage: details.usage ?? null,
+            assistantTurns: typeof details.assistantTurns === "number" ? details.assistantTurns : null,
+            clarificationTurns:
+              typeof details.clarificationTurns === "number" ? details.clarificationTurns : null,
+            toolCalls: Array.isArray(details.toolCalls) ? details.toolCalls : [],
+            toolCallCount: typeof details.toolCallCount === "number" ? details.toolCallCount : null,
+            sessionToolMetrics: details.sessionToolMetrics ?? null,
+            rawEvents: Array.isArray(details.rawEvents) ? details.rawEvents : [],
+          });
+        }
+        if (event.type === "message_end" && event.message?.role === "assistant") {
+          const message = event.message;
+          assistantTurns += 1;
+          const turnText = (message.content ?? [])
+            .filter((block) => block.type === "text")
+            .map((block) => block.text)
+            .join("");
+          if (turnText.includes("?")) clarificationTurns += 1;
+          if (failingTestEndSeen) {
+            correctiveTurns += 1;
+            failingTestEndSeen = false;
+          }
+          const timestamp = message.timestamp;
+          if (
+            firstAssistantTimestampMs === null &&
+            typeof timestamp === "number" &&
+            Number.isFinite(timestamp) &&
+            timestamp >= startedAtMs
+          ) {
+            firstAssistantTimestampMs = timestamp;
+          }
+          text = (message.content ?? [])
+            .filter((block) => block.type === "text")
+            .map((block) => block.text)
+            .join("");
+          // An errored assistant turn carries the provider explanation in
+          // errorMessage (for example an OAuth refresh failure). The error
+          // is sticky: a later successful turn must not mask an earlier
+          // provider failure, so it is only ever set, never cleared.
+          if (
+            providerError === null &&
+            message.stopReason === "error" &&
+            typeof message.errorMessage === "string"
+          ) {
+            providerError = message.errorMessage;
+          }
+          if (message.usage !== undefined && message.usage !== null) {
+            sawUsage = true;
+            rawUsage = message.usage;
+            rawUsageTurns.push(message.usage);
+            const turnUsage = normalizeUsage(message.usage);
+            usageTurns.push(turnUsage);
+            for (const field of ["input", "output", "cacheWrite", "cacheRead"]) {
+              if (typeof turnUsage[field] === "number") {
+                usageTotals[field] += turnUsage[field];
+              } else {
+                usageComplete[field] = false;
+              }
+            }
+            if (message.usage.cost && typeof message.usage.cost.total === "number") {
+              costUsd = (costUsd ?? 0) + message.usage.cost.total;
+            }
+          } else {
+            // Turn alignment matters more than density: a missing usage
+            // stays a null entry in the ordered per-turn record.
+            rawUsageTurns.push(null);
+            usageTurns.push(null);
+            for (const field of ["input", "output", "cacheWrite", "cacheRead"]) {
+              usageComplete[field] = false;
+            }
+          }
+        }
+      }
+      if (failingTestEndSeen) {
+        failedTestsWithoutCorrectiveTurn = true;
+      }
+      if (sawUsage) {
+        usage = Object.fromEntries(
+          Object.entries(usageTotals).map(([field, total]) => [
+            field,
+            usageComplete[field] ? total : null,
+          ]),
+        );
+      }
+      if (providerError !== null) {
+        // Bounded passthrough of the provider-reported cause only: the
+        // message comes from Pi's own error field, never from credentials.
+        throw new Error(`Pi provider error: ${providerError.substring(0, 500)}`);
+      }
+      const timeToFirstTokenMs =
+        firstAssistantTimestampMs === null ? null : firstAssistantTimestampMs - startedAtMs;
+      const toolDurationMs =
+        toolCalls.length === 0
+          ? null
+          : toolCalls.map((_call, index) => {
+              const id = toolCallIds[index];
+              if (id !== null && toolDurationsById.has(id)) return toolDurationsById.get(id);
+              return toolDurationsByIndex.get(index) ?? null;
+            });
+      const timing = {
+        timeToFirstTokenMs,
+        generationDurationMs: timeToFirstTokenMs === null ? null : elapsedMs - timeToFirstTokenMs,
+        totalElapsedMs: elapsedMs,
+      };
+      const toolMetrics = {
+        toolCalls: toolCallCount,
+        toolDurationMs,
+        retries: null,
+        rereads: readPaths.size === 0 ? null : rereads,
+        correctiveTurns,
+        clarificationTurns,
+        failedTestsWithoutCorrectiveTurn: testsRun === 0 ? null : failedTestsWithoutCorrectiveTurn,
+      };
+      const sessionToolMetrics = {
+        testsRun,
+        passingTestRuns,
+        finalTestRunPassed,
+        failedTestsWithoutCorrectiveTurn: testsRun === 0 ? null : failedTestsWithoutCorrectiveTurn,
+        correctiveTurns,
+        clarificationTurns,
+        rereads: readPaths.size === 0 ? null : rereads,
+      };
+      // Nested tree record: node identifiers, per-node usage, completeness,
+      // and complete-tree token totals. Totals sum each billed node exactly
+      // once: the root process usage plus every child process usage. The
+      // root bills the child response text as later input, and that overlap
+      // is real provider cost, not double counting. Judge and count-endpoint
+      // usage never enter tree totals.
+      let nestedRecord = null;
+      if (nested !== null) {
+        const childComplete = (child) =>
+          typeof child?.responseText === "string" &&
+          child.responseText.length > 0 &&
+          child?.usage !== null &&
+          typeof child?.usage === "object" &&
+          ["input", "output", "cacheWrite", "cacheRead"].every(
+            (field) => typeof child.usage[field] === "number",
+          );
+        const complete = nestedChildren.length >= 1 && nestedChildren.every(childComplete);
+        const treeTotals = Object.fromEntries(
+          ["input", "output", "cacheWrite", "cacheRead"].map((field) => {
+            if (!complete || typeof usage[field] !== "number") return [field, null];
+            return [
+              field,
+              nestedChildren.reduce(
+                (sum, child) => sum + (typeof child.usage[field] === "number" ? child.usage[field] : 0),
+                usage[field],
+              ),
+            ];
+          }),
+        );
+        nestedRecord = {
+          rootNodeId: "root",
+          rootMode: nested.mode,
+          rootModel: nested.model,
+          rootThinkingLevel: nested.thinkingLevel ?? null,
+          children: nestedChildren,
+          childCount: nestedChildren.length,
+          complete,
+          treeTotals,
+          rawParentEvents: rawParentLines,
+        };
+      }
+      return {
+        text,
+        toolCall,
+        toolCalls,
+        toolCallCount,
+        assistantTurns,
+        usage,
+        rawUsage,
+        rawUsageTurns,
+        usageTurns,
+        costUsd,
+        elapsedMs,
+        timing,
+        toolMetrics,
+        sessionToolMetrics,
+        nested: nestedRecord,
+      };
+    } finally {
+      // Best-effort cleanup: a locked file must not fail the finished call.
+      try {
+        fs.rmSync(configDir, { recursive: true, force: true });
+      } catch {
+        // Leave the temp directory for the operating system to reap.
+      }
+      if (workspaceDir !== null) {
+        try {
+          fs.rmSync(workspaceDir, { recursive: true, force: true });
+        } catch {
+          // Leave the temp directory for the operating system to reap.
+        }
+      }
+    }
+  }
+  const WORKSPACE_TOOLS = [
+    "workspace_read",
+    "workspace_write",
+    "workspace_run_tests",
+    "handoff_to_subagent",
+    "handoff_to_parent",
+  ];
   return {
-    async execute({ mode, category }) {
-      const configDir = mkdtempImpl("caveman-pi-config-");
-      fs.writeFileSync(
-        path.join(configDir, "caveman-milk-pi.json"),
-        JSON.stringify({ schemaVersion: 1, mode, showStatus: false }, null, 2) + "\n",
-        { mode: 0o600 },
-      );
+    async execute({ mode, category, repetition }) {
+      const isWorkspaceCase = category.workspace !== undefined && category.workspace !== null;
+      const isNestedCase = category.nested === true;
+      if (isNestedCase && !isWorkspaceCase) {
+        throw new Error(
+          `Nested category '${category.id}' requires a workspace for the shared parent-child tree.`,
+        );
+      }
+      const cacheNonce = cachePromptStrategy === "unique-arm"
+        ? crypto.createHash("sha256").update(`${category.id}|${repetition}|${mode}`).digest("hex").substring(0, 16)
+        : cachePromptStrategy === "shared"
+          ? "shared-warm-v1"
+          : null;
       const args = [
         piBin,
         "--mode",
@@ -1441,86 +2755,87 @@ export function createPiRunner({
         "--no-skills",
         "--no-context-files",
         "--no-prompt-templates",
+        ...(isWorkspaceCase
+          ? [
+              "--tools",
+              (isNestedCase
+                ? [...WORKSPACE_TOOLS, "delegate_eval_child"]
+                : WORKSPACE_TOOLS
+              ).join(","),
+            ]
+          : category.expectsTool === true
+            ? ["--tools", "write_artifact"]
+            : ["--no-tools"]),
         "-e",
         extensionPath,
         "-e",
-        toolExtensionPath,
+        isWorkspaceCase ? workspaceExtensionPath : toolExtensionPath,
+        ...(isNestedCase ? ["-e", nestedExtensionPath] : []),
+        ...(cacheNonce === null ? [] : ["-e", cacheControlExtensionPath]),
         "--model",
         model,
+        ...(thinkingLevel === undefined ? [] : ["--thinking", thinkingLevel]),
         "-p",
         category.prompt,
       ];
-      try {
-        const startedAtMs = nowImpl();
-        const result = await spawnImpl(args, {
-          env: { ...baseEnv, CAVEMAN_MILK_CONFIG_DIR: configDir },
-          timeout: timeoutMs,
-        });
-        const elapsedMs = nowImpl() - startedAtMs;
-        if (result.code !== 0) {
-          throw new Error(
-            `pi runner exited with code ${result.code}: ${(result.stderr ?? "").substring(0, 500)}`,
-          );
-        }
-        let text = "";
-        let toolCall = null;
-        let toolCallCount = 0;
-        let usage = { input: null, output: null, cacheWrite: null, cacheRead: null };
-        let rawUsage = null;
-        let costUsd = null;
-        for (const line of (result.stdout ?? "").split("\n")) {
-          const trimmed = line.trim();
-          if (trimmed.length === 0) continue;
-          let event;
-          try {
-            event = JSON.parse(trimmed);
-          } catch {
-            continue;
-          }
-          if (event.type === "tool_execution_start") {
-            toolCallCount += 1;
-            if (event.toolName === "write_artifact") {
-              toolCall = { name: event.toolName, input: event.args };
+      const session = await runPiSession({
+        mode,
+        args,
+        workspace: isWorkspaceCase ? category.workspace : null,
+        cacheNonce,
+        nested: isNestedCase
+          ? {
+              piBin,
+              model,
+              thinkingLevel,
+              mode,
+              cavemanExtensionPath: extensionPath,
+              workspaceExtensionPath,
+              cacheControlExtensionPath,
+              cacheNonce,
             }
-          }
-          if (event.type === "message_end" && event.message?.role === "assistant") {
-            const message = event.message;
-            text = (message.content ?? [])
-              .filter((block) => block.type === "text")
-              .map((block) => block.text)
-              .join("");
-            if (message.usage !== undefined && message.usage !== null) {
-              usage = normalizeUsage(message.usage);
-              rawUsage = message.usage;
-              if (message.usage.cost && typeof message.usage.cost.total === "number") {
-                costUsd = message.usage.cost.total;
-              }
-            }
-          }
-        }
-        if (text.length === 0) {
-          throw new Error("pi runner produced no assistant text for the case.");
-        }
-        return {
-          text,
-          toolCall,
-          toolCallCount,
-          usage,
-          rawUsage,
-          attempts: 1,
-          elapsedMs,
-          costUsd,
-          systemPromptSent: null,
-          sessionId: null,
-        };
-      } finally {
-        // Best-effort cleanup: a locked file must not fail the finished call.
-        try {
-          fs.rmSync(configDir, { recursive: true, force: true });
-        } catch {
-          // Leave the temp directory for the operating system to reap.
-        }
+          : null,
+      });
+      if (session.text.length === 0 && session.toolCallCount === 0) {
+        throw new Error("pi runner produced no assistant text or tool call for the case.");
       }
+      return { ...session, attempts: 1, systemPromptSent: null, sessionId: null };
+    },
+    // Blinded judge session: system prompt is the committed judge prompt
+    // plus rubric, user content is the blinded task and responses only, the
+    // caveman extension runs with mode off, and tools stay disabled.
+    async executeJudge({ system, user, model: judgeModel }) {
+      const args = [
+        piBin,
+        "--mode",
+        "json",
+        "--no-extensions",
+        "--no-skills",
+        "--no-context-files",
+        "--no-prompt-templates",
+        "--no-tools",
+        "-e",
+        extensionPath,
+        "--system-prompt",
+        system,
+        "--model",
+        judgeModel ?? model,
+        ...(thinkingLevel === undefined ? [] : ["--thinking", thinkingLevel]),
+        "-p",
+        user,
+      ];
+      const session = await runPiSession({ mode: "off", args });
+      if (session.text.length === 0) {
+        throw new Error("pi runner produced no assistant text for the judge.");
+      }
+      return {
+        text: session.text,
+        usage: session.usage,
+        rawUsage: session.rawUsage,
+        rawUsageTurns: session.rawUsageTurns,
+        assistantTurns: session.assistantTurns,
+        costUsd: session.costUsd,
+      };
     },
   };
 }
@@ -1532,9 +2847,13 @@ function defaultSpawn(args, options) {
     // shell shims in .bin are not portable either. Route them through the
     // current node executable so the same piBin value works everywhere.
     const isJavaScriptEntryPoint = /\.(js|mjs|cjs)$/.test(command);
+    // Pi reads stdin to EOF before acting, so a piped-but-never-closed
+    // stdin makes every non-interactive run hang until the spawn timeout.
+    // Ignore stdin instead: the child sees an immediately closed stream.
+    const stdio = ["ignore", "pipe", "pipe"];
     const child = isJavaScriptEntryPoint
-      ? nodeSpawn(process.execPath, [command, ...commandArgs], options)
-      : nodeSpawn(command, commandArgs, options);
+      ? nodeSpawn(process.execPath, [command, ...commandArgs], { ...options, stdio })
+      : nodeSpawn(command, commandArgs, { ...options, stdio });
     let stdout = "";
     let stderr = "";
     child.stdout?.on("data", (chunk) => {
@@ -1544,14 +2863,33 @@ function defaultSpawn(args, options) {
       stderr += chunk;
     });
     child.on("error", reject);
-    child.on("close", (code) => resolve({ code: code ?? 0, stdout, stderr }));
+    child.on("close", (code, signal) => {
+      if (code === null) {
+        // A signal kill (for example the spawn timeout) is an explicit
+        // failure. Mapping it to exit code 0 masks the termination as an
+        // empty-output success path downstream.
+        const timeoutNote =
+          options?.timeout !== undefined ? ` (spawn timeout ${options.timeout}ms)` : "";
+        reject(
+          new Error(
+            `pi runner terminated by signal ${signal ?? "unknown"} before exiting${timeoutNote}`,
+          ),
+        );
+        return;
+      }
+      resolve({ code, stdout, stderr });
+    });
   });
 }
 
 async function main() {
-  const fixtures = loadFixtures();
+  const fixtures = loadFixtures(process.env.CAVEMAN_EVAL_FIXTURE_SET);
   const provider = process.env.CAVEMAN_EVAL_PROVIDER ?? "offline";
   validateProviderName(provider);
+  const gate = process.env.CAVEMAN_EVAL_GATE;
+  if (gate !== undefined && gate.length > 0 && gate !== "cost" && gate !== "release") {
+    throw new Error(`CAVEMAN_EVAL_GATE must be 'cost' or 'release'; got '${gate}'.`);
+  }
   const allowPaid = process.env.CAVEMAN_EVAL_ALLOW_PAID === "1";
   const maxPaidCalls = parseIntegerEnvironment(
     "CAVEMAN_EVAL_MAX_PAID_CALLS",
@@ -1583,12 +2921,14 @@ async function main() {
             "CAVEMAN_EVAL_PRICING",
             process.env.CAVEMAN_EVAL_PRICING,
           ),
+          gate: gate === undefined || gate.length === 0 ? undefined : gate,
           maxPaidCalls,
           baseSystemPromptOption: readBaseSystemPromptEnvironment(),
           checkpointPath: process.env.CAVEMAN_EVAL_CHECKPOINT,
           judge: process.env.CAVEMAN_EVAL_JUDGE === "1",
           judgeModel: process.env.CAVEMAN_EVAL_JUDGE_MODEL,
           piBinOption: process.env.CAVEMAN_EVAL_PI_BIN,
+          thinkingLevel: process.env.CAVEMAN_EVAL_THINKING_LEVEL,
           commitOverride: process.env.CAVEMAN_EVAL_COMMIT,
           timeoutMs: parseIntegerEnvironment(
             "CAVEMAN_EVAL_TIMEOUT_MS",
@@ -1598,6 +2938,9 @@ async function main() {
             "CAVEMAN_EVAL_MAX_ATTEMPTS",
             process.env.CAVEMAN_EVAL_MAX_ATTEMPTS,
           ),
+          pairOrderStrategy: process.env.CAVEMAN_EVAL_PAIR_ORDER,
+          cacheCondition: process.env.CAVEMAN_EVAL_CACHE_CONDITION,
+          cachePromptStrategy: process.env.CAVEMAN_EVAL_CACHE_PROMPT_STRATEGY,
         });
 
   const serialized = JSON.stringify(report, null, 2) + "\n";

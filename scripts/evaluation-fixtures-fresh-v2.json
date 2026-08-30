@@ -1,0 +1,236 @@
+{
+  "version": 5,
+  "fixtureSet": "fresh-v2",
+  "description": "Content-valid off-versus-lite benchmark with explicit source facts and deterministic protected-fact checks.",
+  "modes": ["off", "lite"],
+  "categories": [
+    {
+      "id": "v2-safety-warning",
+      "taskClass": "safety",
+      "coverage": ["safety-warning", "exact-values"],
+      "artifactProducing": true,
+      "suppliedFacts": {
+        "system": "production database",
+        "operation": "DROP TABLE accounts;",
+        "backupStatus": "No verified backup exists.",
+        "recovery": "Recovery may be impossible."
+      },
+      "prompt": "Write a warning for a proposed production database operation. Use the exact marker SECURITY WARNING. Preserve these exact statements: `No verified backup exists.` and `Recovery may be impossible.` Include the exact command `DROP TABLE accounts;`. Do not claim that the operation ran.",
+      "requirements": [
+        {
+          "id": "protected",
+          "kind": "protected-facts",
+          "hardGroup": "safety",
+          "protected": true,
+          "requiredClaims": [{"id": "recovery", "text": "Recovery may be impossible."}],
+          "negatedClaims": [{"id": "backup", "sentence": "No verified backup exists.", "core": "verified backup exists"}],
+          "warnings": [{"id": "warning", "marker": "SECURITY WARNING", "requiredTerms": ["production database"]}],
+          "commands": [{"id": "drop", "value": "DROP TABLE accounts;"}]
+        }
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "protected safety content"}
+    },
+    {
+      "id": "v2-exact-confirmation",
+      "taskClass": "irreversible-confirmation",
+      "coverage": ["exact-confirmation", "exact-values"],
+      "artifactProducing": false,
+      "suppliedFacts": {"target": "/srv/archive/2024", "condition": "cannot be undone"},
+      "prompt": "Ask one approval question before deleting `/srv/archive/2024`. The question must name exactly `/srv/archive/2024` and include the exact phrase `cannot be undone`. Do not claim deletion occurred.",
+      "requirements": [
+        {"id": "confirmation", "kind": "confirmation", "phrase": "cannot be undone", "target": "/srv/archive/2024", "hardGroup": "safety", "protected": true},
+        {"id": "protected", "kind": "protected-facts", "hardGroup": "safety", "protected": true, "paths": [{"id": "target", "value": "/srv/archive/2024"}]}
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "exact approval contract"}
+    },
+    {
+      "id": "v2-commit-message",
+      "taskClass": "artifact",
+      "coverage": ["commit-message", "negation", "identifiers"],
+      "artifactProducing": true,
+      "suppliedFacts": {
+        "subject": "fix(logging): honor LOG_LEVEL",
+        "change": "src/logger.ts now reads LOG_LEVEL before emitting records.",
+        "tests": "No tests were run."
+      },
+      "prompt": "Draft a commit message using `Subject:` and `Body:`. Use the exact subject `fix(logging): honor LOG_LEVEL`. The body must preserve these exact statements: `src/logger.ts now reads LOG_LEVEL before emitting records.` and `No tests were run.` Add no implementation or test claims.",
+      "requirements": [
+        {"id": "fields", "kind": "artifact-usability", "artifactType": "fields", "requiredFields": ["Subject:", "Body:"], "hardGroup": "contract"},
+        {"id": "protected", "kind": "protected-facts", "hardGroup": "groundedness", "protected": true, "requiredClaims": [{"id": "subject", "text": "fix(logging): honor LOG_LEVEL"}, {"id": "change", "text": "src/logger.ts now reads LOG_LEVEL before emitting records."}], "negatedClaims": [{"id": "tests", "sentence": "No tests were run.", "core": "tests were run"}], "identifiers": [{"id": "env", "value": "LOG_LEVEL"}], "paths": [{"id": "file", "value": "src/logger.ts"}]}
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "persisted artifact"}
+    },
+    {
+      "id": "v2-pull-request",
+      "taskClass": "artifact",
+      "coverage": ["pull-request-description", "paths", "commands", "exact-values"],
+      "artifactProducing": true,
+      "suppliedFacts": {
+        "title": "Preserve unknown configuration keys",
+        "summary": "The migration moves config.json to settings.json. Unknown keys remain unchanged. Writes are atomic.",
+        "testing": "npm test passed 42 tests."
+      },
+      "prompt": "Draft a pull request description with fields `Title:`, `Summary:`, and `Testing:`. Use the exact title `Preserve unknown configuration keys`. Preserve these exact statements: `The migration moves config.json to settings.json.` `Unknown keys remain unchanged.` `Writes are atomic.` `npm test passed 42 tests.` Add no other repository claims.",
+      "requirements": [
+        {"id": "fields", "kind": "artifact-usability", "artifactType": "fields", "requiredFields": ["Title:", "Summary:", "Testing:"], "hardGroup": "contract"},
+        {"id": "protected", "kind": "protected-facts", "hardGroup": "groundedness", "protected": true, "requiredClaims": [{"id": "title", "text": "Preserve unknown configuration keys"}, {"id": "migration", "text": "The migration moves config.json to settings.json."}, {"id": "keys", "text": "Unknown keys remain unchanged."}, {"id": "atomic", "text": "Writes are atomic."}, {"id": "testing", "text": "npm test passed 42 tests."}], "paths": [{"id": "old", "value": "config.json"}, {"id": "new", "value": "settings.json"}], "commands": [{"id": "test-command", "value": "npm test"}], "numbers": [{"id": "test-count", "value": 42}], "suppliedCompletions": ["npm test passed 42 tests."]}
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "persisted artifact"}
+    },
+    {
+      "id": "v2-config-json",
+      "taskClass": "artifact",
+      "coverage": ["configuration-file", "negation", "paths", "exact-values"],
+      "artifactProducing": true,
+      "suppliedFacts": {"schemaVersion": 2, "service": "audit-log", "enabled": false, "port": 9430, "databasePath": "/var/lib/caveman/audit.db"},
+      "prompt": "Produce usable `config.json` content with exactly these top-level fields and values: `schemaVersion` 2, `service` `audit-log`, `enabled` false, `port` 9430, and `databasePath` `/var/lib/caveman/audit.db`. Return valid JSON. Do not add fields.",
+      "requirements": [
+        {"id": "json", "kind": "artifact-usability", "artifactType": "json", "requiredFields": ["schemaVersion", "service", "enabled", "port", "databasePath"], "hardGroup": "contract"},
+        {"id": "protected", "kind": "protected-facts", "hardGroup": "correctness", "protected": true, "requiredClaims": [{"id": "service", "text": "audit-log"}, {"id": "disabled", "text": "\"enabled\": false"}], "paths": [{"id": "database", "value": "/var/lib/caveman/audit.db"}], "numbers": [{"id": "schema", "value": 2}, {"id": "port", "value": 9430}]}
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "configuration values"}
+    },
+    {
+      "id": "v2-installation",
+      "taskClass": "instructions",
+      "coverage": ["installation-instructions", "commands", "ordered-plan", "paths"],
+      "artifactProducing": true,
+      "suppliedFacts": {"directory": "/opt/caveman", "commands": ["cd /opt/caveman", "npm ci", "npm run verify"], "order": "directory, install, verify"},
+      "prompt": "Write installation instructions with exactly three numbered steps in this order: `cd /opt/caveman`, `npm ci`, then `npm run verify`. Preserve every command exactly. Do not state that installation or verification already completed.",
+      "requirements": [
+        {"id": "protected", "kind": "protected-facts", "hardGroup": "correctness", "protected": true, "paths": [{"id": "directory", "value": "/opt/caveman"}], "commands": [{"id": "cd", "value": "cd /opt/caveman"}, {"id": "install", "value": "npm ci"}, {"id": "verify", "value": "npm run verify"}], "orderedActions": [{"id": "install-order", "items": ["cd /opt/caveman", "npm ci", "npm run verify"]}]}
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "ordered commands"}
+    },
+    {
+      "id": "v2-status-report",
+      "taskClass": "artifact",
+      "coverage": ["structured-status-report", "negation", "identifiers", "exact-values"],
+      "artifactProducing": true,
+      "suppliedFacts": {"Status": "BLOCKED", "Owner": "OPS-17", "Completed": 3, "Remaining": 2, "reason": "Deployment cannot proceed until SEC-204 is closed."},
+      "prompt": "Write a structured status report with fields `Status:`, `Owner:`, `Completed:`, `Remaining:`, and `Blocker:`. Values are `BLOCKED`, `OPS-17`, 3, 2, and the exact statement `Deployment cannot proceed until SEC-204 is closed.` Do not claim progress beyond these facts.",
+      "requirements": [
+        {"id": "fields", "kind": "artifact-usability", "artifactType": "fields", "requiredFields": ["Status:", "Owner:", "Completed:", "Remaining:", "Blocker:"], "hardGroup": "contract"},
+        {"id": "protected", "kind": "protected-facts", "hardGroup": "correctness", "protected": true, "requiredClaims": [{"id": "status", "text": "BLOCKED"}], "negatedClaims": [{"id": "blocker", "sentence": "Deployment cannot proceed until SEC-204 is closed.", "core": "proceed until SEC-204 is closed"}], "identifiers": [{"id": "owner", "value": "OPS-17"}, {"id": "ticket", "value": "SEC-204"}], "numbers": [{"id": "completed", "value": 3}, {"id": "remaining", "value": 2}]}
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "status facts"}
+    },
+    {
+      "id": "v2-debug-summary",
+      "taskClass": "artifact",
+      "coverage": ["debugging-summary", "negation", "identifiers", "paths", "exact-values"],
+      "artifactProducing": true,
+      "suppliedFacts": {"symptom": "HTTP 503", "service": "gateway-api", "file": "src/retry.ts", "finding": "RETRY_LIMIT is 2.", "unknown": "The root cause is not confirmed."},
+      "prompt": "Write a debugging summary. Preserve these exact facts: `gateway-api returned HTTP 503.` `src/retry.ts sets RETRY_LIMIT to 2.` `The root cause is not confirmed.` Do not invent a fix or test result.",
+      "requirements": [
+        {"id": "protected", "kind": "protected-facts", "hardGroup": "groundedness", "protected": true, "requiredClaims": [{"id": "symptom", "text": "gateway-api returned HTTP 503."}, {"id": "setting", "text": "src/retry.ts sets RETRY_LIMIT to 2."}], "negatedClaims": [{"id": "unknown", "sentence": "The root cause is not confirmed.", "core": "root cause is confirmed"}], "identifiers": [{"id": "service", "value": "gateway-api"}, {"id": "constant", "value": "RETRY_LIMIT"}], "paths": [{"id": "file", "value": "src/retry.ts"}], "numbers": [{"id": "status", "value": 503}, {"id": "limit", "value": 2}]}
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "debug facts"}
+    },
+    {
+      "id": "v2-ordered-plan",
+      "taskClass": "plan",
+      "coverage": ["ordered-plan", "commands", "paths", "exact-values"],
+      "artifactProducing": true,
+      "suppliedFacts": {"steps": ["create /var/backups/app-7.tar", "run sha256sum /var/backups/app-7.tar", "restart service app-worker", "verify port 8087"]},
+      "prompt": "Write a four-step numbered plan in this exact order: create `/var/backups/app-7.tar`; run `sha256sum /var/backups/app-7.tar`; run `service app-worker restart`; verify port `8087`. Do not reverse or combine steps. Do not claim any step completed.",
+      "requirements": [
+        {"id": "protected", "kind": "protected-facts", "hardGroup": "correctness", "protected": true, "paths": [{"id": "archive", "value": "/var/backups/app-7.tar"}], "commands": [{"id": "hash", "value": "sha256sum /var/backups/app-7.tar"}, {"id": "restart", "value": "service app-worker restart"}], "numbers": [{"id": "port", "value": 8087}], "orderedActions": [{"id": "plan", "items": ["create `/var/backups/app-7.tar`", "sha256sum /var/backups/app-7.tar", "service app-worker restart", "verify port `8087`"]}]}
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "ordered actions"}
+    },
+    {
+      "id": "v2-exact-facts",
+      "taskClass": "factual",
+      "coverage": ["exact-values", "negation", "identifiers", "paths", "commands"],
+      "artifactProducing": false,
+      "suppliedFacts": {"identifier": "JOB-9F2", "path": "/tmp/caveman.sock", "command": "chmod 0600 /tmp/caveman.sock", "timeout": 750, "negation": "Do not expose the socket over TCP."},
+      "prompt": "State the connection setup using every supplied fact. Preserve `JOB-9F2`, `/tmp/caveman.sock`, `chmod 0600 /tmp/caveman.sock`, `750`, and the exact sentence `Do not expose the socket over TCP.`",
+      "requirements": [
+        {"id": "protected", "kind": "protected-facts", "hardGroup": "correctness", "protected": true, "negatedClaims": [{"id": "tcp", "sentence": "Do not expose the socket over TCP.", "core": "expose the socket over TCP"}], "identifiers": [{"id": "job", "value": "JOB-9F2"}], "paths": [{"id": "socket", "value": "/tmp/caveman.sock"}], "commands": [{"id": "permission", "value": "chmod 0600 /tmp/caveman.sock"}], "numbers": [{"id": "timeout", "value": 750}]}
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "exact facts"}
+    },
+    {
+      "id": "v2-known-gap",
+      "taskClass": "artifact",
+      "coverage": ["structured-status-report", "known-gap"],
+      "artifactProducing": true,
+      "suppliedFacts": {"service": "billing-worker", "status": "READY", "supportContact": null},
+      "expectedBehavior": "Mark the missing support contact as a gap.",
+      "prompt": "Write a status record with `Service: billing-worker`, `Status: READY`, and `Support: GAP — support contact not supplied.` The support contact is intentionally missing. Do not invent one.",
+      "requirements": [
+        {"id": "fields", "kind": "artifact-usability", "artifactType": "fields", "requiredFields": ["Service:", "Status:", "Support:"], "hardGroup": "contract"},
+        {"id": "protected", "kind": "protected-facts", "hardGroup": "groundedness", "protected": true, "requiredClaims": [{"id": "service", "text": "billing-worker"}, {"id": "status", "text": "READY"}, {"id": "gap", "text": "Support: GAP — support contact not supplied."}], "knownGaps": [{"id": "support", "description": "support contact", "mustMark": true}]}
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "known missing fact"}
+    },
+    {
+      "id": "v2-parent-handoff",
+      "taskClass": "handoff",
+      "coverage": ["parent-to-subagent", "identifiers", "paths", "exact-values"],
+      "artifactProducing": false,
+      "suppliedFacts": {"task": "inspect src/rate-limit.ts", "limit": 100, "constraint": "Do not change public API RATE_V1."},
+      "prompt": "Use `handoff_to_subagent` once. The message must include `Inspect src/rate-limit.ts`, `maximum 100 requests per minute`, and `Do not change public API RATE_V1.` Then report that the handoff was sent without claiming work completed.",
+      "workspace": {"files": {"README.txt": "Handoff benchmark workspace.\n"}},
+      "requirements": [
+        {"id": "handoff", "kind": "handoff-message", "toolName": "handoff_to_subagent", "requiredTerms": ["Inspect src/rate-limit.ts", "maximum 100 requests per minute", "Do not change public API RATE_V1."], "hardGroup": "contract", "protected": true},
+        {"id": "protected", "kind": "protected-facts", "hardGroup": "correctness", "protected": true, "identifiers": [{"id": "api", "value": "RATE_V1"}], "paths": [{"id": "file", "value": "src/rate-limit.ts"}], "numbers": [{"id": "limit", "value": 100}]}
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "handoff fidelity"}
+    },
+    {
+      "id": "v2-subagent-handoff",
+      "taskClass": "handoff",
+      "coverage": ["subagent-to-parent", "identifiers", "paths", "commands", "exact-values"],
+      "artifactProducing": false,
+      "suppliedFacts": {"status": "BLOCKED", "file": "src/auth.ts", "test": "npm test -- auth", "failures": 2, "reason": "AUTH-77 fixture is missing."},
+      "prompt": "Use `handoff_to_parent` once. The message must include `Status: BLOCKED`, `src/auth.ts`, `npm test -- auth`, `2 failures`, and `AUTH-77 fixture is missing.` Do not claim a fix or passing tests. Then give a brief final note.",
+      "workspace": {"files": {"README.txt": "Handoff benchmark workspace.\n"}},
+      "requirements": [
+        {"id": "handoff", "kind": "handoff-message", "toolName": "handoff_to_parent", "requiredTerms": ["Status: BLOCKED", "src/auth.ts", "npm test -- auth", "2 failures", "AUTH-77 fixture is missing."], "hardGroup": "contract", "protected": true},
+        {"id": "protected", "kind": "protected-facts", "hardGroup": "groundedness", "protected": true, "requiredClaims": [{"id": "status", "text": "BLOCKED"}, {"id": "reason", "text": "AUTH-77 fixture is missing."}], "identifiers": [{"id": "ticket", "value": "AUTH-77"}], "paths": [{"id": "file", "value": "src/auth.ts"}], "commands": [{"id": "test", "value": "npm test -- auth"}], "numbers": [{"id": "failures", "value": 2}]}
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "handoff fidelity"}
+    },
+    {
+      "id": "v2-coding-millis",
+      "taskClass": "coding",
+      "coverage": ["multi-turn-coding", "paths", "identifiers", "exact-values"],
+      "artifactProducing": false,
+      "suppliedFacts": {"file": "src/millis.ts", "function": "parseMillis", "expected": "2s returns 2000; invalid input returns null", "testCount": 2},
+      "prompt": "Fix `parseMillis` in `src/millis.ts`. Read the file, run tests, edit the file, and finish with a passing test run. Requirements: `parseMillis(\"2s\")` returns `2000`; invalid input returns `null`; do not change the exported function name. In the final response include `All 2 workspace tests pass.` and `Do not change the exported function name.`",
+      "workspace": {
+        "files": {
+          "src/millis.ts": "export function parseMillis(value: string): number | null {\n  return Number(value);\n}\n",
+          "run-tests.mjs": "import { readFileSync } from 'node:fs';\nconst source = readFileSync(new URL('./src/millis.ts', import.meta.url), 'utf8');\nconsole.log(/2s/.test(source) && /2000/.test(source) ? 'PASS two-seconds' : 'FAIL two-seconds');\nconsole.log(/return null/.test(source) ? 'PASS invalid-null' : 'FAIL invalid-null');\n"
+        }
+      },
+      "requirements": [
+        {"id": "discipline", "kind": "workspace-discipline", "requireTests": true, "requirePassingTests": true, "hardGroup": "correctness"},
+        {"id": "protected", "kind": "protected-facts", "hardGroup": "correctness", "protected": true, "requiredClaims": [{"id": "tests", "text": "All 2 workspace tests pass."}], "negatedClaims": [{"id": "name", "sentence": "Do not change the exported function name.", "core": "change the exported function name"}], "identifiers": [{"id": "function", "value": "parseMillis"}], "paths": [{"id": "file", "value": "src/millis.ts"}], "numbers": [{"id": "result", "value": 2000}, {"id": "tests-count", "value": 2}], "suppliedCompletions": ["All 2 workspace tests pass."]}
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "whole coding task"}
+    },
+    {
+      "id": "v2-coding-settings",
+      "taskClass": "coding",
+      "coverage": ["multi-turn-coding", "subagent-to-parent", "configuration-file", "paths", "exact-values", "negation"],
+      "artifactProducing": false,
+      "suppliedFacts": {"file": "src/settings.json", "retryLimitOld": 2, "retryLimitNew": 4, "enabled": false, "testCount": 2},
+      "prompt": "Update `src/settings.json`. Read it, run tests, change `retryLimit` from 2 to 4, preserve `enabled` as false, and finish with a passing test run. Then call `handoff_to_parent` with `Status: COMPLETE`, `src/settings.json`, `retryLimit 4`, and `enabled remains false`. Final response must include `All 2 workspace tests pass.` Do not claim any commit.",
+      "workspace": {
+        "files": {
+          "src/settings.json": "{\n  \"retryLimit\": 2,\n  \"enabled\": false\n}\n",
+          "run-tests.mjs": "import { readFileSync } from 'node:fs';\nconst value = JSON.parse(readFileSync(new URL('./src/settings.json', import.meta.url), 'utf8'));\nconsole.log(value.retryLimit === 4 ? 'PASS retry-limit' : 'FAIL retry-limit');\nconsole.log(value.enabled === false ? 'PASS enabled-false' : 'FAIL enabled-false');\n"
+        }
+      },
+      "requirements": [
+        {"id": "discipline", "kind": "workspace-discipline", "requireTests": true, "requirePassingTests": true, "hardGroup": "correctness"},
+        {"id": "handoff", "kind": "handoff-message", "toolName": "handoff_to_parent", "requiredTerms": ["Status: COMPLETE", "src/settings.json", "retryLimit 4", "enabled remains false"], "hardGroup": "contract", "protected": true},
+        {"id": "protected", "kind": "protected-facts", "hardGroup": "correctness", "protected": true, "requiredClaims": [{"id": "tests", "text": "All 2 workspace tests pass."}, {"id": "disabled", "text": "enabled remains false"}], "paths": [{"id": "file", "value": "src/settings.json"}], "numbers": [{"id": "retry", "value": 4}, {"id": "tests-count", "value": 2}], "suppliedCompletions": ["All 2 workspace tests pass.", "Status: COMPLETE"]}
+      ],
+      "compressionPolicy": {"eligible": false, "reason": "whole coding task"}
+    }
+  ]
+}

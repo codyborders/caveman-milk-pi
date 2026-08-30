@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "fixtureFrozenBeforeTrials": true,
+  "artifacts": [
+    {
+      "path": "scripts/evaluation-fixtures-fresh-v3.json",
+      "sha256": "df12469c154635f1c00cebb6490e6fcacbd78dfcae584eb5c10b27ddf13c37d3",
+      "role": "frozen-holdout"
+    },
+    {
+      "path": "evaluation/results/fresh-v3-tool-preflight.json",
+      "sha256": "2286c12494bc2abe74b4faaf0a53a4815df347b532c8a866d4d07a6b3445e747",
+      "role": "raw-preflight"
+    },
+    {
+      "path": "evaluation/results/fresh-v3-warmup-shared-v1.json",
+      "sha256": "f2c4077f2fab086fa5cf8aab361e7fe168fd891f25ede64b0a0190a93884721d",
+      "role": "raw-warmup"
+    },
+    {
+      "path": "evaluation/results/fresh-v3-cold-controlled-v1.json",
+      "sha256": "aa66de789202ab1fdec1dac8e52b46e2c1f4afdf0bfe3dbd3d729d7d5f4cc5b0",
+      "role": "raw-controlled-cold"
+    },
+    {
+      "path": "evaluation/results/fresh-v3-warm-controlled-v1.json",
+      "sha256": "a067827682e94f23884fc7bc7840f97d3ab81ac4ca75d3cc035610e7d9d3a482",
+      "role": "raw-controlled-warm"
+    },
+    {
+      "path": "evaluation/results/fresh-v3-analysis-v1.json",
+      "sha256": "5864e0852f72d11643a54c403b770162f970d563e8623ef255a9713afc093fc8",
+      "role": "derived-analysis"
+    },
+    {
+      "path": "evaluation/results/fresh-v3-analysis-v1.md",
+      "sha256": "f635a07e543c1384b81fe09eaa55367f7c080e50595ec395bfb4e9e341fdea2e",
+      "role": "derived-analysis-prose"
+    },
+    {
+      "path": "evaluation/results/fresh-v3-analysis-v2.json",
+      "sha256": "552584c97ccec684f73d5af85af8bfac437b5ec386aa5507481a7979001e2d6f",
+      "role": "derived-analysis-v2"
+    },
+    {
+      "path": "evaluation/results/fresh-v3-analysis-v2.md",
+      "sha256": "2de8153c1da5d8ea8aa21f8409730c63459c105457040edb2f29f63bdfc6fbc2",
+      "role": "derived-analysis-v2-prose"
+    },
+    {
+      "path": "evaluation/results/fresh-v3-pr-summary-v2.md",
+      "sha256": "132b4e6f67e8b4a4db1819c79fdc01da50215d06e8c95594f0d388b316fa00ce",
+      "role": "derived-pr-summary-v2"
+    }
+  ]
+}

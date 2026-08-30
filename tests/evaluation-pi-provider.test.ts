@@ -52,4 +52,34 @@ describe("pi provider routing", () => {
       cost: { total: 0.0005 },
     });
   });
+
+  it("passes captured Pi tool calls into deterministic validators", async () => {
+    const toolJsonl = [
+      JSON.stringify({
+        type: "tool_execution_start",
+        toolName: "write_artifact",
+        args: { content: "Configuration remains valid after restart." },
+      }),
+      JSON.stringify({
+        type: "message_end",
+        message: {
+          role: "assistant",
+          content: [{ type: "text", text: "Stored." }],
+          usage: { input: 50, output: 4, cacheRead: 10, cacheWrite: 5 },
+        },
+      }),
+    ].join("\n");
+
+    const report = await evaluate.runProviderEvaluation(
+      baseOptions("unused://endpoint", {
+        provider: "pi",
+        apiKey: undefined,
+        categories: ["tool-argument"],
+        spawnImpl: async () => ({ code: 0, stdout: toolJsonl, stderr: "" }),
+      }),
+    );
+
+    expect(report.results.every((result) => result.toolCall?.name === "write_artifact")).toBe(true);
+    expect(report.results.every((result) => result.validationPassed)).toBe(true);
+  });
 });

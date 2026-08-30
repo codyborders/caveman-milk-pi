@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "experiment": "lite-v10",
+  "description": "Prompt contract v10 experiment baseline. The v9 common contract, mode rules, canonical hash, and fully injected runtime prompts are preserved byte for byte for regression comparison.",
+  "baseline": {
+    "contractVersion": 9,
+    "contract": {
+      "version": 9,
+      "commonRules": "Obey constraints. Copy required wording exactly. Preserve negation, warnings, identifiers, paths, values, and step order. Keep code, commands, tool arguments, files, persisted artifacts, commits, PRs, and docs usable and complete. Artifacts: requested fields from supplied facts. No other text. Mark gaps. For confirmation requests, ask \"Do you approve [action] [exact target]?\" Then wait. ",
+      "modeRules": {
+        "lite": "Use concise complete prose.",
+        "full": "Be concise.",
+        "ultra": "Use fewest clear words. State each fact once.",
+        "wenyan-lite": "Chinese: light literary style. Other languages: concise and unchanged.",
+        "wenyan": "Chinese: literary style. Other languages: concise and unchanged.",
+        "wenyan-ultra": "Chinese: shortest literary style. Other languages: concise and unchanged."
+      },
+      "tokenAccounting": {
+        "method": "provider-count-endpoint",
+        "endpointPath": "/v1/messages/count_tokens",
+        "status": "not-run",
+        "exactCountsByModel": {}
+      }
+    },
+    "contractSha256": "3611fa174ef844d6323a1e1f28428c78d00316588607d6f0b68df62e58734d49",
+    "runtimePrompts": {
+      "off": "",
+      "lite": "\n\nCAVEMAN MODE ACTIVE — level: lite\nObey constraints. Copy required wording exactly. Preserve negation, warnings, identifiers, paths, values, and step order. Keep code, commands, tool arguments, files, persisted artifacts, commits, PRs, and docs usable and complete. Artifacts: requested fields from supplied facts. No other text. Mark gaps. For confirmation requests, ask \"Do you approve [action] [exact target]?\" Then wait. Use concise complete prose.",
+      "full": "\n\nCAVEMAN MODE ACTIVE — level: full\nObey constraints. Copy required wording exactly. Preserve negation, warnings, identifiers, paths, values, and step order. Keep code, commands, tool arguments, files, persisted artifacts, commits, PRs, and docs usable and complete. Artifacts: requested fields from supplied facts. No other text. Mark gaps. For confirmation requests, ask \"Do you approve [action] [exact target]?\" Then wait. Be concise.",
+      "ultra": "\n\nCAVEMAN MODE ACTIVE — level: ultra\nObey constraints. Copy required wording exactly. Preserve negation, warnings, identifiers, paths, values, and step order. Keep code, commands, tool arguments, files, persisted artifacts, commits, PRs, and docs usable and complete. Artifacts: requested fields from supplied facts. No other text. Mark gaps. For confirmation requests, ask \"Do you approve [action] [exact target]?\" Then wait. Use fewest clear words. State each fact once.",
+      "wenyan-lite": "\n\nCAVEMAN MODE ACTIVE — level: wenyan-lite\nObey constraints. Copy required wording exactly. Preserve negation, warnings, identifiers, paths, values, and step order. Keep code, commands, tool arguments, files, persisted artifacts, commits, PRs, and docs usable and complete. Artifacts: requested fields from supplied facts. No other text. Mark gaps. For confirmation requests, ask \"Do you approve [action] [exact target]?\" Then wait. Chinese: light literary style. Other languages: concise and unchanged.",
+      "wenyan": "\n\nCAVEMAN MODE ACTIVE — level: wenyan-full\nObey constraints. Copy required wording exactly. Preserve negation, warnings, identifiers, paths, values, and step order. Keep code, commands, tool arguments, files, persisted artifacts, commits, PRs, and docs usable and complete. Artifacts: requested fields from supplied facts. No other text. Mark gaps. For confirmation requests, ask \"Do you approve [action] [exact target]?\" Then wait. Chinese: literary style. Other languages: concise and unchanged.",
+      "wenyan-ultra": "\n\nCAVEMAN MODE ACTIVE — level: wenyan-ultra\nObey constraints. Copy required wording exactly. Preserve negation, warnings, identifiers, paths, values, and step order. Keep code, commands, tool arguments, files, persisted artifacts, commits, PRs, and docs usable and complete. Artifacts: requested fields from supplied facts. No other text. Mark gaps. For confirmation requests, ask \"Do you approve [action] [exact target]?\" Then wait. Chinese: shortest literary style. Other languages: concise and unchanged."
+    },
+    "injected": {
+      "off": {
+        "characters": 0,
+        "estimatedTokens": 0
+      },
+      "lite": {
+        "characters": 453,
+        "estimatedTokens": 113,
+        "sourceHash": "8a9105956e558a0c"
+      },
+      "full": {
+        "characters": 437,
+        "estimatedTokens": 109,
+        "sourceHash": "d253acd59b8fd64b"
+      },
+      "ultra": {
+        "characters": 472,
+        "estimatedTokens": 118,
+        "sourceHash": "186940604cbe772f"
+      },
+      "wenyan-lite": {
+        "characters": 503,
+        "estimatedTokens": 126,
+        "sourceHash": "51f4c64da67f3abc"
+      },
+      "wenyan": {
+        "characters": 497,
+        "estimatedTokens": 124,
+        "sourceHash": "daa4d48ca633d6a1"
+      },
+      "wenyan-ultra": {
+        "characters": 507,
+        "estimatedTokens": 127,
+        "sourceHash": "dbf8ed1f3087426d"
+      }
+    }
+  },
+  "target": {
+    "scope": "Replace only the active common contract. Mode rules, header, and the empty off arm stay unchanged.",
+    "measurement": "Fully injected estimated tokens use Math.round(characters / 4) over the header, common rules, and mode rule for each active mode.",
+    "minimumFullyInjectedTokenReduction": 0.25
+  }
+}

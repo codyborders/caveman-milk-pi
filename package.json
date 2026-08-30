@@ -37,10 +37,6 @@
     "index.ts",
     "src/",
     "skill/",
-    "scripts/evaluate.mjs",
-    "scripts/evaluation-fixtures.json",
-    "scripts/sync-skill.sh",
-    "scripts/eval/",
     "README.md",
     "CREDITS.md",
     "LICENSE"
@@ -52,12 +48,14 @@
     "typecheck": "tsc --noEmit",
     "evaluate": "node scripts/evaluate.mjs",
     "evaluate:offline": "node scripts/evaluate.mjs",
+    "eval:v10-check": "node scripts/eval/prompt-contract-v10-dev-check.mjs",
+    "rescore:offline": "node scripts/eval/rescore.mjs",
     "test:package": "node scripts/smoke-packed.mjs"
   },
   "devDependencies": {
     "@earendil-works/pi-coding-agent": "0.84.3",
-    "@types/node": "^25.6.0",
     "typescript": "^6.0.2",
+    "@types/node": "^25.6.0",
     "vitest": "^4.1.4"
   }
 }

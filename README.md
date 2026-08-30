@@ -22,14 +22,16 @@ The compact generator replaces the former filtered-markdown injector. Measuremen
 
 | Mode | Former characters | Current characters | Former estimated tokens | Current estimated tokens |
 | --- | ---: | ---: | ---: | ---: |
-| `lite` | 4,276 | 453 | 1,069 | 113 |
-| `full` | 4,216 | 437 | 1,054 | 109 |
-| `ultra` | 4,213 | 472 | 1,054 | 118 |
-| `wenyan-lite` | 4,103 | 503 | 1,026 | 126 |
-| `wenyan` | 4,262 | 497 | 1,066 | 124 |
-| `wenyan-ultra` | 4,158 | 507 | 1,040 | 127 |
+| `lite` | 4,276 | 321 | 1,069 | 80 |
+| `full` | 4,216 | 305 | 1,054 | 76 |
+| `ultra` | 4,213 | 340 | 1,054 | 85 |
+| `wenyan-lite` | 4,103 | 371 | 1,026 | 93 |
+| `wenyan` | 4,262 | 365 | 1,066 | 91 |
+| `wenyan-ultra` | 4,158 | 375 | 1,040 | 94 |
 
-Prompt contract v9 has SHA-256 `3611fa174ef844d6323a1e1f28428c78d00316588607d6f0b68df62e58734d49`. Mode `off` remains empty.
+Prompt contract v10 has SHA-256 `fe4efd2e266e3e9d7304a5d74f76b96567c3ac489de276a24d2efb115447e27b`. Mode `off` remains empty.
+
+Contract v10 replaces only the common rules. It cuts fully injected estimated tokens by at least 25 percent on every active mode against v9. The v9 baseline text, runtime prompts, and hash are preserved in `evaluation/prompt-experiment-v10.json`. Run `npm run eval:v10-check` for the deterministic development checks.
 
 `src/prompt-contract.json` records the exact common text and its trailing ASCII space.
 
@@ -135,6 +137,10 @@ Repeated calls within one mode return identical text. A mode change intentionall
 ## Evaluation
 
 The repository includes preserved pilot-v1 inputs plus named benchmark-regression-v2 and fresh-v1 fixture sets. New sets use schema 4 structured `requirements[]` as the single source for hard checks and protected content.
+
+The `fresh-v2` set serves as the locked development regression input for contract checks. The `fresh-v3` set adds direct and nested categories. Nested categories run a parent Pi process that calls the `delegate_eval_child` tool. That tool spawns a real child Pi process with the same model, thinking level, caveman mode, repository extension, isolated config, and shared workspace. Reports retain node identifiers, per-node usage, complete-tree totals, raw parent events, and child events through the tool result. The `nested-delegation` requirement fails any incomplete tree.
+
+Reports carry a `cacheVerification` block. It classifies every off-versus-lite pair as both-zero, both-positive, or mixed. A labeled cold or warm condition only counts when observed cache reads prove it on every pair. Mixed pairs stay in raw results. The deterministic `scripts/eval/fresh-v3-analysis.mjs` reads the controlled runs, verifies eligibility, pairs total tree tokens with root, first-token, and generation latency, and splits user-facing from inter-agent preservation. Its four conjunctive gates keep the default mode `off` unless every gate passes.
 
 Fixtures cover factual answers, explanations, code, ordered steps, safety warnings, irreversible confirmations, document artifacts, file output, commit fields, PR fields, and under-specified clarification.
 

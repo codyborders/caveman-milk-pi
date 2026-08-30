@@ -899,6 +899,99 @@ const VALIDATORS = {
           : `handoff violations: ${findings.map((finding) => `${finding.type}(${finding.id})`).join(", ")}.`,
     };
   },
+  // Nested delegation: the parent must call the delegation tool with a
+  // complete child task, and the retained tree must contain every child node
+  // with a response and complete usage. An incomplete tree always fails.
+  "nested-delegation": (_text, config, context) => {
+    const toolName = String(config.toolName ?? "");
+    if (toolName.length === 0) {
+      throw new Error("nested-delegation requires a non-empty 'toolName' option.");
+    }
+    const requiredTerms = Array.isArray(config.requiredTerms) ? config.requiredTerms.map(String) : [];
+    const requiredChildResponseTerms = Array.isArray(config.requiredChildResponseTerms)
+      ? config.requiredChildResponseTerms.map(String)
+      : [];
+    const requiredChildren = Number(config.requiredChildren ?? 1);
+    const nested = context.nested ?? null;
+    const calls = (context.toolCalls ?? []).filter((call) => call?.name === toolName);
+    const findings = [];
+    if (calls.length < requiredChildren) {
+      findings.push({
+        type: "delegation-missing",
+        id: toolName,
+        detail: `expected at least ${requiredChildren} ${toolName} call(s) but ${calls.length} were recorded.`,
+      });
+    } else if (requiredTerms.length > 0) {
+      const taskOf = (call) => String(call?.input?.task ?? call?.input?.message ?? "");
+      for (const term of requiredTerms) {
+        if (!calls.some((call) => semanticContains(taskOf(call), term))) {
+          findings.push({
+            type: "delegation-term-missing",
+            id: term,
+            detail: `${toolName} task is missing required content '${term}'.`,
+          });
+        }
+      }
+    }
+    if (nested === null) {
+      findings.push({
+        type: "incomplete-tree",
+        id: "tree",
+        detail: "no nested tree record is available for this case.",
+      });
+    } else {
+      const children = Array.isArray(nested.children) ? nested.children : [];
+      if (nested.complete !== true || children.length < requiredChildren) {
+        findings.push({
+          type: "incomplete-tree",
+          id: "tree",
+          detail: `nested tree is incomplete: ${children.length} child node(s) recorded.`,
+        });
+      }
+      for (const child of children) {
+        const nodeId = String(child?.nodeId ?? "child");
+        if (typeof child?.responseText !== "string" || child.responseText.length === 0) {
+          findings.push({
+            type: "child-response-missing",
+            id: nodeId,
+            detail: "child node has no retained response text.",
+          });
+        }
+        const usage = child?.usage;
+        if (
+          usage === null ||
+          typeof usage !== "object" ||
+          ["input", "output", "cacheWrite", "cacheRead"].some(
+            (field) => typeof usage[field] !== "number",
+          )
+        ) {
+          findings.push({
+            type: "child-usage-missing",
+            id: nodeId,
+            detail: "child node has no complete usage record.",
+          });
+        }
+      }
+      for (const term of requiredChildResponseTerms) {
+        if (!children.some((child) => semanticContains(String(child?.responseText ?? ""), term))) {
+          findings.push({
+            type: "child-handoff-term-missing",
+            id: term,
+            detail: `child response is missing required content '${term}'.`,
+          });
+        }
+      }
+    }
+    return {
+      id: "nested-delegation",
+      passed: findings.length === 0,
+      findings,
+      detail:
+        findings.length === 0
+          ? `${toolName} called with a complete task and a complete tree.`
+          : `nested delegation violations: ${findings.map((finding) => `${finding.type}(${finding.id})`).join(", ")}.`,
+    };
+  },
   // Workspace discipline: measured session behavior decides the check. A
   // coding case that never runs tests, or that ends right after failing
   // tests without an assistant corrective turn, fails deterministically.
@@ -1678,6 +1771,15 @@ export function runRequirements(text, requirements = [], context = {}) {
           id: "handoff-message",
           toolName: requirement.toolName,
           requiredTerms: requirement.requiredTerms,
+        });
+        break;
+      case "nested-delegation":
+        validatorConfigs.push({
+          ...common,
+          id: "nested-delegation",
+          toolName: requirement.toolName,
+          requiredTerms: requirement.requiredTerms,
+          requiredChildren: requirement.requiredChildren,
         });
         break;
       case "workspace-discipline":

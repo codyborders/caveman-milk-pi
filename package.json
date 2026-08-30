@@ -48,6 +48,7 @@
     "typecheck": "tsc --noEmit",
     "evaluate": "node scripts/evaluate.mjs",
     "evaluate:offline": "node scripts/evaluate.mjs",
+    "eval:v10-check": "node scripts/eval/prompt-contract-v10-dev-check.mjs",
     "rescore:offline": "node scripts/eval/rescore.mjs",
     "test:package": "node scripts/smoke-packed.mjs"
   },

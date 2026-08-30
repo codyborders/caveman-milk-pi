@@ -6,7 +6,8 @@
     "fresh-v1": { "path": "scripts/evaluation-fixtures-fresh-v1.json", "sha256": "d961c987a01da8fe2280037489cca42e6c1f303fc06e9d570495dffde3818e3e", "role": "corrected-stratified-set" },
     "benchmark-targeted-v3": { "path": "scripts/evaluation-fixtures-targeted-v3.json", "sha256": "4612cffeff328204c2458d965b008dd251b1c270c0b52ddfb97e515018e04004", "role": "targeted-regression-input" },
     "benchmark-targeted-v4": { "path": "scripts/evaluation-fixtures-targeted-v4.json", "sha256": "c4f3f865f2e394bff2e6a8fcf59db1708c7edcab390af137e58df033b98a67de", "role": "future-targeted-regression-input" },
-    "fresh-v2": { "path": "scripts/evaluation-fixtures-fresh-v2.json", "sha256": "8bd5776b40800d69e238100bfe5ccddf00e6d5ab826919c8c400835f9caf353a", "role": "locked-content-valid-off-lite-set" }
+    "fresh-v2": { "path": "scripts/evaluation-fixtures-fresh-v2.json", "sha256": "8bd5776b40800d69e238100bfe5ccddf00e6d5ab826919c8c400835f9caf353a", "role": "locked-content-valid-off-lite-set" },
+    "fresh-v3": { "path": "scripts/evaluation-fixtures-fresh-v3.json", "sha256": "df12469c154635f1c00cebb6490e6fcacbd78dfcae584eb5c10b27ddf13c37d3", "role": "locked-nested-off-lite-set" }
   },
   "sourceFixtures": {
     "benchmark-regression-v2-paid": { "path": "evaluation/source-fixtures/benchmark-regression-v2.json", "sha256": "da6ff6b621fa512301c954cc94850ca7a1ff3873766302c97ad69ec1cd4d0adb", "role": "immutable-paid-run-input" }

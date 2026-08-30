@@ -1055,11 +1055,16 @@ export async function runProviderEvaluation(options) {
     commitOverride,
     readPiVersion,
   });
+  const nestedCategoryIds = new Set(
+    categories.filter((category) => category.nested === true).map((category) => category.id),
+  );
+  const plannedNestedCalls = plan.filter((call) => nestedCategoryIds.has(call.category)).length;
+  const plannedProviderCalls = plan.length + plannedNestedCalls;
   const plannedJudgeCalls =
     judge === true ? activeModes.length * categories.length * repetitionCount : 0;
   const plannedCountCalls =
     countTokens === true ? (modes.includes("off") ? modes.length : modes.length + 1) : 0;
-  const plannedPaidCalls = plan.length + plannedJudgeCalls + plannedCountCalls;
+  const plannedPaidCalls = plannedProviderCalls + plannedJudgeCalls + plannedCountCalls;
   validateRunConfiguration({
     modes,
     repetitions: repetitionCount,
@@ -1262,6 +1267,7 @@ export async function runProviderEvaluation(options) {
         toolMetrics: piOutcome.toolMetrics,
         usageTurns: piOutcome.usageTurns,
         sessionToolMetrics: piOutcome.sessionToolMetrics,
+        nested: piOutcome.nested ?? null,
       };
     } else {
       const systemBlocks = buildSystemBlocks(baseSystemPrompt, cavemanText);
@@ -1362,6 +1368,7 @@ export async function runProviderEvaluation(options) {
           toolCalls: resultToolCalls,
           expectsTool: category.expectsTool === true,
           sessionToolMetrics: executionExtras.sessionToolMetrics ?? null,
+          nested: executionExtras.nested ?? null,
         })
       : runValidators(extracted.validationText, validatorConfigs, {
           toolCall: extracted.toolCall,
@@ -1444,6 +1451,7 @@ export async function runProviderEvaluation(options) {
         retries: Math.max(0, (executionExtras.attempts ?? 1) - 1),
       },
       sessionToolMetrics: executionExtras.sessionToolMetrics ?? null,
+      nested: executionExtras.nested ?? null,
       cacheCondition: {
         label: cacheCondition,
         promptCacheEligible: true,
@@ -1591,6 +1599,59 @@ export async function runProviderEvaluation(options) {
   }
 
   const tolerance = 0;
+  // Controlled cache verification: a labeled cold or warm condition counts
+  // only when observed cache reads prove it on every pair. Mixed or
+  // all-opposite pairs stay in raw results and never silently satisfy a
+  // labeled condition.
+  const cacheVerificationPairs = [];
+  {
+    const byPair = new Map();
+    for (const result of results) {
+      const key = `${result.repetition}::${result.category}`;
+      const pair = byPair.get(key) ?? {};
+      if (result.mode === "off") pair.off = result;
+      else if (pair.active === undefined) pair.active = result;
+      byPair.set(key, pair);
+    }
+    for (const [key, pair] of byPair) {
+      if (pair.off === undefined || pair.active === undefined) continue;
+      const offZero = pair.off.usage.cacheRead === 0;
+      const activeZero = pair.active.usage.cacheRead === 0;
+      const classification =
+        offZero && activeZero ? "both-zero" : !offZero && !activeZero ? "both-positive" : "mixed";
+      const verifiedEligible =
+        cacheCondition === "cold"
+          ? classification === "both-zero"
+          : cacheCondition === "warm"
+            ? classification === "both-positive"
+            : null;
+      cacheVerificationPairs.push({
+        key,
+        category: pair.off.category,
+        repetition: pair.off.repetition,
+        offMode: "off",
+        offCacheRead: pair.off.usage.cacheRead,
+        activeMode: pair.active.mode,
+        activeCacheRead: pair.active.usage.cacheRead,
+        classification,
+        verifiedEligible,
+      });
+    }
+  }
+  const cacheVerification = {
+    condition: cacheCondition,
+    strategy: cachePromptStrategy,
+    pairOrderStrategy,
+    pairCount: cacheVerificationPairs.length,
+    eligiblePairCount: cacheVerificationPairs.filter((pair) => pair.verifiedEligible === true).length,
+    mixedPairCount: cacheVerificationPairs.filter((pair) => pair.classification === "mixed").length,
+    conditionAchieved:
+      cacheCondition === "observed"
+        ? null
+        : cacheVerificationPairs.length > 0 &&
+          cacheVerificationPairs.every((pair) => pair.verifiedEligible === true),
+    pairs: cacheVerificationPairs,
+  };
   for (const result of results) {
     const off = offByPair.get(`${result.repetition}::${result.category}`);
     const judgeResult = result.mode === "off" ? null : judgeResultsByKey.get(result.key) ?? null;
@@ -1655,6 +1716,23 @@ export async function runProviderEvaluation(options) {
     }
   }
 
+  const childProviderCalls = results.reduce(
+    (sum, result) => sum + (result.nested?.childCount ?? 0),
+    0,
+  );
+  const invocationChildProviderCalls = results.reduce(
+    (sum, result) => sum + (result.resumed === true ? 0 : (result.nested?.childCount ?? 0)),
+    0,
+  );
+  const actualProviderCalls = attemptState.provider + childProviderCalls;
+  const actualPaidCalls = paidAttempts() + childProviderCalls;
+  const invocationParentProviderCalls = attemptState.provider - invocationStart.provider;
+  const invocationProviderCalls = invocationParentProviderCalls + invocationChildProviderCalls;
+  const invocationPaidCalls =
+    paidAttempts() -
+    (invocationStart.provider + invocationStart.judge + invocationStart.countEndpoint) +
+    invocationChildProviderCalls;
+
   return {
     schemaVersion: isSchema4 ? 4 : 3,
     fixtureVersion: fixtures.version,
@@ -1677,32 +1755,43 @@ export async function runProviderEvaluation(options) {
     modes,
     categories: categories.map((category) => category.id),
     plannedCalls: plannedPaidCalls,
-    plannedProviderCalls: plan.length,
+    plannedProviderCalls,
     plannedJudgeCalls,
     paidCallAccounting: {
       cap: maxPaidCalls ?? null,
       planned: {
-        provider: plan.length,
+        provider: plannedProviderCalls,
+        ...(plannedNestedCalls === 0
+          ? {}
+          : { parentProvider: plan.length, childProvider: plannedNestedCalls }),
         judge: plannedJudgeCalls,
         countEndpoint: plannedCountCalls,
         total: plannedPaidCalls,
       },
       actual: {
-        provider: attemptState.provider,
+        provider: actualProviderCalls,
+        ...(plannedNestedCalls === 0
+          ? {}
+          : { parentProvider: attemptState.provider, childProvider: childProviderCalls }),
         judge: attemptState.judge,
         countEndpoint: attemptState.countEndpoint,
-        total: paidAttempts(),
+        total: actualPaidCalls,
       },
       invocation: {
-        provider: attemptState.provider - invocationStart.provider,
+        provider: invocationProviderCalls,
+        ...(plannedNestedCalls === 0
+          ? {}
+          : {
+              parentProvider: invocationParentProviderCalls,
+              childProvider: invocationChildProviderCalls,
+            }),
         judge: attemptState.judge - invocationStart.judge,
         countEndpoint: attemptState.countEndpoint - invocationStart.countEndpoint,
-        total:
-          paidAttempts() -
-          (invocationStart.provider + invocationStart.judge + invocationStart.countEndpoint),
+        total: invocationPaidCalls,
       },
     },
     caseCount: results.length,
+    cacheVerification,
     runOrder: results.map((result) => ({
       seq: result.seq,
       key: result.key,
@@ -2264,6 +2353,7 @@ export function createPiRunner({
   toolExtensionPath = path.resolve(here, "eval", "pi-eval-tool.ts"),
   workspaceExtensionPath = path.resolve(here, "eval", "pi-eval-workspace.ts"),
   cacheControlExtensionPath = path.resolve(here, "eval", "pi-eval-cache-control.ts"),
+  nestedExtensionPath = path.resolve(here, "eval", "pi-eval-nested.ts"),
   cachePromptStrategy = "observed",
   model,
   thinkingLevel,
@@ -2282,7 +2372,7 @@ export function createPiRunner({
   // response); time to first token and generation duration are derived from
   // child-reported assistant message timestamps and stay null when the
   // child reports none.
-  async function runPiSession({ mode, args, workspace = null, cacheNonce = null }) {
+  async function runPiSession({ mode, args, workspace = null, cacheNonce = null, nested = null }) {
     const configDir = mkdtempImpl("caveman-pi-config-");
     fs.writeFileSync(
       path.join(configDir, "caveman-milk-pi.json"),
@@ -2305,6 +2395,18 @@ export function createPiRunner({
           CAVEMAN_MILK_CONFIG_DIR: configDir,
           ...(workspaceDir === null ? {} : { CAVEMAN_EVAL_WORKSPACE_DIR: workspaceDir }),
           ...(cacheNonce === null ? {} : { CAVEMAN_EVAL_CACHE_NONCE: cacheNonce }),
+          ...(nested === null
+            ? {}
+            : {
+                CAVEMAN_EVAL_NESTED_PI_BIN: nested.piBin,
+                CAVEMAN_EVAL_NESTED_MODEL: nested.model,
+                ...(nested.thinkingLevel === undefined
+                  ? {}
+                  : { CAVEMAN_EVAL_NESTED_THINKING: nested.thinkingLevel }),
+                CAVEMAN_EVAL_NESTED_MODE: nested.mode,
+                CAVEMAN_EVAL_NESTED_CAVEMAN_EXTENSION: nested.cavemanExtensionPath,
+                CAVEMAN_EVAL_NESTED_WORKSPACE_EXTENSION: nested.workspaceExtensionPath,
+              }),
         },
         timeout: timeoutMs,
       });
@@ -2340,10 +2442,14 @@ export function createPiRunner({
       let failingTestEndSeen = false;
       let failedTestsWithoutCorrectiveTurn = false;
       let correctiveTurns = 0;
+      let clarificationTurns = 0;
       let toolExecutionEndCount = 0;
+      const nestedChildren = [];
+      const rawParentLines = [];
       for (const line of (result.stdout ?? "").split("\n")) {
         const trimmed = line.trim();
         if (trimmed.length === 0) continue;
+        rawParentLines.push(trimmed);
         let event;
         try {
           event = JSON.parse(trimmed);
@@ -2386,9 +2492,36 @@ export function createPiRunner({
           }
           toolExecutionEndCount += 1;
         }
+        if (event.type === "tool_execution_end" && event.toolName === "delegate_eval_child") {
+          const details = event.result?.details ?? {};
+          nestedChildren.push({
+            nodeId: details.nodeId ?? null,
+            parentId: details.parentId ?? "root",
+            task: details.task ?? null,
+            responseText:
+              typeof details.responseText === "string" && details.responseText.length > 0
+                ? details.responseText
+                : String(event.result?.content?.[0]?.text ?? ""),
+            childLatencyMs: typeof details.childLatencyMs === "number" ? details.childLatencyMs : null,
+            timing: details.timing ?? { timeToFirstTokenMs: null, generationDurationMs: null },
+            usage: details.usage ?? null,
+            assistantTurns: typeof details.assistantTurns === "number" ? details.assistantTurns : null,
+            clarificationTurns:
+              typeof details.clarificationTurns === "number" ? details.clarificationTurns : null,
+            toolCalls: Array.isArray(details.toolCalls) ? details.toolCalls : [],
+            toolCallCount: typeof details.toolCallCount === "number" ? details.toolCallCount : null,
+            sessionToolMetrics: details.sessionToolMetrics ?? null,
+            rawEvents: Array.isArray(details.rawEvents) ? details.rawEvents : [],
+          });
+        }
         if (event.type === "message_end" && event.message?.role === "assistant") {
           const message = event.message;
           assistantTurns += 1;
+          const turnText = (message.content ?? [])
+            .filter((block) => block.type === "text")
+            .map((block) => block.text)
+            .join("");
+          if (turnText.includes("?")) clarificationTurns += 1;
           if (failingTestEndSeen) {
             correctiveTurns += 1;
             failingTestEndSeen = false;
@@ -2481,6 +2614,7 @@ export function createPiRunner({
         retries: null,
         rereads: readPaths.size === 0 ? null : rereads,
         correctiveTurns,
+        clarificationTurns,
         failedTestsWithoutCorrectiveTurn: testsRun === 0 ? null : failedTestsWithoutCorrectiveTurn,
       };
       const sessionToolMetrics = {
@@ -2489,8 +2623,50 @@ export function createPiRunner({
         finalTestRunPassed,
         failedTestsWithoutCorrectiveTurn: testsRun === 0 ? null : failedTestsWithoutCorrectiveTurn,
         correctiveTurns,
+        clarificationTurns,
         rereads: readPaths.size === 0 ? null : rereads,
       };
+      // Nested tree record: node identifiers, per-node usage, completeness,
+      // and complete-tree token totals. Totals sum each billed node exactly
+      // once: the root process usage plus every child process usage. The
+      // root bills the child response text as later input, and that overlap
+      // is real provider cost, not double counting. Judge and count-endpoint
+      // usage never enter tree totals.
+      let nestedRecord = null;
+      if (nested !== null) {
+        const childComplete = (child) =>
+          typeof child?.responseText === "string" &&
+          child.responseText.length > 0 &&
+          child?.usage !== null &&
+          typeof child?.usage === "object" &&
+          ["input", "output", "cacheWrite", "cacheRead"].every(
+            (field) => typeof child.usage[field] === "number",
+          );
+        const complete = nestedChildren.length >= 1 && nestedChildren.every(childComplete);
+        const treeTotals = Object.fromEntries(
+          ["input", "output", "cacheWrite", "cacheRead"].map((field) => {
+            if (!complete || typeof usage[field] !== "number") return [field, null];
+            return [
+              field,
+              nestedChildren.reduce(
+                (sum, child) => sum + (typeof child.usage[field] === "number" ? child.usage[field] : 0),
+                usage[field],
+              ),
+            ];
+          }),
+        );
+        nestedRecord = {
+          rootNodeId: "root",
+          rootMode: nested.mode,
+          rootModel: nested.model,
+          rootThinkingLevel: nested.thinkingLevel ?? null,
+          children: nestedChildren,
+          childCount: nestedChildren.length,
+          complete,
+          treeTotals,
+          rawParentEvents: rawParentLines,
+        };
+      }
       return {
         text,
         toolCall,
@@ -2506,6 +2682,7 @@ export function createPiRunner({
         timing,
         toolMetrics,
         sessionToolMetrics,
+        nested: nestedRecord,
       };
     } finally {
       // Best-effort cleanup: a locked file must not fail the finished call.
@@ -2533,6 +2710,12 @@ export function createPiRunner({
   return {
     async execute({ mode, category, repetition }) {
       const isWorkspaceCase = category.workspace !== undefined && category.workspace !== null;
+      const isNestedCase = category.nested === true;
+      if (isNestedCase && !isWorkspaceCase) {
+        throw new Error(
+          `Nested category '${category.id}' requires a workspace for the shared parent-child tree.`,
+        );
+      }
       const cacheNonce = cachePromptStrategy === "unique-arm"
         ? crypto.createHash("sha256").update(`${category.id}|${repetition}|${mode}`).digest("hex").substring(0, 16)
         : cachePromptStrategy === "shared"
@@ -2547,7 +2730,13 @@ export function createPiRunner({
         "--no-context-files",
         "--no-prompt-templates",
         ...(isWorkspaceCase
-          ? ["--tools", WORKSPACE_TOOLS.join(",")]
+          ? [
+              "--tools",
+              (isNestedCase
+                ? [...WORKSPACE_TOOLS, "delegate_eval_child"]
+                : WORKSPACE_TOOLS
+              ).join(","),
+            ]
           : category.expectsTool === true
             ? ["--tools", "write_artifact"]
             : ["--no-tools"]),
@@ -2555,6 +2744,7 @@ export function createPiRunner({
         extensionPath,
         "-e",
         isWorkspaceCase ? workspaceExtensionPath : toolExtensionPath,
+        ...(isNestedCase ? ["-e", nestedExtensionPath] : []),
         ...(cacheNonce === null ? [] : ["-e", cacheControlExtensionPath]),
         "--model",
         model,
@@ -2567,6 +2757,16 @@ export function createPiRunner({
         args,
         workspace: isWorkspaceCase ? category.workspace : null,
         cacheNonce,
+        nested: isNestedCase
+          ? {
+              piBin,
+              model,
+              thinkingLevel,
+              mode,
+              cavemanExtensionPath: extensionPath,
+              workspaceExtensionPath,
+            }
+          : null,
       });
       if (session.text.length === 0 && session.toolCallCount === 0) {
         throw new Error("pi runner produced no assistant text or tool call for the case.");

@@ -1,0 +1,3 @@
+import { describe, expect, it } from "vitest";
+import { assessSelectiveFinalTopology } from "../scripts/eval/selective-final-v11.mjs";
+describe("selective-final topology", () => { it("requires off parent and children, empty finalizer tools, ordered handoff, exact injection count", () => { expect(assessSelectiveFinalTopology({ arm: "selective-final-v11", base: { mode: "off", handoffComplete: true }, children: [{ mode: "off" }], finalizer: { injectedCandidateNodes: 1, tools: [] } }).passed).toBe(true); expect(assessSelectiveFinalTopology({ arm: "off", base: { mode: "off", handoffComplete: true }, children: [{ mode: "off" }], finalizer: { injectedCandidateNodes: 1, tools: [] } }).passed).toBe(false); }); });

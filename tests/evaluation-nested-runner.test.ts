@@ -115,6 +115,7 @@ describe("pi runner nested wiring", () => {
     expect(outcome.nested.children[0]).toMatchObject({
       nodeId: "child-1",
       parentId: "root",
+      mode: "lite",
       childLatencyMs: 4000,
       usage: { input: 230, output: 30, cacheWrite: 6, cacheRead: 60 },
       responseText: "Fixed parseDelay. All 1 workspace tests pass.",

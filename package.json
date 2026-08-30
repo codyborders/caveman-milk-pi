@@ -49,6 +49,12 @@
     "evaluate": "node scripts/evaluate.mjs",
     "evaluate:offline": "node scripts/evaluate.mjs",
     "eval:v10-check": "node scripts/eval/prompt-contract-v10-dev-check.mjs",
+    "eval:v11-check": "node scripts/eval/prompt-contract-v11-dev-check.mjs",
+    "eval:v11:preflight": "node scripts/eval/selective-final-v11-cli.mjs preflight",
+    "eval:v11:cold": "node scripts/eval/selective-final-v11-cli.mjs cold",
+    "eval:v11:warmup": "node scripts/eval/selective-final-v11-cli.mjs warmup",
+    "eval:v11:warm": "node scripts/eval/selective-final-v11-cli.mjs warm",
+    "eval:v11:analysis": "node scripts/eval/selective-final-v11-analysis.mjs",
     "rescore:offline": "node scripts/eval/rescore.mjs",
     "test:package": "node scripts/smoke-packed.mjs"
   },

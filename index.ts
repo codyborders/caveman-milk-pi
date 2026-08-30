@@ -8,6 +8,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { registerCavemanCommand } from "./src/command.js";
 import { loadConfig, updateConfig } from "./src/config.js";
 import { computeInjection } from "./src/injection.js";
+import { FINAL_RESPONSE_CONTRACT_V11 as FINAL_RESPONSE_CONTRACT_V11_DATA } from "./src/final-response-contract.js";
 import type { CavemanConfig, InjectionCache } from "./src/types.js";
 
 export interface ExtensionDependencies {
@@ -16,19 +17,7 @@ export interface ExtensionDependencies {
   updateConfig: (mutator: (config: CavemanConfig) => CavemanConfig) => Promise<CavemanConfig>;
 }
 
-// Prompt contract v11 for /caveman final: terse style for final user-facing
-// prose only, with protected content and delegation exclusions intact.
-export const FINAL_RESPONSE_CONTRACT_V11 = [
-  "\n\nCAVEMAN FINAL-RESPONSE MODE — prompt contract v11 — this response only.",
-  "",
-  "Apply terse style only to your final user-facing prose. Drop filler, hedging, and pleasantries. Keep complete technical meaning and all substance.",
-  "",
-  "Preserve unchanged and complete: safety warnings, irreversible-action confirmations, uncertainty, negation, scope, exact values, ordered steps, unfinished work, code, commands, paths, filenames, quotations, logs, commit text, PR text, documentation, files, and persisted artifacts.",
-  "",
-  "Delegation requests and child-agent responses remain normal and complete.",
-  "",
-  "Tools are disabled for this response, so no file, command, commit, PR, document, persisted artifact, or child handoff can be created. Code and commands embedded in final prose remain unchanged.",
-].join("\n");
+export const FINAL_RESPONSE_CONTRACT_V11 = FINAL_RESPONSE_CONTRACT_V11_DATA.text;
 
 export function registerExtension(
   pi: ExtensionAPI,
@@ -65,7 +54,7 @@ export function registerExtension(
     if (finalArmed) {
       // One-shot: clear before returning so only the armed request is hit.
       finalArmed = false;
-      return { systemPrompt: event.systemPrompt + FINAL_RESPONSE_CONTRACT_V11 };
+      return { systemPrompt: event.systemPrompt + FINAL_RESPONSE_CONTRACT_V11_DATA.text };
     }
     if (cache === null || cache.mode === "off") return undefined;
     return { systemPrompt: event.systemPrompt + cache.text };

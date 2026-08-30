@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "fixtureFrozenBeforeTrials": true,
+  "trialStatus": "not-run",
+  "modelCalls": 0,
+  "artifacts": [
+    {
+      "path": "scripts/evaluation-fixtures-fresh-v4.json",
+      "sha256": "34a051015ef549043f96731047ab5d8dc64160a81ee770a26c5d11ffd0266907",
+      "role": "frozen-holdout"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-preflight.json",
+      "sha256": null,
+      "role": "locked-placeholder",
+      "status": "not-run"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-analysis.json",
+      "sha256": null,
+      "role": "locked-placeholder",
+      "status": "not-run"
+    }
+  ]
+}

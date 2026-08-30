@@ -1,0 +1,7 @@
+{
+  "version": 11,
+  "characters": 822,
+  "sha256": "8b066cf616f306ca4d368c8671c55b51ac0a79e59a2c63540070037bdddb868a",
+  "exclusions": ["safety warnings", "irreversible-action confirmations", "uncertainty", "negation", "scope", "exact values", "ordered steps", "unfinished work", "code", "commands", "paths", "filenames", "quotations", "logs", "commit text", "PR text", "documentation", "files", "persisted artifacts", "delegation requests", "child-agent responses"],
+  "text": "\n\nCAVEMAN FINAL-RESPONSE MODE — prompt contract v11 — this response only.\n\nApply terse style only to your final user-facing prose. Drop filler, hedging, and pleasantries. Keep complete technical meaning and all substance.\n\nPreserve unchanged and complete: safety warnings, irreversible-action confirmations, uncertainty, negation, scope, exact values, ordered steps, unfinished work, code, commands, paths, filenames, quotations, logs, commits, commit text, PR text, docs, documentation, files, and persisted artifacts.\n\nDelegation requests and child-agent responses remain normal and complete. Child responses remain complete.\n\nTools are disabled for this response, so no file, command, commit, PR, document, persisted artifact, or child handoff can be created. Code and commands embedded in final prose remain unchanged."
+}

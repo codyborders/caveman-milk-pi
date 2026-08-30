@@ -1,0 +1,3 @@
+import { describe, expect, it } from "vitest";
+import { cacheEligibility } from "../scripts/eval/selective-final-v11.mjs";
+describe("selective-final cache eligibility", () => { it("requires every parent, child, and finalizer node to be eligible", () => { expect(cacheEligibility({ usage: { cacheRead: 0 }, nested: { complete: true, children: [{ usage: { cacheRead: 0 } }] }, finalizer: { usage: { cacheRead: 0 } } }, "zero")).toBe(true); expect(cacheEligibility({ usage: { cacheRead: 0 }, nested: { complete: true, children: [{ usage: { cacheRead: 1 } }] }, finalizer: { usage: { cacheRead: 0 } } }, "zero")).toBe(false); }); });

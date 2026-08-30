@@ -1153,7 +1153,7 @@ const COMPLETION_CLAIM_PATTERNS = [
 ];
 
 function isGapMarker(unit) {
-  return /\bGAP\b|\[GAP|GAP:|\bnot supplied\b|\bnot provided\b|\bno [a-z][a-z ]{2,40} suppl(?:ied|ied)\b|\bmissing (?:fact|value|detail|information|schema|input)\b/i.test(unit);
+  return /\bGAP\b|\[GAP|GAP:|\bnot supplied\b|\bnot provided\b|\bno [a-z][a-z ]{2,40} suppl(?:ied|ied)\b|\bmissing (?:fact|value|detail|information|schema|input)\b|\b(?:remains?|is|are) (?:unfinished|incomplete|pending|unknown|unverified)\b|\bhas not (?:run|completed)\b|\bnot yet (?:run|completed)\b/i.test(unit);
 }
 
 function descriptionKeywords(description) {

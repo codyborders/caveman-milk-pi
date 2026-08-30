@@ -18,3 +18,10 @@ evaluation/results/fresh-v2-warm-v1.json -text
 evaluation/results/fresh-v2-cold-controlled-v1.json -text
 evaluation/results/fresh-v2-warmup-shared-v1.json -text
 evaluation/results/fresh-v2-warm-controlled-v1.json -text
+scripts/evaluation-fixtures-fresh-v3.json -text
+evaluation/results/fresh-v3-tool-preflight.json -text
+evaluation/results/fresh-v3-warmup-shared-v1.json -text
+evaluation/results/fresh-v3-cold-controlled-v1.json -text
+evaluation/results/fresh-v3-warm-controlled-v1.json -text
+evaluation/results/fresh-v3-analysis-v1.json -text
+evaluation/results/fresh-v3-analysis-v1.md -text

@@ -125,6 +125,24 @@ describe("protected-facts requirement", () => {
     expect(outcome.passed).toBe(true);
   });
 
+  it("accepts an exact unfinished-work statement as an explicit gap", () => {
+    const validation = runRequirements(
+      "Load testing remains unfinished.",
+      [
+        {
+          id: "gap",
+          kind: "protected-facts",
+          hardGroup: "safety",
+          knownGaps: [
+            { id: "load", description: "Load testing remains unfinished.", mustMark: true },
+          ],
+        },
+      ],
+      {},
+    );
+    expect(validation.passed).toBe(true);
+  });
+
   it("classifies omissions, altered facts, unsupported claims, ordering errors, and unmarked gaps", () => {
     const text = [
       "The Default Timeout Was 30 Seconds before this change.",

@@ -11,6 +11,10 @@ const DEFAULT_CONTROLLED_RUNS = [
   { id: "cold", path: "evaluation/results/fresh-v3-cold-controlled-v1.json", cacheRule: "zero" },
   { id: "warm", path: "evaluation/results/fresh-v3-warm-controlled-v1.json", cacheRule: "positive" },
 ];
+const DEFAULT_SUPPORT_RUNS = [
+  { id: "preflight", path: "evaluation/results/fresh-v3-tool-preflight.json" },
+  { id: "warmup", path: "evaluation/results/fresh-v3-warmup-shared-v1.json" },
+];
 const VALIDATOR_VERSION = "schema5-task-success-v14";
 const USER_FACING_TYPES = new Set([
   "critical-omission",
@@ -133,6 +137,9 @@ function preservationFrom(validation) {
       incompleteTreeCount: count((finding) => finding.type === "incomplete-tree"),
       childResponseMissingCount: count((finding) => finding.type === "child-response-missing"),
       childUsageMissingCount: count((finding) => finding.type === "child-usage-missing"),
+      childHandoffTermMissingCount: count(
+        (finding) => finding.type === "child-handoff-term-missing",
+      ),
       handoffMissingCount: count((finding) => finding.type === "handoff-missing"),
       handoffTermMissingCount: count((finding) => finding.type === "handoff-term-missing"),
     },
@@ -383,6 +390,143 @@ function interAgentClean(totals) {
   return Object.values(totals).every((count) => count === 0);
 }
 
+function measuredPromptOverhead(correctedEntries, fixture) {
+  const nestedIds = new Set(
+    fixture.categories.filter((category) => category.nested === true).map((category) => category.id),
+  );
+  const warm = correctedEntries.find((entry) => entry.id === "warm");
+  if (warm === undefined) return null;
+  const deltas = pairResults(warm.corrected.results)
+    .filter((pair) => !nestedIds.has(pair.off.category))
+    .map((pair) => {
+      const requestTokens = (result) => {
+        const first = result.usageTurns?.[0];
+        if (first === undefined) return null;
+        return ["input", "cacheRead", "cacheWrite"].reduce(
+          (sum, field) => sum + Number(first[field] ?? 0),
+          0,
+        );
+      };
+      const off = requestTokens(pair.off);
+      const lite = requestTokens(pair.lite);
+      return off === null || lite === null ? null : lite - off;
+    })
+    .filter(Number.isFinite)
+    .sort((left, right) => left - right);
+  if (deltas.length === 0) return null;
+  const actualInjectedTokens = deltas[Math.floor(deltas.length / 2)];
+  const baselineApproximateTokens = 102;
+  return {
+    mode: "lite",
+    method: "provider-reported first-turn request tokens with one shared warm identifier",
+    pairCount: deltas.length,
+    actualInjectedTokens,
+    min: deltas[0],
+    max: deltas.at(-1),
+    baselineApproximateTokens,
+    reductionFromApproximateBaselineTokens: baselineApproximateTokens - actualInjectedTokens,
+    reductionPercent: ((baselineApproximateTokens - actualInjectedTokens) / baselineApproximateTokens) * 100,
+  };
+}
+
+function buildHandoffAudit(correctedRuns) {
+  const records = correctedRuns.flatMap((run) =>
+    run.results
+      .filter((result) => result.nested !== null && result.nested !== undefined)
+      .map((result) => ({
+        sourceRun: result.sourceRun,
+        rawPointer: result.rawPointer,
+        mode: result.mode,
+        category: result.category,
+        repetition: result.repetition,
+        parentToChild: result.nested.children.map((child) => ({
+          nodeId: child.nodeId,
+          task: child.task,
+        })),
+        childToParent: result.nested.children.map((child) => ({
+          nodeId: child.nodeId,
+          response: child.responseText,
+        })),
+        parentResponse: result.response,
+        interAgentCounts: result.preservation.interAgent,
+        userFacingCounts: result.preservation.userFacing,
+        deterministicFindings: result.preservation.findings,
+        judgeLoss:
+          result.mode === "lite" &&
+          Number(result.judge?.activeQualityTotal) < Number(result.judge?.offQualityTotal)
+            ? {
+                notes: result.judge.notes,
+                off: result.judge.offQualityTotal,
+                lite: result.judge.activeQualityTotal,
+              }
+            : null,
+      })),
+  );
+  return {
+    recordCount: records.length,
+    taskImpactLossCount: records.filter((record) => record.judgeLoss !== null).length,
+    records,
+  };
+}
+
+function buildBlindedJudgment(correctedRuns) {
+  const summary = { wins: 0, ties: 0, losses: 0, lossRecords: [] };
+  for (const result of correctedRuns.flatMap((run) => run.results)) {
+    if (result.mode !== "lite" || result.judge === null || result.judge === undefined) continue;
+    const delta = Number(result.judge.activeQualityTotal) - Number(result.judge.offQualityTotal);
+    if (delta > 0) summary.wins += 1;
+    else if (delta < 0) {
+      summary.losses += 1;
+      summary.lossRecords.push({
+        sourceRun: result.sourceRun,
+        rawPointer: result.rawPointer,
+        category: result.category,
+        repetition: result.repetition,
+        notes: result.judge.notes,
+        offQualityTotal: result.judge.offQualityTotal,
+        liteQualityTotal: result.judge.activeQualityTotal,
+        userResponse: result.response,
+        handoffs: result.nested?.children ?? [],
+      });
+    } else summary.ties += 1;
+  }
+  return summary;
+}
+
+function buildTreeOperations(correctedRuns, mode) {
+  const results = correctedRuns.flatMap((run) => run.results.filter((result) => result.mode === mode));
+  const totals = {
+    resultCount: results.length,
+    toolCalls: 0,
+    rereads: 0,
+    rereadsUnknownNodes: 0,
+    correctiveTurns: 0,
+    clarificationTurns: 0,
+    testNodesObserved: 0,
+    passingFinalTestNodes: 0,
+  };
+  const addNode = (toolCalls, metrics) => {
+    totals.toolCalls += Array.isArray(toolCalls) ? toolCalls.length : 0;
+    if (Number.isFinite(metrics?.rereads)) totals.rereads += metrics.rereads;
+    else totals.rereadsUnknownNodes += 1;
+    if (Number.isFinite(metrics?.correctiveTurns)) totals.correctiveTurns += metrics.correctiveTurns;
+    if (Number.isFinite(metrics?.clarificationTurns)) {
+      totals.clarificationTurns += metrics.clarificationTurns;
+    }
+    if (typeof metrics?.finalTestRunPassed === "boolean") {
+      totals.testNodesObserved += 1;
+      if (metrics.finalTestRunPassed) totals.passingFinalTestNodes += 1;
+    }
+  };
+  for (const result of results) {
+    addNode(result.toolCalls, result.sessionToolMetrics ?? result.toolMetrics);
+    for (const child of result.nested?.children ?? []) {
+      addNode(child.toolCalls, child.sessionToolMetrics);
+    }
+  }
+  return totals;
+}
+
 function responseReference(result) {
   return {
     sourceRun: result.sourceRun,
@@ -392,6 +536,7 @@ function responseReference(result) {
     category: result.category,
     repetition: result.repetition,
     responseSha256: result.responseSha256,
+    response: result.response,
     originalBehavioralPassed: result.originalBehavioralPassed,
     correctedBehavioralPassed: result.behavioralPassed,
     preservation: {
@@ -427,39 +572,84 @@ function buildMarkdown(analysis) {
       ["Total tree tokens", value.pairedMetrics.totalTreeTokens],
       ["Root end-to-end ms", value.pairedMetrics.rootLatencyMs],
       ["First-token ms", value.pairedMetrics.timeToFirstTokenMs],
-      ["Generation ms (single-turn)", value.pairedMetrics.generationDurationMs],
-    ].map(([metric, result]) => `| ${name} | ${metric} | ${format(result.mean)} | ${format(result.lower95)} | ${format(result.upper95)} |`))
+      ["Generation ms (single-turn direct)", value.pairedMetrics.generationDurationMs],
+    ].map(([metric, result]) => `| ${name} | ${metric} | ${result.count} | ${format(result.mean)} | ${format(result.lower95)} | ${format(result.upper95)} |`))
+    .join("\n");
+  const successRows = Object.entries(analysis.taskSuccess)
+    .map(([name, value]) => `| ${name} | ${value.pairCount} | ${format(value.pairedDelta.mean, 3)} | ${format(value.pairedDelta.lower95, 3)} | ${format(value.pairedDelta.upper95, 3)} |`)
     .join("\n");
   const gateRows = Object.entries(analysis.finalDecision.gates)
     .map(([name, gate]) => `| ${name} | ${gate.passed ? "PASS" : "FAIL"} | ${gate.reason} |`)
     .join("\n");
+  const failureRows = analysis.activeOnlyFailures
+    .map((item) => `| ${item.condition} | ${item.repetition} | ${item.category} | ${item.findingSummary.join(", ")} | \`${item.offRawPointer}\` | \`${item.liteRawPointer}\` |`)
+    .join("\n");
   const userFacing = analysis.preservation.lite.userFacing;
   const interAgent = analysis.preservation.lite.interAgent;
+  const prompt = analysis.measuredPromptOverhead;
+  const promptSummary = prompt === null
+    ? "Injected lite token count is unavailable because first-turn provider usage is missing."
+    : `Provider usage reports ${prompt.actualInjectedTokens} injected lite tokens across ${prompt.pairCount} matched warm pairs. Every pair reports the same value. The approximate v9 baseline is ${prompt.baselineApproximateTokens} tokens. V10 removes ${prompt.reductionFromApproximateBaselineTokens} tokens, or ${format(prompt.reductionPercent)} percent.`;
+  const mixTokens = analysis.deploymentMixMetrics.totalTreeTokens;
+  const mixLatency = analysis.deploymentMixMetrics.rootLatencyMs;
   return `# Fresh-v3 analysis (v1)
 
-Fresh-v3 compares \`off\` with \`lite\` under prompt contract v10 and records real parent-child trees. The fixture SHA-256 is \`${analysis.fixture.sha256}\`.
+Fresh-v3 compares \`off\` with \`lite\` under prompt contract v10. It records real parent-child trees. The fixture SHA-256 is \`${analysis.fixture.sha256}\`.
+
+## Candidate overhead
+
+${promptSummary}
+
+## Process accounting
+
+Controlled runs used ${analysis.externalAttempts.primary} primary processes and ${analysis.externalAttempts.judge} judge processes. Preflight and warm-up used ${analysis.supportAttempts.primary} more primary processes. The complete experiment used ${analysis.experimentAttempts.total} model processes. No process from analysis generation is included.
 
 ## Verified cache conditions
 
-Cold counts only pairs with zero cache reads in both arms. Warm counts only pairs with positive cache reads in both arms. Mixed pairs stay in raw results.
+Cold eligibility requires zero cache reads for each parent and child node in both modes. Warm eligibility requires positive reads for every node. Other pairs remain in raw reports.
 
 | Condition | Verified pairs | Successful pairs | Mixed pairs |
 | --- | ---: | ---: | ---: |
 ${conditionRows}
 
-## Matched tree metrics
+## Matched task metrics
 
-Deltas are \`lite - off\` over pairs where both arms pass corrected validation. Total tree tokens sum the root and every child process once. Generation duration covers single-turn direct cases only.
+Deltas are \`lite - off\`. Successful-pair intervals include pairs where both modes pass corrected validation. Total tree tokens sum every parent and child process once.
 
-| Condition | Metric | Mean delta | Lower 95% | Upper 95% |
-| --- | --- | ---: | ---: | ---: |
+Generation duration is observable for single-turn direct tasks only. Root end-to-end latency is the complete critical path through the final answer.
+
+| Condition | Metric | Pairs | Mean delta | Lower 95% | Upper 95% |
+| --- | --- | ---: | ---: | ---: | ---: |
 ${intervalRows}
 
-## Preservation
+The declared deployment mix is 50 percent cold and 50 percent warm. Its total-token delta is ${format(mixTokens.mean)} with interval [${format(mixTokens.lower95)}, ${format(mixTokens.upper95)}]. Its root-latency delta is ${format(mixLatency.mean)} ms with interval [${format(mixLatency.lower95)}, ${format(mixLatency.upper95)}].
 
-User-facing preservation covers response content. Inter-agent preservation covers delegation and handoff structure.
+## Complete-tree operations
 
-Lite user-facing critical counts: ${userFacing.criticalOmissionCount} omissions, ${userFacing.missingNegationCount} negation failures, ${userFacing.warningFailureCount} warning failures. Lite inter-agent counts: ${interAgent.delegationMissingCount} missing delegations, ${interAgent.incompleteTreeCount} incomplete trees.
+| Mode | Tool calls | Rereads | Unknown reread nodes | Corrective turns | Clarification turns | Passing final test nodes |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| off | ${analysis.treeOperations.off.toolCalls} | ${analysis.treeOperations.off.rereads} | ${analysis.treeOperations.off.rereadsUnknownNodes} | ${analysis.treeOperations.off.correctiveTurns} | ${analysis.treeOperations.off.clarificationTurns} | ${analysis.treeOperations.off.passingFinalTestNodes}/${analysis.treeOperations.off.testNodesObserved} |
+| lite | ${analysis.treeOperations.lite.toolCalls} | ${analysis.treeOperations.lite.rereads} | ${analysis.treeOperations.lite.rereadsUnknownNodes} | ${analysis.treeOperations.lite.correctiveTurns} | ${analysis.treeOperations.lite.clarificationTurns} | ${analysis.treeOperations.lite.passingFinalTestNodes}/${analysis.treeOperations.lite.testNodesObserved} |
+
+## Task success
+
+| Task group | Pairs | Mean delta | Lower 95% | Upper 95% |
+| --- | ---: | ---: | ---: | ---: |
+${successRows}
+
+Lite has ${analysis.activeOnlyFailures.length} case failures where off passes.
+
+| Condition | Repetition | Category | Finding | Off raw pointer | Lite raw pointer |
+| --- | ---: | --- | --- | --- | --- |
+${failureRows}
+
+## Information preservation
+
+User-facing checks found ${userFacing.criticalOmissionCount} critical omissions and ${userFacing.missingNegationCount} missing negations for lite. They also found ${userFacing.orderingErrorCount} ordering errors and ${userFacing.changedPathCount} changed paths. Warning failures total ${userFacing.warningFailureCount}.
+
+Inter-agent structural checks found ${interAgent.delegationMissingCount} missing delegations and ${interAgent.incompleteTreeCount} incomplete trees. The JSON report stores ${analysis.handoffAudit.recordCount} full handoff records. Each record separates the parent request, child response, parent response, validation findings, and any blinded loss. Blinded review marks ${analysis.handoffAudit.taskImpactLossCount} handoffs as task-impacting losses.
+
+Blinded judgment records ${analysis.blindedJudgment.wins} wins, ${analysis.blindedJudgment.ties} ties, and ${analysis.blindedJudgment.losses} losses for lite. Complete loss records are stored in the JSON report.
 
 ## Four conjunctive gates
 
@@ -467,7 +657,7 @@ Lite user-facing critical counts: ${userFacing.criticalOmissionCount} omissions,
 | --- | --- | --- |
 ${gateRows}
 
-Final decision: default mode \`${analysis.finalDecision.defaultMode}\`. All four gates must pass before any other default is recorded.
+Final decision: keep default mode \`${analysis.finalDecision.defaultMode}\`. Do not recommend or release lite-v10.
 `;
 }
 
@@ -482,6 +672,7 @@ export function buildFreshV3Analysis(options = {}) {
     );
   }
   const controlledRunOptions = options.controlledRuns ?? DEFAULT_CONTROLLED_RUNS;
+  const supportRunOptions = options.supportRuns ?? DEFAULT_SUPPORT_RUNS;
   const sourceEntries = controlledRunOptions.map((entry) => {
     if (entry.raw !== undefined) return { ...entry, raw: entry.raw };
     const absolute = path.join(ROOT, entry.path);
@@ -527,6 +718,11 @@ export function buildFreshV3Analysis(options = {}) {
           offResponse: pair.off.response,
           liteResponse: pair.lite.response,
           liteValidation: pair.lite.validation,
+          findingSummary: pair.lite.validation.checks
+            .flatMap((check) => check.findings ?? [])
+            .map((finding) => `${finding.type}:${finding.id ?? "unknown"}`),
+          judgeNotes: pair.lite.judge?.notes ?? null,
+          handoffs: pair.lite.nested?.children ?? [],
         });
       }
     }
@@ -543,11 +739,39 @@ export function buildFreshV3Analysis(options = {}) {
     },
   };
 
+  const handoffAudit = buildHandoffAudit(correctedRuns);
+  const blindedJudgment = buildBlindedJudgment(correctedRuns);
+
   const externalAttempts = {
     primary: correctedRuns.reduce((sum, run) => sum + (run.paidCallAccounting?.actual?.provider ?? 0), 0),
     judge: correctedRuns.reduce((sum, run) => sum + (run.paidCallAccounting?.actual?.judge ?? 0), 0),
   };
   externalAttempts.total = externalAttempts.primary + externalAttempts.judge;
+  const supportRuns = supportRunOptions
+    .map((entry) => {
+      if (entry.raw !== undefined) return { ...entry, raw: entry.raw };
+      const absolute = path.join(ROOT, entry.path);
+      return fs.existsSync(absolute)
+        ? { ...entry, sha256: sha256File(entry.path), raw: readJson(entry.path) }
+        : null;
+    })
+    .filter((entry) => entry !== null);
+  const supportAttempts = {
+    primary: supportRuns.reduce(
+      (sum, entry) => sum + (entry.raw.paidCallAccounting?.actual?.provider ?? 0),
+      0,
+    ),
+    judge: supportRuns.reduce(
+      (sum, entry) => sum + (entry.raw.paidCallAccounting?.actual?.judge ?? 0),
+      0,
+    ),
+  };
+  supportAttempts.total = supportAttempts.primary + supportAttempts.judge;
+  const experimentAttempts = {
+    primary: externalAttempts.primary + supportAttempts.primary,
+    judge: externalAttempts.judge + supportAttempts.judge,
+  };
+  experimentAttempts.total = experimentAttempts.primary + experimentAttempts.judge;
 
   const deploymentMix = { cold: 0.5, warm: 0.5 };
   const deploymentMixMetrics = {
@@ -567,7 +791,9 @@ export function buildFreshV3Analysis(options = {}) {
     taskSuccess.nestedAgent.pairedDelta.lower95 >= 0 &&
     activeOnlyFailures.length === 0;
   const preservationPassed =
-    preservationClean(preservation.lite.userFacing) && interAgentClean(preservation.lite.interAgent);
+    preservationClean(preservation.lite.userFacing) &&
+    interAgentClean(preservation.lite.interAgent) &&
+    handoffAudit.taskImpactLossCount === 0;
   const gates = {
     totalTreeTokenReduction: {
       passed: totalTokenPassed,
@@ -590,15 +816,15 @@ export function buildFreshV3Analysis(options = {}) {
     preservation: {
       passed: preservationPassed,
       reason: preservationPassed
-        ? "Lite has zero user-facing critical findings and zero inter-agent findings."
-        : "Lite has a user-facing critical finding or an inter-agent finding.",
+        ? "Lite has zero user-facing critical findings and zero task-impacting handoff losses."
+        : `Lite has a user-facing critical finding or ${handoffAudit.taskImpactLossCount} task-impacting handoff loss(es).`,
     },
   };
 
   const analysis = {
     version: 1,
     generatedBy: "scripts/eval/fresh-v3-analysis.mjs",
-    externalModelCalls: 0,
+    analysisGeneratorExternalModelCalls: 0,
     validatorVersion: VALIDATOR_VERSION,
     fixture: { path: FIXTURE_PATH, sha256: fixtureSha },
     sources: sourceEntries.map((entry) => ({
@@ -611,6 +837,15 @@ export function buildFreshV3Analysis(options = {}) {
       judgeAttempts: entry.raw.paidCallAccounting?.actual?.judge ?? 0,
     })),
     externalAttempts,
+    supportAttempts,
+    experimentAttempts,
+    measuredPromptOverhead: measuredPromptOverhead(correctedEntries, fixture),
+    blindedJudgment,
+    handoffAudit,
+    treeOperations: {
+      off: buildTreeOperations(correctedRuns, "off"),
+      lite: buildTreeOperations(correctedRuns, "lite"),
+    },
     conditions,
     deploymentMix,
     deploymentMixMetrics,

@@ -94,6 +94,12 @@ function makeResult({ mode, repetition, category, cacheRead, childCacheRead, dro
     mode,
     response,
     usage,
+    usageTurns: [{
+      input: 100 + (lite ? 77 : 0),
+      output: usage.output,
+      cacheWrite: usage.cacheWrite,
+      cacheRead: usage.cacheRead,
+    }],
     elapsedMs,
     assistantTurns: isNested ? 3 : 1,
     timing: {
@@ -145,6 +151,13 @@ describe("fresh-v3 analysis", () => {
     expect(analysis.conditions.cold.pairedMetrics.totalTreeTokens.mean).toBeLessThan(0);
     expect(analysis.conditions.cold.pairedMetrics.rootLatencyMs.mean).toBeLessThan(0);
     expect(analysis.conditions.warm.pairedMetrics.timeToFirstTokenMs.mean).toBeLessThan(0);
+    expect(analysis.measuredPromptOverhead).toMatchObject({
+      mode: "lite",
+      actualInjectedTokens: 77,
+      pairCount: 15,
+    });
+    expect(analysis.correctedResults[0].response).toBe(controlledRuns[0].raw.results[0].response);
+    expect(analysis.handoffAudit.records).toHaveLength(24);
     expect(analysis.deploymentMix).toMatchObject({ cold: 0.5, warm: 0.5 });
     expect(analysis.deploymentMixMetrics.totalTreeTokens.count).toBeGreaterThan(0);
     expect(analysis.deploymentMixMetrics.rootLatencyMs.count).toBeGreaterThan(0);
@@ -166,7 +179,22 @@ describe("fresh-v3 analysis", () => {
     expect(analysis.finalDecision.gates.taskSuccess.passed).toBe(false);
     expect(analysis.finalDecision.gates.preservation.passed).toBe(false);
     expect(analysis.finalDecision.defaultMode).toBe("off");
-    expect(analysis.externalModelCalls).toBe(0);
+    expect(analysis.analysisGeneratorExternalModelCalls).toBe(0);
+  });
+});
+
+describe("fresh-v3 unavailable prompt overhead", () => {
+  it("reports unavailable overhead without crashing the Markdown renderer", () => {
+    const noTurnRuns = controlledRuns.map((entry) => ({
+      ...entry,
+      raw: {
+        ...entry.raw,
+        results: entry.raw.results.map(({ usageTurns: _usageTurns, ...result }) => result),
+      },
+    }));
+    const analysis = buildFreshV3Analysis({ controlledRuns: noTurnRuns });
+    expect(analysis.measuredPromptOverhead).toBeNull();
+    expect(analysis.markdown).toContain("Injected lite token count is unavailable");
   });
 });
 

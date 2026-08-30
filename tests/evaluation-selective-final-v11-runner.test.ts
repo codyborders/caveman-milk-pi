@@ -31,6 +31,7 @@ describe("selective-final v11 Pi runner", () => {
       extensionPath: "/extension.ts",
       finalResponseExtensionPath: "/final-response.ts",
       selectiveFinal: true,
+      cachePromptStrategy: "unique-arm",
       model: "test/model",
       spawnImpl,
       nowImpl: () => times.shift() ?? 35,
@@ -45,6 +46,14 @@ describe("selective-final v11 Pi runner", () => {
     expect(calls).toHaveLength(2);
     expect(calls[0].env.CAVEMAN_EVAL_FINAL_ARM).toBeUndefined();
     expect(calls[1].env.CAVEMAN_EVAL_FINAL_ARM).toBe("selective-final-v11");
+    expect(calls[0].args).toContain("--system-prompt");
+    expect(calls[1].args).toContain("--system-prompt");
+    expect(calls[0].args[calls[0].args.indexOf("--system-prompt") + 1]).toContain(
+      calls[0].env.CAVEMAN_EVAL_CACHE_NONCE,
+    );
+    expect(calls[1].args[calls[1].args.indexOf("--system-prompt") + 1]).toContain(
+      calls[1].env.CAVEMAN_EVAL_CACHE_NONCE,
+    );
     expect(calls[1].args).toContain("--no-tools");
     expect(calls[1].args).toContain("/final-response.ts");
     expect(calls[1].args.at(-1)).toContain("complete draft");

@@ -146,6 +146,12 @@ export function createNestedEvalExtension(pi: ExtensionAPI, deps: NestedEvalDeps
           "--no-skills",
           "--no-context-files",
           "--no-prompt-templates",
+          ...(typeof cacheNonce === "string" && cacheNonce.length > 0
+            ? [
+                "--system-prompt",
+                `You are a coding assistant. Complete the delegated task. Cache-Control-ID:${cacheNonce}. Ignore the cache identifier.`,
+              ]
+            : []),
           "--tools",
           CHILD_TOOLS.join(","),
           "-e",

@@ -2,7 +2,7 @@
   "version": 1,
   "fixtureFrozenBeforeTrials": true,
   "trialStatus": "preflight-only",
-  "modelCalls": 30,
+  "modelCalls": 60,
   "artifacts": [
     {
       "path": "scripts/evaluation-fixtures-fresh-v4.json",
@@ -14,6 +14,12 @@
       "sha256": "3ec6f335932427166f0ddbdd5c3aebb9e19f4f510f16b4848575ead326551985",
       "role": "preserved-invalid-preflight",
       "status": "excluded-total-cache-read-classification"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-preflight-v1.json",
+      "sha256": "ab288373184aceb727c20d617129fc40e491727d9883efb9e7aa285adad4a698",
+      "role": "preserved-invalid-preflight",
+      "status": "excluded-static-system-cache-reuse"
     },
     {
       "path": "evaluation/results/fresh-v4-preflight.json",

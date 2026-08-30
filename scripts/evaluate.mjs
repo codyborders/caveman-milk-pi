@@ -2825,6 +2825,12 @@ export function createPiRunner({
         "--no-skills",
         "--no-context-files",
         "--no-prompt-templates",
+        ...(cacheNonce === null
+          ? []
+          : [
+              "--system-prompt",
+              `You are a coding assistant. Complete the user task. Cache-Control-ID:${cacheNonce}. Ignore the cache identifier.`,
+            ]),
         ...(isWorkspaceCase
           ? [
               "--tools",
@@ -2897,6 +2903,12 @@ export function createPiRunner({
       "--no-skills",
       "--no-context-files",
       "--no-prompt-templates",
+      ...(cacheNonce === null
+        ? []
+        : [
+            "--system-prompt",
+            `Return the requested final response. Cache-Control-ID:${cacheNonce}. Ignore the cache identifier.`,
+          ]),
       "--no-tools",
       "-e",
       finalResponseExtensionPath,

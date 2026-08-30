@@ -21,8 +21,30 @@ export function completeTreeLatency(result) {
   return { baseMs, finalizerMs, completeMs: baseMs === null || finalizerMs === null ? null : baseMs + finalizerMs };
 }
 
+function firstChildCacheRead(child) {
+  for (const rawEvent of child?.rawEvents ?? []) {
+    try {
+      const event = typeof rawEvent === "string" ? JSON.parse(rawEvent) : rawEvent;
+      if (event?.type === "message_end" && event?.message?.role === "assistant") {
+        return event.message.usage?.cacheRead ?? null;
+      }
+    } catch {
+      return null;
+    }
+  }
+  return child?.usage?.cacheRead ?? null;
+}
+
+export function firstTurnCacheReads(result) {
+  return [
+    result?.usageTurns?.[0]?.cacheRead ?? result?.usage?.cacheRead,
+    ...(result?.nested?.children ?? []).map(firstChildCacheRead),
+    result?.finalizer?.usageTurns?.[0]?.cacheRead ?? result?.finalizer?.usage?.cacheRead,
+  ];
+}
+
 export function cacheEligibility(result, rule) {
-  const values = [result?.usage?.cacheRead, ...(result?.nested?.children ?? []).map((child) => child?.usage?.cacheRead), result?.finalizer?.usage?.cacheRead];
+  const values = firstTurnCacheReads(result);
   const wanted = rule === "zero" ? 0 : rule === "positive" ? 1 : null;
   return wanted !== null && values.length > 0 && values.every((value) => Number.isFinite(value) && (wanted === 0 ? value === 0 : value > 0));
 }
@@ -40,11 +62,20 @@ export function assessSelectiveFinalTopology(record) {
   return { passed: Object.values(checks).every(Boolean), checks };
 }
 
-export function evaluateSelectiveFinalGates({ tokenUpper95, latencyUpper95, nestedSuccessLower95, preservationLosses }) {
+export function evaluateSelectiveFinalGates({
+  tokenUpper95,
+  latencyUpper95,
+  nestedSuccessLower95,
+  nestedCandidateSuccessRate = 1,
+  preservationLosses,
+}) {
   const gates = {
     totalTokens: Number.isFinite(tokenUpper95) && tokenUpper95 < 0,
     latency: Number.isFinite(latencyUpper95) && latencyUpper95 < 0,
-    nestedSuccess: Number.isFinite(nestedSuccessLower95) && nestedSuccessLower95 >= 0,
+    nestedSuccess:
+      Number.isFinite(nestedSuccessLower95) &&
+      nestedSuccessLower95 >= 0 &&
+      nestedCandidateSuccessRate === 1,
     preservation: preservationLosses === 0,
   };
   return { passed: Object.values(gates).every(Boolean), gates, defaultMode: Object.values(gates).every(Boolean) ? "selective-final-v11" : "off" };

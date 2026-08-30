@@ -33,7 +33,8 @@ function result({
     response: "complete",
     elapsedMs,
     usage: root,
-    validation: { behavioralPassed: true, checks: [] },
+    behavioralPassed: true,
+    validation: { passed: true, checks: [] },
     preservation: { findings },
     nested: nested
       ? {
@@ -98,6 +99,7 @@ describe("selective-final analysis", () => {
     expect(analysis.deploymentMix.totalTokens.upper95).toBeLessThan(0);
     expect(analysis.deploymentMix.endToEndLatencyMs.upper95).toBeLessThan(0);
     expect(analysis.taskSuccess.nested.lower95).toBeGreaterThanOrEqual(0);
+    expect(analysis.taskSuccess.nested.candidateSuccessRate).toBe(1);
     expect(analysis.injectionAudit).toMatchObject({
       offInjectedNodes: 0,
       candidateInjectedNodes: 12,

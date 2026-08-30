@@ -100,7 +100,8 @@ function recordTopology(result) {
 }
 
 function resultPasses(result) {
-  return result?.validation?.behavioralPassed === true && recordTopology(result).passed;
+  const behavioralPassed = result?.behavioralPassed ?? result?.validation?.passed;
+  return behavioralPassed === true && recordTopology(result).passed;
 }
 
 function pairMetric(pair, select) {
@@ -211,15 +212,24 @@ function deploymentMix(cold, warm, field, label) {
 
 function successAnalysis(results, nested) {
   const pairs = pairResults(results).filter((pair) => pair.nested === nested);
-  return pairedBootstrap(
-    pairs,
-    (pair) => {
-      if (pair.off === undefined || pair.candidate === undefined) return null;
-      return Number(resultPasses(pair.candidate)) - Number(resultPasses(pair.off));
-    },
-    BOOTSTRAP_SAMPLES,
-    seedFrom(nested ? "nested-success" : "direct-success"),
+  const paired = pairs.filter(
+    (pair) => pair.off !== undefined && pair.candidate !== undefined,
   );
+  return {
+    ...pairedBootstrap(
+      paired,
+      (pair) => Number(resultPasses(pair.candidate)) - Number(resultPasses(pair.off)),
+      BOOTSTRAP_SAMPLES,
+      seedFrom(nested ? "nested-success" : "direct-success"),
+    ),
+    offPassed: paired.filter((pair) => resultPasses(pair.off)).length,
+    candidatePassed: paired.filter((pair) => resultPasses(pair.candidate)).length,
+    pairCount: paired.length,
+    candidateSuccessRate:
+      paired.length === 0
+        ? null
+        : paired.filter((pair) => resultPasses(pair.candidate)).length / paired.length,
+  };
 }
 
 function isCriticalFinding(finding) {
@@ -291,6 +301,7 @@ export function buildSelectiveFinalAnalysis({ runs }) {
     tokenUpper95: deployment.totalTokens.upper95,
     latencyUpper95: deployment.endToEndLatencyMs.upper95,
     nestedSuccessLower95: taskSuccess.nested.lower95,
+    nestedCandidateSuccessRate: taskSuccess.nested.candidateSuccessRate,
     preservationLosses: preservationLossCount,
   });
   return {

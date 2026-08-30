@@ -29,6 +29,7 @@ evaluation/results/fresh-v3-analysis-v2.json -text
 evaluation/results/fresh-v3-analysis-v2.md -text
 evaluation/results/fresh-v3-pr-summary-v2.md -text
 scripts/evaluation-fixtures-fresh-v4.json -text
+evaluation/results/fresh-v4-preflight-v0.json -text
 evaluation/results/fresh-v4-preflight.json -text
 evaluation/results/fresh-v4-cold-controlled-v1.json -text
 evaluation/results/fresh-v4-warmup-shared-v1.json -text

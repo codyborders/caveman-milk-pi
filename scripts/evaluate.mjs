@@ -6,6 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { execFileSync, spawn as nodeSpawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { firstTurnCacheReads } from "./eval/selective-final-v11.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fixturePath = path.join(here, "evaluation-fixtures.json");
@@ -1630,10 +1631,15 @@ export async function runProviderEvaluation(options) {
       else if (pair.active === undefined) pair.active = result;
       byPair.set(key, pair);
     }
-    const cacheReadsFor = (result) => [
-      result.usage?.cacheRead,
-      ...(result.nested?.children ?? []).map((child) => child.usage?.cacheRead),
-    ];
+    const cacheReadsFor = (result) => isSelectiveFinal
+      ? firstTurnCacheReads(result)
+      : [
+          result.usage?.cacheRead,
+          ...(result.nested?.children ?? []).map((child) => child.usage?.cacheRead),
+          ...(result.finalizer === null || result.finalizer === undefined
+            ? []
+            : [result.finalizer.usage?.cacheRead]),
+        ];
     const cacheState = (result) => {
       const reads = cacheReadsFor(result);
       if (reads.length === 0 || reads.some((value) => !Number.isFinite(value))) return "mixed";

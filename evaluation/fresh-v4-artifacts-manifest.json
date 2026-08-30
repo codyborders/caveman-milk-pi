@@ -1,13 +1,19 @@
 {
   "version": 1,
   "fixtureFrozenBeforeTrials": true,
-  "trialStatus": "not-run",
-  "modelCalls": 0,
+  "trialStatus": "preflight-only",
+  "modelCalls": 30,
   "artifacts": [
     {
       "path": "scripts/evaluation-fixtures-fresh-v4.json",
       "sha256": "34a051015ef549043f96731047ab5d8dc64160a81ee770a26c5d11ffd0266907",
       "role": "frozen-holdout"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-preflight-v0.json",
+      "sha256": "3ec6f335932427166f0ddbdd5c3aebb9e19f4f510f16b4848575ead326551985",
+      "role": "preserved-invalid-preflight",
+      "status": "excluded-total-cache-read-classification"
     },
     {
       "path": "evaluation/results/fresh-v4-preflight.json",
@@ -16,7 +22,31 @@
       "status": "not-run"
     },
     {
-      "path": "evaluation/results/fresh-v4-analysis.json",
+      "path": "evaluation/results/fresh-v4-cold-controlled-v1.json",
+      "sha256": null,
+      "role": "locked-placeholder",
+      "status": "not-run"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-warmup-shared-v1.json",
+      "sha256": null,
+      "role": "locked-placeholder",
+      "status": "not-run"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-warm-controlled-v1.json",
+      "sha256": null,
+      "role": "locked-placeholder",
+      "status": "not-run"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-analysis-v1.json",
+      "sha256": null,
+      "role": "locked-placeholder",
+      "status": "not-run"
+    },
+    {
+      "path": "evaluation/results/fresh-v4-analysis-v1.md",
       "sha256": null,
       "role": "locked-placeholder",
       "status": "not-run"

@@ -107,5 +107,10 @@ describe("selective-final v11 Pi runner", () => {
       report.results.map((result) => result.finalizer.injectedCandidateNodes).sort(),
     ).toEqual([0, 0, 0, 1, 1, 1]);
     expect(report.paidCallAccounting.actual.provider).toBe(12);
+    expect(
+      report.cacheVerification.pairs.every(
+        (pair) => pair.offNodeCacheReads.length === 2 && pair.activeNodeCacheReads.length === 2,
+      ),
+    ).toBe(true);
   });
 });

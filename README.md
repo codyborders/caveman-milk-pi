@@ -70,6 +70,22 @@ Wenyan modes affect Chinese input only. English prompts remain English.
 
 Technical terms, commands, identifiers, quoted errors, and persisted content keep their appropriate original language.
 
+## Experimental final-response activation
+
+Use explicit one-response activation only while the persisted mode is `off`:
+
+```text
+/caveman final <request>
+```
+
+The command applies prompt contract v11 to exactly one final user-facing prose response. It does not change the saved mode.
+
+The extension disables tools for that response. It restores the exact prior tool list after completion or session shutdown. A send failure also restores tools. Overlapping activations are rejected.
+
+Safety warnings, confirmations, uncertainty, negation, scope, exact values, ordered steps, and unfinished work remain complete. Code, commands, paths, filenames, quotations, logs, commit text, PR text, documentation, files, and persisted artifacts remain unchanged.
+
+This explicit command avoids guessing whether a model request targets the user, a child agent, or a persisted artifact. Normal requests and child-agent handoffs receive no v11 injection.
+
 ## Status and diagnostics
 
 The footer shows `caveman: <mode>` by default.

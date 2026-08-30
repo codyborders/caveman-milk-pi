@@ -397,7 +397,7 @@ function buildMarkdown(analysis) {
     .join("\n");
   return `# Fresh-v2 final analysis (v1)
 
-Fresh-v2 compares \`off\` with \`lite\`. Prompt contract v9 is unchanged. The fixture SHA-256 is \`${analysis.fixture.sha256}\`.
+Fresh-v2 compares \`off\` with \`lite\`. Evaluator correction did not change the locked prompt contract v9. The fixture SHA-256 is \`${analysis.fixture.sha256}\`.
 
 The work started ${analysis.externalAttempts.primary} primary processes and ${analysis.externalAttempts.judge} judge processes. Provider failures and judge failures were both zero.
 

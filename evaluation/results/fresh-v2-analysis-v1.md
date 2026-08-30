@@ -1,6 +1,6 @@
 # Fresh-v2 final analysis (v1)
 
-Fresh-v2 compares `off` with `lite`. Prompt contract v9 is unchanged. The fixture SHA-256 is `8bd5776b40800d69e238100bfe5ccddf00e6d5ab826919c8c400835f9caf353a`.
+Fresh-v2 compares `off` with `lite`. Evaluator correction did not change the locked prompt contract v9. The fixture SHA-256 is `8bd5776b40800d69e238100bfe5ccddf00e6d5ab826919c8c400835f9caf353a`.
 
 The work started 612 primary processes and 300 judge processes. Provider failures and judge failures were both zero.
 

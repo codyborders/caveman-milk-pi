@@ -13,6 +13,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..", "..");
 
 export const DEFAULT_PI_BIN = path.join(
+  root,
   "node_modules",
   "@earendil-works",
   "pi-coding-agent",

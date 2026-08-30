@@ -1,6 +1,7 @@
 // Real Pi launch accounting records elapsed time and explicit thinking mode.
 // A deterministic spawn stub verifies arguments and normalized usage.
 
+import * as path from "node:path";
 import { describe, expect, it } from "vitest";
 import { createDefaultLaunchNode } from "../scripts/eval/shared-prefix-v12-launch.mjs";
 
@@ -29,6 +30,7 @@ describe("shared-prefix v12 Pi launcher", () => {
       },
     });
     const result = await launch({ nodeId: "parent", prompt: "work" });
+    expect(path.isAbsolute(calls[0].args[0])).toBe(true);
     expect(calls[0].args).toContain("--thinking");
     expect(calls[0].args).toContain("medium");
     expect(result.elapsedMs).toBe(250);

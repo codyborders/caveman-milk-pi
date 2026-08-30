@@ -15,6 +15,7 @@ type ActiveMode = Exclude<CavemanMode, "off">;
 
 const COMMON_RULES = promptContract.commonRules;
 const MODE_RULES: Readonly<Record<ActiveMode, string>> = promptContract.modeRules;
+const SKILL_RECOVERY = "Reinstall the extension or restore skill/SKILL.md from the package.";
 
 function getSkillPath(): string {
   const here = path.dirname(fileURLToPath(import.meta.url));
@@ -25,21 +26,19 @@ export function loadSkillContent(): string {
   const skillPath = getSkillPath();
   if (!fs.existsSync(skillPath)) {
     throw new Error(
-      `caveman-milk-pi could not load SKILL.md at ${skillPath}. ` +
-        "Reinstall the extension or verify skill/SKILL.md exists.",
+      `caveman-milk-pi could not load SKILL.md at ${skillPath}. ${SKILL_RECOVERY}`,
     );
   }
 
   const content = fs.readFileSync(skillPath, "utf8");
   if (content.length === 0) {
     throw new Error(
-      `caveman-milk-pi SKILL.md at ${skillPath} is empty. Restore via scripts/sync-skill.sh.`,
+      `caveman-milk-pi SKILL.md at ${skillPath} is empty. ${SKILL_RECOVERY}`,
     );
   }
   if (!content.includes("## Intensity")) {
     throw new Error(
-      `caveman-milk-pi SKILL.md at ${skillPath} is malformed (no "## Intensity" section). ` +
-        "Restore via scripts/sync-skill.sh.",
+      `caveman-milk-pi SKILL.md at ${skillPath} is malformed (no "## Intensity" section). ${SKILL_RECOVERY}`,
     );
   }
   return content;

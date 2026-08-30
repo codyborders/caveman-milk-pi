@@ -1,0 +1,1130 @@
+{
+  "schemaVersion": 2,
+  "fixtureVersion": 2,
+  "provider": "pi",
+  "runner": "pi",
+  "model": "openai-codex/gpt-5.4-mini",
+  "tokenAccounting": {
+    "method": "provider-count-endpoint",
+    "endpointPath": "/v1/messages/count_tokens",
+    "status": "not-run",
+    "model": "openai-codex/gpt-5.4-mini",
+    "totalRequestInputTokens": {},
+    "incrementalActiveMinusOffTokens": {},
+    "exactCounts": {}
+  },
+  "judge": {
+    "enabled": true,
+    "model": "openai-codex/gpt-5.6-sol",
+    "tolerance": 0
+  },
+  "pricing": null,
+  "seed": "0xc0ffee01",
+  "runId": "caveman-eval-9b0213aaef8a5244",
+  "runIdentity": {
+    "provider": "pi",
+    "endpoint": "https://api.anthropic.com/v1/messages",
+    "model": "openai-codex/gpt-5.4-mini",
+    "judge": true,
+    "judgeModel": "openai-codex/gpt-5.6-sol",
+    "fixtureVersion": 2,
+    "commit": "bfe18ba66da25f8f393a9ce3ff81b4481265c618",
+    "modes": [
+      "off",
+      "lite",
+      "full"
+    ],
+    "categories": [
+      "technical-explanation"
+    ],
+    "repetitions": 3,
+    "seed": "0xc0ffee01",
+    "baseSystemPromptHash": "50fa36792a831a710bce59bf9c130272ebd7577a281e23f611fa299c71b87cae",
+    "promptContractHash": "c59769742e305985e772eb5fa4b34931cd644ed09e908cfe7abccbff9c2ab8e6",
+    "runtimePromptHash": "03edd1eb4baa46467645a0a0607f0066951043a444763b43138843f681f108f8"
+  },
+  "generatedAt": "2026-08-28T02:39:22.804Z",
+  "environment": {
+    "node": "v25.8.2",
+    "platform": "darwin",
+    "arch": "arm64",
+    "commit": "bfe18ba66da25f8f393a9ce3ff81b4481265c618",
+    "piVersion": "0.84.3",
+    "provider": "pi",
+    "runner": "pi",
+    "model": "openai-codex/gpt-5.4-mini",
+    "fixtureVersion": 2,
+    "pricing": null,
+    "seed": "0xc0ffee01",
+    "generatedAt": "2026-08-28T02:37:19.433Z"
+  },
+  "repetitions": 3,
+  "modes": [
+    "off",
+    "lite",
+    "full"
+  ],
+  "categories": [
+    "technical-explanation"
+  ],
+  "plannedCalls": 15,
+  "plannedProviderCalls": 9,
+  "plannedJudgeCalls": 6,
+  "paidCallAccounting": {
+    "cap": 15,
+    "planned": {
+      "provider": 9,
+      "judge": 6,
+      "countEndpoint": 0,
+      "total": 15
+    },
+    "actual": {
+      "provider": 9,
+      "judge": 6,
+      "countEndpoint": 0,
+      "total": 15
+    }
+  },
+  "caseCount": 9,
+  "runOrder": [
+    {
+      "seq": 1,
+      "key": "1::technical-explanation::full",
+      "repetition": 1,
+      "category": "technical-explanation",
+      "mode": "full",
+      "armPosition": 0,
+      "resumed": false
+    },
+    {
+      "seq": 2,
+      "key": "1::technical-explanation::off",
+      "repetition": 1,
+      "category": "technical-explanation",
+      "mode": "off",
+      "armPosition": 1,
+      "resumed": false
+    },
+    {
+      "seq": 3,
+      "key": "1::technical-explanation::lite",
+      "repetition": 1,
+      "category": "technical-explanation",
+      "mode": "lite",
+      "armPosition": 2,
+      "resumed": false
+    },
+    {
+      "seq": 4,
+      "key": "2::technical-explanation::lite",
+      "repetition": 2,
+      "category": "technical-explanation",
+      "mode": "lite",
+      "armPosition": 0,
+      "resumed": false
+    },
+    {
+      "seq": 5,
+      "key": "2::technical-explanation::off",
+      "repetition": 2,
+      "category": "technical-explanation",
+      "mode": "off",
+      "armPosition": 1,
+      "resumed": false
+    },
+    {
+      "seq": 6,
+      "key": "2::technical-explanation::full",
+      "repetition": 2,
+      "category": "technical-explanation",
+      "mode": "full",
+      "armPosition": 2,
+      "resumed": false
+    },
+    {
+      "seq": 7,
+      "key": "3::technical-explanation::lite",
+      "repetition": 3,
+      "category": "technical-explanation",
+      "mode": "lite",
+      "armPosition": 0,
+      "resumed": false
+    },
+    {
+      "seq": 8,
+      "key": "3::technical-explanation::off",
+      "repetition": 3,
+      "category": "technical-explanation",
+      "mode": "off",
+      "armPosition": 1,
+      "resumed": false
+    },
+    {
+      "seq": 9,
+      "key": "3::technical-explanation::full",
+      "repetition": 3,
+      "category": "technical-explanation",
+      "mode": "full",
+      "armPosition": 2,
+      "resumed": false
+    }
+  ],
+  "results": [
+    {
+      "seq": 1,
+      "key": "1::technical-explanation::full",
+      "repetition": 1,
+      "category": "technical-explanation",
+      "mode": "full",
+      "armPosition": 0,
+      "response": "A `cache_key` must include model identity because the same input can produce different outputs on different models.\n\nIf the `cache_key` only uses the prompt:\n- a response from Model A can be incorrectly reused for Model B\n- upgrades or version changes can return stale results\n- different tokenization, system behavior, or decoding rules can change the answer\n\nSo the `cache_key` should distinguish at least:\n- model name / version\n- relevant generation settings if they affect output\n\nIn short: model identity is part of the data that defines the cached result. Without it, the cache can return the wrong answer.",
+      "wordCount": 95,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "terms",
+            "passed": true,
+            "detail": "all 1 required terms retained"
+          }
+        ]
+      },
+      "usage": {
+        "input": 1274,
+        "output": 227,
+        "cacheWrite": 0,
+        "cacheRead": 0
+      },
+      "rawUsage": {
+        "input": 1274,
+        "output": 227,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "reasoning": 96,
+        "totalTokens": 1501,
+        "cost": {
+          "input": 0.0009555000000000001,
+          "output": 0.0010215,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0.001977
+        }
+      },
+      "costUsd": 0.001977,
+      "elapsedMs": 9898,
+      "attempts": 1,
+      "toolCallCount": 0,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": {
+        "failed": false,
+        "assignment": {
+          "A": "full",
+          "B": "off"
+        },
+        "verdict": {
+          "A": {
+            "completeness": 4,
+            "correctness": 4,
+            "total": 8
+          },
+          "B": {
+            "completeness": 4,
+            "correctness": 4,
+            "total": 8
+          },
+          "notes": "Both fully explain why model identity must be included and use the exact term cache_key."
+        },
+        "offQualityTotal": 8,
+        "activeQualityTotal": 8,
+        "notes": "Both fully explain why model identity must be included and use the exact term cache_key.",
+        "usage": {
+          "input": 1217,
+          "output": 90,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": {
+          "input": 1217,
+          "output": 90,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 40,
+          "totalTokens": 1307,
+          "cost": {
+            "input": 0.006085,
+            "output": 0.0027,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0.008785000000000001
+          }
+        }
+      },
+      "tokenRatioToOff": 0.961864406779661,
+      "wordRatioToOff": 0.8189655172413793,
+      "brevityPassed": false,
+      "qualityPassed": true,
+      "passed": false,
+      "requiredTermsPassed": true,
+      "validationPassed": true
+    },
+    {
+      "seq": 2,
+      "key": "1::technical-explanation::off",
+      "repetition": 1,
+      "category": "technical-explanation",
+      "mode": "off",
+      "armPosition": 1,
+      "response": "A `cache_key` must include model identity because the same prompt can produce different results on different models.\n\nWhy:\n- Different models have different weights, tokenizers, context limits, and decoding behavior.\n- Even the same model family can change across versions.\n- So if the `cache_key` only uses the prompt, you could return a cached answer from the wrong model.\n\nExample:\n- Prompt: “Summarize this text”\n- Model A: concise summary\n- Model B: detailed summary\n\nIf both share the same `cache_key`, the cache may serve the wrong response.\n\nSo the `cache_key` should include at least:\n- prompt/input\n- model name or ID\n- model version or revision\n- relevant generation settings if they affect output\n\nThis keeps cached results correct and avoids cross-model collisions.",
+      "wordCount": 116,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "terms",
+            "passed": true,
+            "detail": "all 1 required terms retained"
+          }
+        ]
+      },
+      "usage": {
+        "input": 1154,
+        "output": 236,
+        "cacheWrite": 0,
+        "cacheRead": 0
+      },
+      "rawUsage": {
+        "input": 1154,
+        "output": 236,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "reasoning": 65,
+        "totalTokens": 1390,
+        "cost": {
+          "input": 0.0008655000000000001,
+          "output": 0.001062,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0.0019275
+        }
+      },
+      "costUsd": 0.0019275,
+      "elapsedMs": 8669,
+      "attempts": 1,
+      "toolCallCount": 0,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": null,
+      "tokenRatioToOff": null,
+      "wordRatioToOff": null,
+      "brevityPassed": true,
+      "qualityPassed": true,
+      "passed": true,
+      "requiredTermsPassed": true,
+      "validationPassed": true
+    },
+    {
+      "seq": 3,
+      "key": "1::technical-explanation::lite",
+      "repetition": 1,
+      "category": "technical-explanation",
+      "mode": "lite",
+      "armPosition": 2,
+      "response": "The `cache_key` must include model identity because the same input can produce different outputs on different models.\n\nIf you only key by prompt/content, you can get unsafe cache collisions:\n- Model A and Model B may tokenize differently.\n- They may have different weights, context limits, tool behavior, or system prompts.\n- Even with identical text, their responses can differ.\n\nSo `cache_key` should distinguish:\n- model name/version\n- prompt or request content\n- relevant settings like temperature, tools, and system prompt\n\nOtherwise, you might return a cached answer from the wrong model.",
+      "wordCount": 88,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "terms",
+            "passed": true,
+            "detail": "all 1 required terms retained"
+          }
+        ]
+      },
+      "usage": {
+        "input": 1271,
+        "output": 231,
+        "cacheWrite": 0,
+        "cacheRead": 0
+      },
+      "rawUsage": {
+        "input": 1271,
+        "output": 231,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "reasoning": 107,
+        "totalTokens": 1502,
+        "cost": {
+          "input": 0.00095325,
+          "output": 0.0010395,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0.00199275
+        }
+      },
+      "costUsd": 0.00199275,
+      "elapsedMs": 10510,
+      "attempts": 1,
+      "toolCallCount": 0,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": {
+        "failed": false,
+        "assignment": {
+          "A": "off",
+          "B": "lite"
+        },
+        "verdict": {
+          "A": {
+            "completeness": 4,
+            "correctness": 4,
+            "total": 8
+          },
+          "B": {
+            "completeness": 4,
+            "correctness": 4,
+            "total": 8
+          },
+          "notes": "Both fully explain cross-model cache collisions and use the exact term cache_key."
+        },
+        "offQualityTotal": 8,
+        "activeQualityTotal": 8,
+        "notes": "Both fully explain cross-model cache collisions and use the exact term cache_key.",
+        "usage": {
+          "input": 1210,
+          "output": 114,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": {
+          "input": 1210,
+          "output": 114,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 66,
+          "totalTokens": 1324,
+          "cost": {
+            "input": 0.006050000000000001,
+            "output": 0.0034200000000000003,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0.009470000000000001
+          }
+        }
+      },
+      "tokenRatioToOff": 0.9788135593220338,
+      "wordRatioToOff": 0.7586206896551724,
+      "brevityPassed": false,
+      "qualityPassed": true,
+      "passed": false,
+      "requiredTermsPassed": true,
+      "validationPassed": true
+    },
+    {
+      "seq": 4,
+      "key": "2::technical-explanation::lite",
+      "repetition": 2,
+      "category": "technical-explanation",
+      "mode": "lite",
+      "armPosition": 0,
+      "response": "A `cache_key` must include model identity because the same input can produce different results in different models.\n\nIf you omit the model from the `cache_key`, you can get false hits:\n- model A’s cached response reused for model B\n- different tokenization or formatting rules ignored\n- different output quality, behavior, or safety policy mixed together\n\nSo the `cache_key` should uniquely represent not just the prompt/input, but also the exact model that generated or will consume it.",
+      "wordCount": 75,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "terms",
+            "passed": true,
+            "detail": "all 1 required terms retained"
+          }
+        ]
+      },
+      "usage": {
+        "input": 1271,
+        "output": 204,
+        "cacheWrite": 0,
+        "cacheRead": 0
+      },
+      "rawUsage": {
+        "input": 1271,
+        "output": 204,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "reasoning": 100,
+        "totalTokens": 1475,
+        "cost": {
+          "input": 0.00095325,
+          "output": 0.000918,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0.00187125
+        }
+      },
+      "costUsd": 0.00187125,
+      "elapsedMs": 8144,
+      "attempts": 1,
+      "toolCallCount": 0,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": {
+        "failed": false,
+        "assignment": {
+          "A": "lite",
+          "B": "off"
+        },
+        "verdict": {
+          "A": {
+            "completeness": 4,
+            "correctness": 4,
+            "total": 8
+          },
+          "B": {
+            "completeness": 4,
+            "correctness": 4,
+            "total": 8
+          },
+          "notes": "Both fully and correctly explain why model identity belongs in the cache_key; B adds useful version and settings details."
+        },
+        "offQualityTotal": 8,
+        "activeQualityTotal": 8,
+        "notes": "Both fully and correctly explain why model identity belongs in the cache_key; B adds useful version and settings details.",
+        "usage": {
+          "input": 1150,
+          "output": 109,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": {
+          "input": 1150,
+          "output": 109,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 54,
+          "totalTokens": 1259,
+          "cost": {
+            "input": 0.005750000000000001,
+            "output": 0.00327,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0.00902
+          }
+        }
+      },
+      "tokenRatioToOff": 0.9066666666666666,
+      "wordRatioToOff": 0.78125,
+      "brevityPassed": true,
+      "qualityPassed": true,
+      "passed": true,
+      "requiredTermsPassed": true,
+      "validationPassed": true
+    },
+    {
+      "seq": 5,
+      "key": "2::technical-explanation::off",
+      "repetition": 2,
+      "category": "technical-explanation",
+      "mode": "off",
+      "armPosition": 1,
+      "response": "`cache_key` must include model identity because the same input can produce different results on different models.\n\nIf the key only reflects the prompt/input:\n- a response from Model A could be incorrectly reused for Model B\n- tokenization/context limits may differ\n- decoding, safety, and formatting behavior may differ\n- model upgrades or version changes would silently serve stale or wrong cached data\n\nSo `cache_key` should encode at least:\n- model name or ID\n- model version/revision\n- relevant generation settings when they affect output\n\nThat ensures cached results are only reused when they’re actually valid for the exact model.",
+      "wordCount": 96,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "terms",
+            "passed": true,
+            "detail": "all 1 required terms retained"
+          }
+        ]
+      },
+      "usage": {
+        "input": 1154,
+        "output": 225,
+        "cacheWrite": 0,
+        "cacheRead": 0
+      },
+      "rawUsage": {
+        "input": 1154,
+        "output": 225,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "reasoning": 94,
+        "totalTokens": 1379,
+        "cost": {
+          "input": 0.0008655000000000001,
+          "output": 0.0010125,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0.001878
+        }
+      },
+      "costUsd": 0.001878,
+      "elapsedMs": 8143,
+      "attempts": 1,
+      "toolCallCount": 0,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": null,
+      "tokenRatioToOff": null,
+      "wordRatioToOff": null,
+      "brevityPassed": true,
+      "qualityPassed": true,
+      "passed": true,
+      "requiredTermsPassed": true,
+      "validationPassed": true
+    },
+    {
+      "seq": 6,
+      "key": "2::technical-explanation::full",
+      "repetition": 2,
+      "category": "technical-explanation",
+      "mode": "full",
+      "armPosition": 2,
+      "response": "A `cache_key` must include model identity because the same prompt can produce different results across models.\n\nIf you omit the model, two requests like:\n\n- prompt: `\"Summarize this text\"`\n- model: `gpt-4`\n- model: `gpt-4.1`\n\ncould collide in the cache even though the outputs, tokenization, context handling, or safety behavior differ. That would return the wrong cached result.\n\nIncluding model identity in the `cache_key` ensures:\n\n- no collisions between different models\n- correct reuse only for the same model\n- safe invalidation when models change\n\nSo the `cache_key` should reflect at least: prompt/content + model identity + any model-specific parameters.",
+      "wordCount": 96,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "terms",
+            "passed": true,
+            "detail": "all 1 required terms retained"
+          }
+        ]
+      },
+      "usage": {
+        "input": 250,
+        "output": 236,
+        "cacheWrite": 0,
+        "cacheRead": 1024
+      },
+      "rawUsage": {
+        "input": 250,
+        "output": 236,
+        "cacheRead": 1024,
+        "cacheWrite": 0,
+        "reasoning": 84,
+        "totalTokens": 1510,
+        "cost": {
+          "input": 0.0001875,
+          "output": 0.001062,
+          "cacheRead": 0.0000768,
+          "cacheWrite": 0,
+          "total": 0.0013262999999999999
+        }
+      },
+      "costUsd": 0.0013262999999999999,
+      "elapsedMs": 8218,
+      "attempts": 1,
+      "toolCallCount": 0,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": {
+        "failed": false,
+        "assignment": {
+          "A": "off",
+          "B": "full"
+        },
+        "verdict": {
+          "A": {
+            "completeness": 4,
+            "correctness": 4,
+            "total": 8
+          },
+          "B": {
+            "completeness": 4,
+            "correctness": 4,
+            "total": 8
+          },
+          "notes": "Both fully explain collision risks and correctly use the exact term cache_key."
+        },
+        "offQualityTotal": 8,
+        "activeQualityTotal": 8,
+        "notes": "Both fully explain collision risks and correctly use the exact term cache_key.",
+        "usage": {
+          "input": 1198,
+          "output": 113,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": {
+          "input": 1198,
+          "output": 113,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 66,
+          "totalTokens": 1311,
+          "cost": {
+            "input": 0.0059900000000000005,
+            "output": 0.0033900000000000002,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0.009380000000000001
+          }
+        }
+      },
+      "tokenRatioToOff": 1.048888888888889,
+      "wordRatioToOff": 1,
+      "brevityPassed": false,
+      "qualityPassed": true,
+      "passed": false,
+      "requiredTermsPassed": true,
+      "validationPassed": true
+    },
+    {
+      "seq": 7,
+      "key": "3::technical-explanation::lite",
+      "repetition": 3,
+      "category": "technical-explanation",
+      "mode": "lite",
+      "armPosition": 0,
+      "response": "A `cache_key` must include model identity because the same input can produce different outputs across models.\n\nIf the cache_key only used the prompt or request text, then:\n- model A could store a result,\n- model B could later reuse it incorrectly,\n- and you’d serve the wrong response for a different model.\n\nModel identity matters because different models may differ in:\n- weights and behavior,\n- tokenization,\n- system prompt handling,\n- sampling defaults,\n- fine-tuning/version.\n\nSo the cache_key should uniquely represent the full semantic request, including the model ID/version, not just the text.",
+      "wordCount": 90,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "terms",
+            "passed": true,
+            "detail": "all 1 required terms retained"
+          }
+        ]
+      },
+      "usage": {
+        "input": 1271,
+        "output": 189,
+        "cacheWrite": 0,
+        "cacheRead": 0
+      },
+      "rawUsage": {
+        "input": 1271,
+        "output": 189,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "reasoning": 62,
+        "totalTokens": 1460,
+        "cost": {
+          "input": 0.00095325,
+          "output": 0.0008505,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0.00180375
+        }
+      },
+      "costUsd": 0.00180375,
+      "elapsedMs": 7787,
+      "attempts": 1,
+      "toolCallCount": 0,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": {
+        "failed": false,
+        "assignment": {
+          "A": "off",
+          "B": "lite"
+        },
+        "verdict": {
+          "A": {
+            "completeness": 4,
+            "correctness": 4,
+            "total": 8
+          },
+          "B": {
+            "completeness": 4,
+            "correctness": 4,
+            "total": 8
+          },
+          "notes": "Both fully explain that model identity prevents cross-model cache collisions and include the exact term cache_key."
+        },
+        "offQualityTotal": 8,
+        "activeQualityTotal": 8,
+        "notes": "Both fully explain that model identity prevents cross-model cache collisions and include the exact term cache_key.",
+        "usage": {
+          "input": 1161,
+          "output": 90,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": {
+          "input": 1161,
+          "output": 90,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 38,
+          "totalTokens": 1251,
+          "cost": {
+            "input": 0.005805,
+            "output": 0.0027,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0.008505
+          }
+        }
+      },
+      "tokenRatioToOff": 0.8217391304347826,
+      "wordRatioToOff": 1.0465116279069768,
+      "brevityPassed": true,
+      "qualityPassed": true,
+      "passed": true,
+      "requiredTermsPassed": true,
+      "validationPassed": true
+    },
+    {
+      "seq": 8,
+      "key": "3::technical-explanation::off",
+      "repetition": 3,
+      "category": "technical-explanation",
+      "mode": "off",
+      "armPosition": 1,
+      "response": "A `cache_key` must include model identity because the same input can produce different outputs across models.\n\nIf you cache only by prompt/request text:\n- model A’s result could be reused for model B\n- you may return stale or incompatible data\n- output shape, tokenization, and reasoning can differ by model version\n\nSo the `cache_key` should encode at least:\n- model name/ID\n- model version or snapshot\n- relevant decoding settings if they affect output\n\nThat prevents collisions and ensures the cached response matches the exact model that produced it.",
+      "wordCount": 86,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "terms",
+            "passed": true,
+            "detail": "all 1 required terms retained"
+          }
+        ]
+      },
+      "usage": {
+        "input": 1154,
+        "output": 230,
+        "cacheWrite": 0,
+        "cacheRead": 0
+      },
+      "rawUsage": {
+        "input": 1154,
+        "output": 230,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "reasoning": 111,
+        "totalTokens": 1384,
+        "cost": {
+          "input": 0.0008655000000000001,
+          "output": 0.0010350000000000001,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0.0019005000000000003
+        }
+      },
+      "costUsd": 0.0019005000000000003,
+      "elapsedMs": 8350,
+      "attempts": 1,
+      "toolCallCount": 0,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": null,
+      "tokenRatioToOff": null,
+      "wordRatioToOff": null,
+      "brevityPassed": true,
+      "qualityPassed": true,
+      "passed": true,
+      "requiredTermsPassed": true,
+      "validationPassed": true
+    },
+    {
+      "seq": 9,
+      "key": "3::technical-explanation::full",
+      "repetition": 3,
+      "category": "technical-explanation",
+      "mode": "full",
+      "armPosition": 2,
+      "response": "A `cache_key` must include model identity because the same input can produce different outputs on different models.\n\nWhy:\n- Different models have different tokenization, context limits, system behavior, and decoding.\n- A response cached for one model may be wrong, invalid, or unsafe for another.\n- Without model identity in the `cache_key`, two models can collide and reuse the wrong result.\n\nSo the `cache_key` should distinguish:\n- model name/version\n- prompt/input\n- relevant generation settings\n\nIn short: same prompt ≠ same result unless the model is the same.",
+      "wordCount": 83,
+      "requiredTermRatio": 1,
+      "validation": {
+        "passed": true,
+        "checks": [
+          {
+            "id": "terms",
+            "passed": true,
+            "detail": "all 1 required terms retained"
+          }
+        ]
+      },
+      "usage": {
+        "input": 1274,
+        "output": 203,
+        "cacheWrite": 0,
+        "cacheRead": 0
+      },
+      "rawUsage": {
+        "input": 1274,
+        "output": 203,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "reasoning": 80,
+        "totalTokens": 1477,
+        "cost": {
+          "input": 0.0009555000000000001,
+          "output": 0.0009135,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0.001869
+        }
+      },
+      "costUsd": 0.001869,
+      "elapsedMs": 8006,
+      "attempts": 1,
+      "toolCallCount": 0,
+      "systemPromptSent": null,
+      "sessionId": null,
+      "judge": {
+        "failed": false,
+        "assignment": {
+          "A": "full",
+          "B": "off"
+        },
+        "verdict": {
+          "A": {
+            "completeness": 4,
+            "correctness": 4,
+            "total": 8
+          },
+          "B": {
+            "completeness": 4,
+            "correctness": 4,
+            "total": 8
+          },
+          "notes": "Both fully explain why model identity belongs in the cache_key and use the exact required term."
+        },
+        "offQualityTotal": 8,
+        "activeQualityTotal": 8,
+        "notes": "Both fully explain why model identity belongs in the cache_key and use the exact required term.",
+        "usage": {
+          "input": 1157,
+          "output": 75,
+          "cacheWrite": 0,
+          "cacheRead": 0
+        },
+        "rawUsage": {
+          "input": 1157,
+          "output": 75,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "reasoning": 24,
+          "totalTokens": 1232,
+          "cost": {
+            "input": 0.005785,
+            "output": 0.0022500000000000003,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0.008035
+          }
+        }
+      },
+      "tokenRatioToOff": 0.8826086956521739,
+      "wordRatioToOff": 0.9651162790697675,
+      "brevityPassed": false,
+      "qualityPassed": true,
+      "passed": false,
+      "requiredTermsPassed": true,
+      "validationPassed": true
+    }
+  ],
+  "aggregates": {
+    "byMode": {
+      "full": {
+        "pairCount": 3,
+        "completePairCount": 3,
+        "incompletePairCount": 0,
+        "outputTokenRatio": {
+          "mean": 0.964454,
+          "median": 0.961864,
+          "count": 3
+        },
+        "deltas": {
+          "inputTokens": {
+            "mean": -221.333333,
+            "median": 120,
+            "count": 3
+          },
+          "cacheWriteTokens": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          },
+          "cacheReadTokens": {
+            "mean": 341.333333,
+            "median": 0,
+            "count": 3
+          },
+          "outputTokens": {
+            "mean": -8.333333,
+            "median": -9,
+            "count": 3
+          },
+          "costUsd": null,
+          "latencyMs": {
+            "mean": 320,
+            "median": 75,
+            "count": 3
+          },
+          "qualityTotal": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          }
+        },
+        "validationPassed": true,
+        "brevityPassed": false,
+        "qualityPassed": true
+      },
+      "lite": {
+        "pairCount": 3,
+        "completePairCount": 3,
+        "incompletePairCount": 0,
+        "outputTokenRatio": {
+          "mean": 0.902406,
+          "median": 0.906667,
+          "count": 3
+        },
+        "deltas": {
+          "inputTokens": {
+            "mean": 117,
+            "median": 117,
+            "count": 3
+          },
+          "cacheWriteTokens": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          },
+          "cacheReadTokens": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          },
+          "outputTokens": {
+            "mean": -22.333333,
+            "median": -21,
+            "count": 3
+          },
+          "costUsd": null,
+          "latencyMs": {
+            "mean": 426.333333,
+            "median": 1,
+            "count": 3
+          },
+          "qualityTotal": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          }
+        },
+        "validationPassed": true,
+        "brevityPassed": false,
+        "qualityPassed": true
+      }
+    },
+    "byModeCategory": {
+      "full::technical-explanation": {
+        "pairCount": 3,
+        "completePairCount": 3,
+        "incompletePairCount": 0,
+        "outputTokenRatio": {
+          "mean": 0.964454,
+          "median": 0.961864,
+          "count": 3
+        },
+        "deltas": {
+          "inputTokens": {
+            "mean": -221.333333,
+            "median": 120,
+            "count": 3
+          },
+          "cacheWriteTokens": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          },
+          "cacheReadTokens": {
+            "mean": 341.333333,
+            "median": 0,
+            "count": 3
+          },
+          "outputTokens": {
+            "mean": -8.333333,
+            "median": -9,
+            "count": 3
+          },
+          "costUsd": null,
+          "latencyMs": {
+            "mean": 320,
+            "median": 75,
+            "count": 3
+          },
+          "qualityTotal": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          }
+        },
+        "validationPassed": true,
+        "brevityPassed": false,
+        "qualityPassed": true
+      },
+      "lite::technical-explanation": {
+        "pairCount": 3,
+        "completePairCount": 3,
+        "incompletePairCount": 0,
+        "outputTokenRatio": {
+          "mean": 0.902406,
+          "median": 0.906667,
+          "count": 3
+        },
+        "deltas": {
+          "inputTokens": {
+            "mean": 117,
+            "median": 117,
+            "count": 3
+          },
+          "cacheWriteTokens": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          },
+          "cacheReadTokens": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          },
+          "outputTokens": {
+            "mean": -22.333333,
+            "median": -21,
+            "count": 3
+          },
+          "costUsd": null,
+          "latencyMs": {
+            "mean": 426.333333,
+            "median": 1,
+            "count": 3
+          },
+          "qualityTotal": {
+            "mean": 0,
+            "median": 0,
+            "count": 3
+          }
+        },
+        "validationPassed": true,
+        "brevityPassed": false,
+        "qualityPassed": true
+      }
+    }
+  },
+  "failures": [],
+  "judgeFailures": 0,
+  "primaryUsageComplete": true,
+  "passed": false
+}

@@ -31,6 +31,7 @@ describe("pi runner adapter", () => {
       piBin: "/opt/pi/bin/pi",
       extensionPath: "/repo/index.ts",
       model: "test-model",
+      thinkingLevel: "medium",
       spawnImpl: async (args, options) => {
         spawns.push({
           args,
@@ -65,6 +66,7 @@ describe("pi runner adapter", () => {
     expect(flags).not.toContain("--session-id");
     expect(flags).toContain("--model");
     expect(flags[flags.indexOf("--model") + 1]).toBe("test-model");
+    expect(flags[flags.indexOf("--thinking") + 1]).toBe("medium");
     expect(flags[flags.indexOf("-p") + 1]).toBe("Explain this backup policy.");
 
     // The extension config is isolated through the documented override and
@@ -93,5 +95,66 @@ describe("pi runner adapter", () => {
     expect(outcome.sessionId).toBeNull();
     expect(outcome.elapsedMs).toBeGreaterThan(0);
     fs.rmSync(homeRoot, { recursive: true, force: true });
+  });
+
+  it("prepends equal-length unique cache identifiers for cold arm trials", async () => {
+    const spawns = [];
+    const homeRoot = fs.mkdtempSync(path.join(os.tmpdir(), "caveman-pi-cache-"));
+    const runner = evaluate.createPiRunner({
+      piBin: "/opt/pi/bin/pi",
+      extensionPath: "/repo/index.ts",
+      cacheControlExtensionPath: "/repo/scripts/eval/pi-eval-cache-control.ts",
+      cachePromptStrategy: "unique-arm",
+      model: "test-model",
+      spawnImpl: async (args, options) => {
+        spawns.push({ args, nonce: options.env.CAVEMAN_EVAL_CACHE_NONCE });
+        return { code: 0, stdout: jsonlEvents, stderr: "" };
+      },
+      mkdtempImpl: (prefix) => fs.mkdtempSync(path.join(homeRoot, prefix)),
+    });
+
+    try {
+      await runner.execute({ mode: "off", category: { id: "facts", prompt: "Report facts." }, repetition: 1 });
+      await runner.execute({ mode: "lite", category: { id: "facts", prompt: "Report facts." }, repetition: 1 });
+      expect(spawns[0].args).toContain("/repo/scripts/eval/pi-eval-cache-control.ts");
+      expect(spawns[0].nonce).not.toBe(spawns[1].nonce);
+      expect(spawns[0].nonce).toHaveLength(spawns[1].nonce.length);
+    } finally {
+      fs.rmSync(homeRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("accepts a tool-only assistant turn when Pi returns no final text", async () => {
+    const homeRoot = fs.mkdtempSync(path.join(os.tmpdir(), "caveman-pi-tool-only-"));
+    const runner = evaluate.createPiRunner({
+      piBin: "/opt/pi/bin/pi",
+      extensionPath: "/repo/index.ts",
+      model: "test-model",
+      spawnImpl: async () => ({
+        code: 0,
+        stdout: JSON.stringify({
+          type: "tool_execution_start",
+          toolName: "write_artifact",
+          args: { content: "Persist this exact content." },
+        }),
+        stderr: "",
+      }),
+      mkdtempImpl: (prefix) => fs.mkdtempSync(path.join(homeRoot, prefix)),
+    });
+
+    try {
+      const outcome = await runner.execute({
+        mode: "off",
+        category: { id: "tool-argument", prompt: "Persist this text." },
+        repetition: 1,
+      });
+      expect(outcome.text).toBe("");
+      expect(outcome.toolCall).toEqual({
+        name: "write_artifact",
+        input: { content: "Persist this exact content." },
+      });
+    } finally {
+      fs.rmSync(homeRoot, { recursive: true, force: true });
+    }
   });
 });

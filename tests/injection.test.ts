@@ -1,5 +1,7 @@
 // Injection tests cover the vendored artifact and deterministic compact prompt generation.
 
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { validateMode } from "../src/config.js";
 import { computeInjection, loadSkillContent } from "../src/injection.js";
@@ -35,8 +37,20 @@ describe("computeInjection determinism", () => {
 });
 
 describe("computeInjection compact rules", () => {
-  it("uses exact concise language contract text", () => {
-    expect(promptContract.commonRules).toMatch(/^Answer concisely in the user's language\. /);
+  it("keeps constraint, protection, fact, and approval rules", () => {
+    expect(promptContract.commonRules).toContain("Obey constraints.");
+    expect(promptContract.commonRules).toContain(
+      "Copy required wording exactly. Preserve negation, warnings, identifiers, paths, values, and step order.",
+    );
+    expect(promptContract.commonRules).toContain(
+      "Keep code, commands, tool arguments, files, persisted artifacts, commits, PRs, and docs usable and complete.",
+    );
+    expect(promptContract.commonRules).toContain(
+      "Artifacts: requested fields from supplied facts. No other text. Mark gaps.",
+    );
+    expect(promptContract.commonRules).toContain(
+      "For confirmation requests, ask \"Do you approve [action] [exact target]?\" Then wait.",
+    );
   });
 
   it("off mode produces empty text", () => {
@@ -51,6 +65,31 @@ describe("computeInjection compact rules", () => {
     }
   });
 
+  it("uses exact v9 injection lengths and hashes with off at zero", () => {
+    expect(promptContract.version).toBe(9);
+    expect(computeInjection("off")).toEqual({ mode: "off", text: "", sourceHash: "" });
+    const canonicalContractHash = createHash("sha256")
+      .update(JSON.stringify(promptContract))
+      .digest("hex");
+    expect(canonicalContractHash).toBe(
+      "3611fa174ef844d6323a1e1f28428c78d00316588607d6f0b68df62e58734d49",
+    );
+    const expected = {
+      lite: { length: 453, hash: "8a9105956e558a0c" },
+      full: { length: 437, hash: "d253acd59b8fd64b" },
+      ultra: { length: 472, hash: "186940604cbe772f" },
+      "wenyan-lite": { length: 503, hash: "51f4c64da67f3abc" },
+      wenyan: { length: 497, hash: "daa4d48ca633d6a1" },
+      "wenyan-ultra": { length: 507, hash: "dbf8ed1f3087426d" },
+    } as const;
+    for (const mode of VALID_MODES.filter((item) => item !== "off")) {
+      const injection = computeInjection(mode);
+      expect(injection.text.length, `mode=${mode}`).toBe(expected[mode].length);
+      expect(injection.sourceHash, `mode=${mode}`).toBe(expected[mode].hash);
+      expect(injection.text.length, `mode=${mode}`).toBeLessThanOrEqual(800);
+    }
+  });
+
   it("full mode uses exact compact runtime rules", () => {
     const result = computeInjection("full");
     expect(result.text).toBe(
@@ -62,26 +101,35 @@ describe("computeInjection compact rules", () => {
     expect(result.text).not.toContain("| **full** |");
   });
 
-  it("uses distinct intensity rules", () => {
-    expect(computeInjection("lite").text).toContain("concise complete sentences");
-    expect(computeInjection("full").text).toContain("clear fragments");
-    expect(computeInjection("ultra").text).toContain("fewest clear words");
+  it("uses the exact v9 mode rules", () => {
+    expect(promptContract.modeRules.lite).toBe("Use concise complete prose.");
+    expect(promptContract.modeRules.full).toBe("Be concise.");
+    expect(promptContract.modeRules.ultra).toBe("Use fewest clear words. State each fact once.");
+    expect(promptContract.modeRules["wenyan-lite"]).toBe(
+      "Chinese: light literary style. Other languages: concise and unchanged.",
+    );
+    expect(promptContract.modeRules.wenyan).toBe(
+      "Chinese: literary style. Other languages: concise and unchanged.",
+    );
+    expect(promptContract.modeRules["wenyan-ultra"]).toBe(
+      "Chinese: shortest literary style. Other languages: concise and unchanged.",
+    );
   });
 
   it("uses literary Chinese rules only for Chinese input", () => {
     for (const mode of ["wenyan-lite", "wenyan", "wenyan-ultra"] as const) {
       const text = computeInjection(mode).text;
-      expect(text, `mode=${mode}`).toContain("For Chinese input");
-      expect(text, `mode=${mode}`).toContain("For non-Chinese input, preserve original language");
-      expect(text, `mode=${mode}`).toContain("Keep style in assistant chat responses until disabled");
+      expect(text, `mode=${mode}`).toContain("Chinese:");
+      expect(text, `mode=${mode}`).toContain("Other languages: concise and unchanged.");
+      expect(text, `mode=${mode}`).toContain("Obey constraints");
     }
   });
 
   it("keeps document and persisted-content rules in every active mode", () => {
     for (const mode of VALID_MODES.filter((item) => item !== "off")) {
       const text = computeInjection(mode).text;
-      expect(text, `mode=${mode}`).toContain("Normal prose for files");
-      expect(text, `mode=${mode}`).toContain("full prose for explicitly requested documents");
+      expect(text, `mode=${mode}`).toContain("files, persisted artifacts, commits, PRs, and docs usable and complete");
+      expect(text, `mode=${mode}`).toContain("usable and complete");
     }
   });
 
@@ -89,6 +137,24 @@ describe("computeInjection compact rules", () => {
     expect(computeInjection("wenyan").text).toContain(
       "CAVEMAN MODE ACTIVE — level: wenyan-full",
     );
+  });
+
+  it("keeps README prompt lengths synchronized with generated injections", () => {
+    const readme = readFileSync("README.md", "utf8");
+    const currentLengths = new Map<string, { characters: number; estimatedTokens: number }>();
+    for (const match of readme.matchAll(/^\| `([^`]+)` \| [\d,]+ \| ([\d,]+) \| [\d,]+ \| ([\d,]+) \|$/gm)) {
+      currentLengths.set(String(match[1]), {
+        characters: Number(String(match[2]).replaceAll(",", "")),
+        estimatedTokens: Number(String(match[3]).replaceAll(",", "")),
+      });
+    }
+    for (const mode of VALID_MODES.filter((item) => item !== "off")) {
+      const characters = computeInjection(mode).text.length;
+      expect(currentLengths.get(mode), `mode=${mode}`).toEqual({
+        characters,
+        estimatedTokens: Math.round(characters / 4),
+      });
+    }
   });
 });
 

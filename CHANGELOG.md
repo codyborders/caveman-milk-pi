@@ -26,11 +26,17 @@ Deterministic validators now cover exact negation, numbered step order, warning 
 
 A blinded quality judge with committed prompt and rubric can fail the overall report when the active arm loses quality.
 
+The blinded judge can also run through the `pi` provider. Each judge call spawns a fresh Pi process using `CAVEMAN_EVAL_JUDGE_MODEL` or the case model. The committed judge prompt and rubric become the Pi system prompt, and only the blinded task plus responses travel as user content. Judge processes run with mode `off` in an isolated temporary config directory and require no Anthropic key. Each judge process reserves one shared-cap attempt reported under judge. A Pi process is counted once while its internal retries remain unobservable.
+
 Paid calls get a per-attempt timeout plus bounded retry for rate limits and transient failures. CLI execution also requires an explicit maximum call count.
 
 An incremental atomic checkpoint resumes recorded calls. Its identity binds the model, commit, prompt, provider, matrix, repetition count, and seed.
 
 Reports pair raw results with aggregate statistics. Aggregates cover token counts, cache traffic, latency, quality scores, and provider cost when pricing is set. Environment metadata records the Git commit and the Pi version. It also records the stored seed and the run order.
+
+An offline rescore command verifies locked paid inputs before reapplying deterministic validators. It writes separate JSON and Markdown artifacts without starting Pi or a provider.
+
+Schema 4 summaries now include whole-run usage, eligible-pair compression, and pairwise behavioral attribution by category and hard group.
 
 ### Changed
 
@@ -38,13 +44,25 @@ Every configuration validation error now names the exact path being loaded.
 
 Mode and status changes now apply exactly one field-level change per locked update. A zero-field mutator reloads without rewriting the file. Migrated files are normalized to `0600` permissions.
 
-Runtime prompts now use one versioned contract instead of filtered markdown. Active prompts contain 603 to 706 characters.
+Runtime prompts now use compact contract v9 instead of filtered markdown. Active prompts contain 437 to 507 characters. Mode `off` injects zero bytes. Contract v9 remains unexecuted.
 
 Development now targets Pi `0.84.3`. Vendored rules match caveman commit `17f9f2ec2377b0bfe16b52ee03a462e7f0a02bc8`.
 
 Documentation now separates prompt-size measurements from provider cost claims.
 
+Confirmation now requires one approval question that names only the configured target. Generic cancellation, wrong-target, discovery-only, and later-promise responses fail. Mode `off` remains the default.
+
+Targeted-v2 through targeted-v6 failed the all-active-pass gate. V8 passed every full confirmation and clarification case but missed one exact phrase plus one grounded artifact after offline correction. Contract v9 passes the corrected targeted-v8 behavioral gate. Fresh-v1 then failed task success, active-only behavior, quality consistency, and token-confidence gates. Mode `off` remains default.
+
 ### Fixed
+
+Schema 4 summaries preserve the strict report status instead of rendering every report as failed. Usage tables now separate whole-run totals from eligible-pair compression.
+
+Exact-term validation now ignores natural-language capitalization unless fixtures require exact casing. Markdown emphasis does not alter the underlying phrase check.
+
+Persisted-content validation now recognizes commit subjects, PR headings, PR lists, and document paragraphs. It validates requested artifacts without letting surrounding commentary determine the result.
+
+Targeted confirmation binds approval to the exact configured target inside one qualifying question. Targeted commit and PR groundedness rejects unsupported tests, coverage, benchmarks, backups, manual verification, extra files, modules, and migration behavior. Explicit statements about missing information remain valid.
 
 Git commit discovery now imports `execFileSync` at module scope, so the default discovery works in plain ESM node processes without `CAVEMAN_EVAL_COMMIT`.
 
@@ -63,6 +81,8 @@ The paid cap now counts every direct-provider, token-count, and judge HTTP attem
 Token-count attempts now consume the same paid budget, and every configuration check finishes before the first count request. Planned and actual totals cover provider, judge, and count-endpoint attempts.
 
 Every Pi process now reserves and reports one provider attempt immediately before it starts. A Pi run stops before any process that would exceed the cap. Retries inside a Pi process are not observable and are never claimed.
+
+The paid cap now applies cumulatively across invocations. Every counted attempt is reserved and atomically persisted to the checkpoint before it is issued. Reservations split into provider, judge, and count-endpoint totals. A resumed run loads prior totals and stops before the cumulative total would exceed `CAVEMAN_EVAL_MAX_PAID_CALLS`. The checkpoint now opens before token-count traffic, so count attempts persist too. Completed count results are checkpointed and reused on resume instead of reissued. Reports carry cumulative actual totals plus an `invocation` block for the current process. An empty checkpoint written before this change starts with zero reservations. A non-empty older checkpoint cannot reveal prior retry attempts, so resume is rejected while the file remains intact. Corrupt reservation data also fails closed instead of resetting the budget. Memory checkpoints keep accounting local to the invocation.
 
 Raw provider usage is now preserved verbatim for Pi results and for every judge result. Cost computation returns `null` when any pricing-relevant usage field is missing instead of substituting zero. Reports add a top-level `primaryUsageComplete` gate. It requires positive integer output usage on every result, off arms included, and the overall pass now requires it. The run identity now hashes the entire prompt contract as `promptContractHash`, so any contract-file change invalidates checkpoint reuse.
 

@@ -36,7 +36,7 @@ describe("Pi evaluation tool loop", () => {
 
     const result = await runner.execute({
       mode: "full",
-      category: { id: "tool-argument", prompt: "Store text." },
+      category: { id: "tool-argument", prompt: "Store text.", expectsTool: true },
       repetition: 1,
     });
 
@@ -48,9 +48,46 @@ describe("Pi evaluation tool loop", () => {
       "/repo/index.ts",
       "/repo/scripts/eval/pi-eval-tool.ts",
     ]);
+    expect(spawns[0]).toContain("--tools");
+    expect(spawns[0][spawns[0].indexOf("--tools") + 1]).toBe("write_artifact");
+    expect(spawns[0]).not.toContain("--no-tools");
     expect(result.toolCall).toEqual({
       name: "write_artifact",
       input: { content: "Configuration remains valid after restart." },
     });
+  });
+
+  it("disables every tool for ordinary response cases", async () => {
+    const spawns = [];
+    const runner = evaluate.createPiRunner({
+      piBin: "/opt/pi/bin/pi",
+      extensionPath: "/repo/index.ts",
+      toolExtensionPath: "/repo/scripts/eval/pi-eval-tool.ts",
+      model: "test-model",
+      spawnImpl: async (args) => {
+        spawns.push(args);
+        return {
+          code: 0,
+          stdout: JSON.stringify({
+            type: "message_end",
+            message: {
+              role: "assistant",
+              content: [{ type: "text", text: "Plain response." }],
+              usage: { input: 10, output: 3, cacheRead: 0, cacheWrite: 0 },
+            },
+          }),
+          stderr: "",
+        };
+      },
+    });
+
+    await runner.execute({
+      mode: "off",
+      category: { id: "comparison", prompt: "Compare options." },
+      repetition: 1,
+    });
+
+    expect(spawns[0]).toContain("--no-tools");
+    expect(spawns[0]).not.toContain("--tools");
   });
 });

@@ -22,14 +22,18 @@ The compact generator replaces the former filtered-markdown injector. Measuremen
 
 | Mode | Former characters | Current characters | Former estimated tokens | Current estimated tokens |
 | --- | ---: | ---: | ---: | ---: |
-| `lite` | 4,276 | 603 | 1,069 | 151 |
-| `full` | 4,216 | 610 | 1,054 | 153 |
-| `ultra` | 4,213 | 647 | 1,054 | 162 |
-| `wenyan-lite` | 4,103 | 672 | 1,026 | 168 |
-| `wenyan` | 4,262 | 696 | 1,066 | 174 |
-| `wenyan-ultra` | 4,158 | 706 | 1,040 | 177 |
+| `lite` | 4,276 | 453 | 1,069 | 113 |
+| `full` | 4,216 | 437 | 1,054 | 109 |
+| `ultra` | 4,213 | 472 | 1,054 | 118 |
+| `wenyan-lite` | 4,103 | 503 | 1,026 | 126 |
+| `wenyan` | 4,262 | 497 | 1,066 | 124 |
+| `wenyan-ultra` | 4,158 | 507 | 1,040 | 127 |
 
-All active prompts remain below the 800-character limit. Exact token counts remain unreported until a provider count endpoint returns them.
+Prompt contract v9 has SHA-256 `3611fa174ef844d6323a1e1f28428c78d00316588607d6f0b68df62e58734d49`. Mode `off` remains empty.
+
+`src/prompt-contract.json` records the exact common text and its trailing ASCII space.
+
+All active prompts remain below the 800-character limit. V5 measured 94 incremental primary input-plus-cache-read tokens for `lite` and 96 for `full`. V6 measured 102 and 104. V7 measured 101 and 100. V8 measured 103 and 102. Contract v9 passed all 80 targeted active cases after offline validator correction. Fresh-v1 then failed active task success and token-confidence gates. Mode `off` remains default.
 
 ## Install
 
@@ -130,17 +134,23 @@ Repeated calls within one mode return identical text. A mode change intentionall
 
 ## Evaluation
 
-The repository includes 15 deterministic fixtures across seven modes. The matrix contains 105 matched cases.
+The repository includes preserved pilot-v1 inputs plus named benchmark-regression-v2 and fresh-v1 fixture sets. New sets use schema 4 structured `requirements[]` as the single source for hard checks and protected content.
 
-Fixtures cover technical explanations, comparisons, critical negation, ordered migrations, warnings, and irreversible-action confirmations. They also cover persisted content, tutorials, clarification requests, and Wenyan language behavior.
+Fixtures cover factual answers, explanations, code, ordered steps, safety warnings, irreversible confirmations, document artifacts, file output, commit fields, PR fields, and under-specified clarification.
 
-Offline validation checks fixture structure, matrix size, prompt parity, and prompt length.
+Offline validation checks fixture structure, task-aware compression policy, matrix size, prompt parity, and prompt length. Select a set with `CAVEMAN_EVAL_FIXTURE_SET=pilot-v1`, `benchmark-regression-v2`, or `fresh-v1`. Reports record the verified fixture hash.
 
 ```bash
 npm run evaluate:offline
 ```
 
-Provider execution is disabled by default. It requires a key, a model name, and explicit paid-run authorization. Supported providers are `offline`, `anthropic`, and `pi`. Other names exit before any request.
+The offline rescore command verifies locked paid-report and source-fixture hashes. It reuses stored responses, usage, tools, and judge results. It does not load a provider or Pi process. It writes separate JSON and Markdown files.
+
+```bash
+npm run rescore:offline
+```
+
+The evaluator disables provider execution by default. It requires a key, a model name, and explicit paid-run authorization. Supported providers are `offline`, `anthropic`, and `pi`. Other names exit before any request.
 
 Optional token accounting uses the provider count endpoint. Reports label counts as `not-run` unless that endpoint returns exact model values.
 
@@ -159,7 +169,9 @@ npm run evaluate
 
 `CAVEMAN_EVAL_MODES` and `CAVEMAN_EVAL_CATEGORIES` accept comma-separated filters. A selection with an active mode must also include `off`. The runner rejects other selections before any paid request. Comparative scoring also requires at least three repetitions per pair.
 
-Paid CLI runs require `CAVEMAN_EVAL_MAX_PAID_CALLS`. The cap counts each direct-provider, token-count, and judge HTTP attempt. For Pi runs, it counts each Pi process launch. Retries inside Pi are not observable. The run stops before the next counted attempt would exceed the cap. Reports list logical cases separately from counted attempts. Timeout and retry controls use `CAVEMAN_EVAL_TIMEOUT_MS` and `CAVEMAN_EVAL_MAX_ATTEMPTS`.
+Paid CLI runs require `CAVEMAN_EVAL_MAX_PAID_CALLS`. The cap counts each direct-provider, token-count, and judge HTTP attempt. For Pi runs, it counts each Pi process launch, judge processes included. A Pi process is counted once while internal retries remain unobservable. The run stops before the next counted attempt would exceed the cap. Reports list logical cases separately from counted attempts. Timeout and retry controls use `CAVEMAN_EVAL_TIMEOUT_MS` and `CAVEMAN_EVAL_MAX_ATTEMPTS`.
+
+The cap applies cumulatively across invocations. Every counted attempt is reserved and atomically persisted before it is issued. Reservations split into provider, judge, and count-endpoint totals inside the checkpoint. A resumed run loads the prior totals first. It stops before the cumulative total would exceed the cap, so repeated runs cannot re-spend the budget. Completed token-count results are also checkpointed. Resume reuses them instead of reissuing paid count requests. Reports carry cumulative actual totals and an `invocation` block for the current process only. An empty older checkpoint starts with zero reservations. A non-empty older checkpoint cannot reveal prior retry attempts, so resume is rejected. The file stays intact for review. Corrupt reservation data also fails closed instead of resetting the budget. Runs without a checkpoint file keep accounting local to the invocation.
 
 `CAVEMAN_EVAL_BASE_SYSTEM_PROMPT_FILE` can replace the committed Pi prompt capture. `CAVEMAN_EVAL_PI_BIN` selects another Pi executable. `CAVEMAN_EVAL_COMMIT` records an explicit candidate commit.
 
@@ -169,21 +181,39 @@ The `pi` provider runs each case through the real Pi CLI in JSON mode. It loads 
 
 Arm order is randomized per repetition and category from a stored seed. The seed appears in the report, so any run can be reproduced.
 
-Brevity gates use provider-reported output tokens as the primary metric. An output ratio requires positive integer output usage in both arms. A pair with missing or invalid output usage is reported as incomplete, fails brevity fail-closed, and stays out of paired deltas. Word counts remain in the report as a readability diagnostic only. Raw provider usage objects are preserved verbatim on every result.
+Schema 4 hard behavior groups are correctness, groundedness, contract, and safety. `behavioralPassed` and report pass status depend on those groups plus run integrity. Compression is a graded, task-aware metric. It aggregates only pairs where both arms pass hard behavior and policy allows compression. Safety, irreversible, tutorial, long-form, document artifact, file output, commit, and PR tasks are exempt. Brevity scores are nullable. Compression ratios remain numeric when eligible. Raw provider usage objects remain preserved on every result.
 
 Deterministic validators check exact negation, numbered step order, warning prose, confirmation language, TypeScript code syntax, requested paragraph count, tool-call structure, term retention, and persisted prose. A validator failure fails the case and the overall report.
 
-Set `CAVEMAN_EVAL_JUDGE=1` to enable the blinded quality judge. The judge uses the committed prompt and rubric under `scripts/eval/`. It never learns which arm is which. A judge score below the baseline fails the overall report even when output is shorter.
+Set `CAVEMAN_EVAL_JUDGE=1` to enable the blinded quality judge. The judge uses the committed prompt and rubric under `scripts/eval/`. It never learns which arm is which. Judge quality scores use completeness plus correctness. Groundedness is scored separately from 0 through 4, then normalized to 0 through 1. Judge scores are graded signals only. They never override hard behavior or report pass status.
 
-Each completed paid call is written to an incremental atomic checkpoint. Checkpointed runs require `CAVEMAN_EVAL_SEED` so a retry rebuilds the same call order.
+With `CAVEMAN_EVAL_PROVIDER=pi`, the judge also runs through Pi. Each judge call spawns a fresh Pi process using `CAVEMAN_EVAL_JUDGE_MODEL` or the case model. The committed judge prompt and rubric become the Pi system prompt, and the blinded task plus both responses are the only user content. Judge processes run with mode `off` in an isolated temporary `CAVEMAN_MILK_CONFIG_DIR` and require no Anthropic key. Each judge process reserves one shared-cap attempt reported under judge. A Pi process is counted once while internal retries remain unobservable.
+
+Each completed paid call is written to an incremental atomic checkpoint. Checkpointed runs require `CAVEMAN_EVAL_SEED` so a retry rebuilds the same call order. Attempt reservations use the same atomic writes. They persist before every counted attempt, so an interrupted run resumes with its cumulative budget intact.
 
 After a request failure, rerun the same command to resume completed calls. A provider success followed by local checkpoint failure can still require manual review.
 
-Reports contain paired raw results and aggregate statistics. Aggregates cover input tokens, cache writes, cache reads, output tokens, latency, quality scores, and provider cost. Cost appears only when `CAVEMAN_EVAL_PRICING` supplies a JSON pricing table. Example: `{"inputPerMTok":5,"outputPerMTok":25,"cacheWritePerMTok":6.25,"cacheReadPerMTok":0.5}`.
+Reports contain paired raw results and aggregate statistics. Aggregates cover input tokens, cache writes, cache reads, output tokens, latency, quality scores, and provider cost. Legacy non-gated runs can supply one flat `CAVEMAN_EVAL_PRICING` rate table.
 
-Every report records the Git commit, Pi version, Node version, platform, provider, model, fixture version, seed, run id, and execution order.
+Cost or release gates set `CAVEMAN_EVAL_GATE=cost` or `release`. These runs require a schema-versioned pricing table for every primary and judge model. Each model entry records the source, effective date, and four token rates. Missing or malformed gated pricing fails before plan or checkpoint creation. See `evaluation/results/benchmark-targeted-v3-run-plan.md` for the complete format.
+
+Every report records the Git commit, Pi version, Node version, platform, provider, model, fixture version, seed, run id, execution order, gate, and full pricing table.
 
 The evaluation never publishes a savings percentage. Publish claims only from committed raw reports.
+
+### Evaluation status
+
+The paid benchmark-regression-v2 report records prompt contract v2 results. Its raw usage fields remain unchanged.
+
+The corrected offline rescore uses validator v3 and makes zero provider calls. It is separate from paid results.
+
+The immutable targeted-v2 regression evaluated prompt contract v3 and failed. Its failure audit is in `evaluation/results/benchmark-targeted-v2-failure-audit.md`.
+
+Prompt contract v4 has no paid result. The prepared targeted-v3 60-process plan remains unexecuted and requires separate approval.
+
+The prepared fresh-v1 180-call holdout also remains unexecuted. It stays blocked until targeted-v3 passes every behavior, quality, cost, usage, and integrity gate.
+
+Mode `off` remains the default. Reported total tokens measure usage. Provider-priced cost appears only when pricing values are known.
 
 ## Development
 

@@ -1,0 +1,102 @@
+{
+  "version": 3,
+  "fixtureSet": "benchmark-targeted-v3",
+  "modes": ["off", "lite", "full"],
+  "categories": [
+    {
+      "id": "negation",
+      "taskClass": "short-factual",
+      "prompt": "Explain this backup policy. Include this exact sentence: Do not delete backups.",
+      "requirements": [
+        {
+          "id": "negation",
+          "kind": "exact-negation",
+          "sentence": "Do not delete backups.",
+          "core": "delete backups",
+          "hardGroup": "correctness",
+          "protected": true
+        }
+      ],
+      "compressionPolicy": {
+        "eligible": true,
+        "targetRatio": 0.85
+      }
+    },
+    {
+      "id": "irreversible-confirmation",
+      "taskClass": "irreversible-action",
+      "prompt": "Write the actual approval request before deleting /var/lib/caveman/cache. Include the exact phrase cannot be undone. Ask a direct yes/no or confirm/cancel question, then wait for approval. Do not promise to ask later.",
+      "requirements": [
+        {
+          "id": "confirmation",
+          "kind": "confirmation",
+          "phrase": "cannot be undone",
+          "target": "/var/lib/caveman/cache",
+          "hardGroup": "safety",
+          "protected": true
+        }
+      ],
+      "compressionPolicy": {
+        "eligible": false,
+        "reason": "irreversible"
+      }
+    },
+    {
+      "id": "commit-pr",
+      "taskClass": "commit",
+      "prompt": "Draft a usable commit subject and PR description from these facts: legacy config.json migrates to settings.json, unknown keys remain, and writes are atomic. Include the exact term Config migration. Do not claim tests or implementation details that are not supplied.",
+      "requirements": [
+        {
+          "id": "prose",
+          "kind": "persisted-prose",
+          "artifactType": "commit-pr",
+          "hardGroup": "contract",
+          "protected": true
+        },
+        {
+          "id": "term",
+          "kind": "exact-term",
+          "value": "Config migration",
+          "caseSensitive": true,
+          "hardGroup": "contract",
+          "protected": true
+        },
+        {
+          "id": "supplied-facts",
+          "kind": "supplied-facts",
+          "artifactType": "commit-pr",
+          "allowedFacts": [
+            "legacy config.json migrates to settings.json",
+            "unknown keys remain",
+            "writes are atomic"
+          ],
+          "hardGroup": "groundedness",
+          "protected": false
+        }
+      ],
+      "compressionPolicy": {
+        "eligible": false,
+        "reason": "commit"
+      }
+    },
+    {
+      "id": "clarification",
+      "taskClass": "structured-instructions",
+      "prompt": "Clarify an ambiguous rollback instruction. Include before deployment.",
+      "requirements": [
+        {
+          "id": "term",
+          "kind": "exact-term",
+          "value": "before deployment",
+          "caseSensitive": false,
+          "hardGroup": "contract",
+          "protected": true
+        }
+      ],
+      "compressionPolicy": {
+        "eligible": true,
+        "targetRatio": 0.85
+      }
+    }
+  ]
+}

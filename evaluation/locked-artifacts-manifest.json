@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "description": "Byte-level locks for immutable evaluation records. Each sha256 covers exact file bytes, so any edit, including whitespace, fails the suite.",
+  "lockedArtifacts": {
+    "benchmark-regression-v2-result": {
+      "path": "evaluation/results/benchmark-regression-v2.json",
+      "sha256": "0e4a254968b0448b2df9e707d04c6bbc7c760c1b3b4a9dfb3ea07cfe6409feeb",
+      "role": "immutable-paid-run-report"
+    },
+    "benchmark-regression-v2-source-fixture": {
+      "path": "evaluation/source-fixtures/benchmark-regression-v2.json",
+      "sha256": "da6ff6b621fa512301c954cc94850ca7a1ff3873766302c97ad69ec1cd4d0adb",
+      "role": "immutable-paid-run-input"
+    },
+    "fresh-v1-fixture": {
+      "path": "scripts/evaluation-fixtures-fresh-v1.json",
+      "sha256": "d961c987a01da8fe2280037489cca42e6c1f303fc06e9d570495dffde3818e3e",
+      "role": "frozen-holdout-fixture"
+    },
+    "benchmark-regression-v2-rescored-json": {
+      "path": "evaluation/results/benchmark-regression-v2-rescored.json",
+      "sha256": "0f7daaca28cc00ff540326082916b9e447833ed0ed0430c6316b915b41adf6b3",
+      "role": "immutable-offline-rescore-report"
+    },
+    "benchmark-regression-v2-rescored-markdown": {
+      "path": "evaluation/results/benchmark-regression-v2-rescored.md",
+      "sha256": "f863ae85ff1937572d73d51b775e7a021d1618ec899d719401d06a759b237e1d",
+      "role": "immutable-offline-rescore-summary"
+    },
+    "benchmark-targeted-v2-json": {
+      "path": "evaluation/results/benchmark-targeted-v2.json",
+      "sha256": "02585e808fc15e553f754a169d6b4f0d5bb7bdbda4fc952abbf88908d8ffd3dd",
+      "role": "immutable-targeted-regression-report"
+    },
+    "benchmark-targeted-v2-markdown": {
+      "path": "evaluation/results/benchmark-targeted-v2.md",
+      "sha256": "d8f135682b6f3750343760b5b84376638cd8ea28319ee024eecb8f406c68a1fe",
+      "role": "immutable-targeted-regression-summary"
+    }
+  }
+}

@@ -1,13 +1,13 @@
 {
-  "version": 2,
-  "commonRules": "Answer concisely in the user's language. Remove filler/repetition. Keep style in assistant chat responses until disabled. Protect file bodies, requested artifacts, tool arguments, quoted errors, code, identifiers, technical terms, exact values, negation, warnings, ordered safety steps. Use complete prose for security warnings, irreversible confirmations, and clarification. Normal prose for files, code comments, commits, PRs, third-party messages. Use full prose for explicitly requested documents/tutorials and artifacts. ",
+  "version": 9,
+  "commonRules": "Obey constraints. Copy required wording exactly. Preserve negation, warnings, identifiers, paths, values, and step order. Keep code, commands, tool arguments, files, persisted artifacts, commits, PRs, and docs usable and complete. Artifacts: requested fields from supplied facts. No other text. Mark gaps. For confirmation requests, ask \"Do you approve [action] [exact target]?\" Then wait. ",
   "modeRules": {
-    "lite": "Use concise complete sentences with normal grammar.",
-    "full": "Use concise sentences or clear fragments when unambiguous.",
-    "ultra": "Use the fewest clear words. State each fact once. Keep grammar when breaking it saves nothing.",
-    "wenyan-lite": "For Chinese input, use light literary Chinese. For non-Chinese input, preserve original language. Remain concise.",
-    "wenyan": "For Chinese input, literary Chinese. Preserve meaning/technical terms. For non-Chinese input, preserve original language. Remain concise.",
-    "wenyan-ultra": "For Chinese input, shortest literary Chinese. Preserve meaning/technical terms. For non-Chinese input, preserve original language. Remain concise."
+    "lite": "Use concise complete prose.",
+    "full": "Be concise.",
+    "ultra": "Use fewest clear words. State each fact once.",
+    "wenyan-lite": "Chinese: light literary style. Other languages: concise and unchanged.",
+    "wenyan": "Chinese: literary style. Other languages: concise and unchanged.",
+    "wenyan-ultra": "Chinese: shortest literary style. Other languages: concise and unchanged."
   },
   "tokenAccounting": {
     "method": "provider-count-endpoint",

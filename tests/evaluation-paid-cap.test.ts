@@ -75,6 +75,7 @@ describe("paid cap actual attempts", () => {
         cap: 10,
         planned: { provider: 6, judge: 3, countEndpoint: 0, total: 9 },
         actual: { provider: 7, judge: 3, countEndpoint: 0, total: 10 },
+        invocation: { provider: 7, judge: 3, countEndpoint: 0, total: 10 },
       });
     } finally {
       server.stop();

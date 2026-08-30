@@ -5,7 +5,15 @@ You will see one task prompt and two responses, labeled Response A and
 Response B. You must not, and cannot, know which system configuration
 produced either response. Judge only what is present.
 
-Evaluate each response independently on two axes, then compare them.
+Evaluate each response independently on three axes, then compare them.
+
+## Groundedness (0-4)
+
+- 4: Uses only facts supplied by the task or response context, and asks for missing facts when needed.
+- 3: Mostly grounded with one minor unsupported implication.
+- 2: Includes a material unsupported claim.
+- 1: Relies mostly on invented specifics.
+- 0: Fabricates facts or answers an under-specified task with false certainty.
 
 ## Completeness (0-4)
 
@@ -40,6 +48,7 @@ Reply with exactly one JSON object and nothing else:
 {
   "completeness": { "A": 0, "B": 0 },
   "correctness": { "A": 0, "B": 0 },
+  "groundedness": { "A": 0, "B": 0 },
   "notes": "one short sentence on the decisive difference"
 }
 ```

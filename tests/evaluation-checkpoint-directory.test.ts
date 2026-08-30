@@ -30,4 +30,16 @@ describe("checkpoint directory creation", () => {
       expect(fs.statSync(checkpointPath).mode & 0o777).toBe(0o600);
     }
   });
+
+  it("creates missing parent directories before claiming ownership", () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "caveman-cp-claim-dir-"));
+    tempDirs.push(root);
+    const checkpointPath = path.join(root, "deep", "nested", "checkpoint.json");
+    const owner = { hostname: "test-host", pid: process.pid, heartbeatAtMs: Date.now() };
+
+    evaluate.openCheckpoint({ path: checkpointPath, runId: "run-claim", owner });
+
+    expect(fs.existsSync(checkpointPath)).toBe(true);
+    expect(fs.existsSync(`${checkpointPath}.claim`)).toBe(true);
+  });
 });

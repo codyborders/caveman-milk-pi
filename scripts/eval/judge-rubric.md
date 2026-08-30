@@ -1,8 +1,18 @@
 # Caveman Milk Pi — Blinded Quality Judge Rubric
 
-Scores run 0 to 4 on two axes for each blinded response. The judge sees the
+Scores run 0 to 4 on three axes for each blinded response. The judge sees the
 original task prompt, Response A, and Response B. The judge never learns which
 caveman mode produced either response.
+
+## Groundedness
+
+| Score | Meaning |
+| --- | --- |
+| 4 | Uses only supplied facts and requests missing facts when needed. |
+| 3 | Mostly grounded with one minor unsupported implication. |
+| 2 | Contains one material unsupported claim. |
+| 1 | Relies mostly on invented specifics. |
+| 0 | Fabricates facts or answers missing-fact tasks with false certainty. |
 
 ## Completeness
 
@@ -54,6 +64,7 @@ The judge must return one JSON object and nothing else:
 {
   "completeness": { "A": 0, "B": 0 },
   "correctness": { "A": 0, "B": 0 },
+  "groundedness": { "A": 0, "B": 0 },
   "notes": "one short sentence on the decisive difference"
 }
 ```

@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "fixture": {
+    "path": "scripts/evaluation-fixtures-fresh-v2.json",
+    "sha256": "8bd5776b40800d69e238100bfe5ccddf00e6d5ab826919c8c400835f9caf353a"
+  },
+  "rawReports": [
+    {
+      "path": "evaluation/results/fresh-v2-tool-preflight.json",
+      "sha256": "abb3b0176ec28df86b3aa5b78562c8c87988e135170e43689aeae84d5742d02a",
+      "role": "multi-turn tool preflight"
+    },
+    {
+      "path": "evaluation/results/fresh-v2-cold-v1.json",
+      "sha256": "18367ded26b0d90cea5e79315232cb7feb89ba64640be4df19e3041a3f3f117e",
+      "role": "initial cold-labeled run rejected by observed cache reads"
+    },
+    {
+      "path": "evaluation/results/fresh-v2-warm-v1.json",
+      "sha256": "7da7d8739b1c8b8a996de407825c2f76b1962423b405587fc2554d7794797805",
+      "role": "initial warm-labeled run retained outside release intervals"
+    },
+    {
+      "path": "evaluation/results/fresh-v2-cold-controlled-v1.json",
+      "sha256": "5bfea52da553f059a79bb661416ce3733a058f064e339adc3105b346ebfbcca7",
+      "role": "unique-identifier cold control"
+    },
+    {
+      "path": "evaluation/results/fresh-v2-warmup-shared-v1.json",
+      "sha256": "03908c0993b211f9327e90f5b6d945c3cfcbba5e1c839b4d0fe7a84b95708e81",
+      "role": "shared-identifier warm-up"
+    },
+    {
+      "path": "evaluation/results/fresh-v2-warm-controlled-v1.json",
+      "sha256": "dcd136cf0a28e8de4c3d2e269f15e308ab31ba9f93f963f30e68f301591a884f",
+      "role": "shared-identifier warm control"
+    }
+  ],
+  "externalAttempts": {
+    "primary": 612,
+    "judge": 300,
+    "total": 912
+  },
+  "promptContractVersion": 9,
+  "promptContractSha256": "3611fa174ef844d6323a1e1f28428c78d00316588607d6f0b68df62e58734d49",
+  "originalValidatorVersion": "schema5-protected-facts-v13",
+  "correctedValidatorVersion": "schema5-task-success-v14"
+}

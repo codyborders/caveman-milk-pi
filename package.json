@@ -52,6 +52,7 @@
     "typecheck": "tsc --noEmit",
     "evaluate": "node scripts/evaluate.mjs",
     "evaluate:offline": "node scripts/evaluate.mjs",
+    "evaluate:v12:offline": "node scripts/eval/shared-prefix-v12-cli.mjs",
     "test:package": "node scripts/smoke-packed.mjs"
   },
   "devDependencies": {

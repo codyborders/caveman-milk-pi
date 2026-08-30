@@ -1,0 +1,137 @@
+{
+  "version": 12,
+  "name": "shared-prefix-v12-holdout",
+  "groups": [
+    {
+      "id": "eligible-prose",
+      "classification": "eligible",
+      "tasks": [
+        {
+          "id": "eligible-technical-explanation",
+          "kind": "technical-explanation",
+          "prompt": "Explain how the nightly backup job decides which snapshots to keep. Cover the retention rules and the dry-run flag exactly as the workspace notes describe them.",
+          "requiredFacts": ["retention", "dry-run", "nightly"],
+          "childTasks": [
+            "Read backup-notes.md in the workspace and list every retention rule with its exact rule identifier.",
+            "Read backup-notes.md in the workspace and report exactly what the dry-run flag changes, quoting the flag name."
+          ],
+          "workspaceFiles": [
+            {
+              "path": "backup-notes.md",
+              "contents": "# Backup notes\n\nThe nightly backup job runs at 02:00 UTC. Retention rule R1 keeps the seven most recent daily snapshots. Retention rule R2 keeps the four most recent weekly snapshots. Retention rule R3 keeps monthly snapshots for one year.\n\nThe --dry-run flag makes the job print the plan without deleting or uploading anything. Without --dry-run the job prunes snapshots that no longer match any retention rule.\n"
+            }
+          ]
+        },
+        {
+          "id": "eligible-implementation-recap",
+          "kind": "implementation-recap",
+          "prompt": "Recap what the connection-pool change delivered. Cover the pool cap and the eviction change with their exact values.",
+          "requiredFacts": ["pool cap", "eviction"],
+          "childTasks": [
+            "Summarize the connection-pool change: report the pool cap value, the eviction trigger, and the eviction delay exactly as stated in the task context below. Task context: the pool cap is 64 connections, eviction triggers when idle share exceeds 80 percent, evicted connections drain for 30 seconds."
+          ]
+        },
+        {
+          "id": "eligible-comparison",
+          "kind": "comparison",
+          "prompt": "Compare the two queue implementations described by the children and recommend one for the alerts pipeline. Cover throughput and ordering for both.",
+          "requiredFacts": ["throughput", "ordering"],
+          "childTasks": [
+            "Report the throughput and ordering guarantees of the bounded ring queue exactly as given here: throughput 120k messages per second, ordering strict per producer, capacity fixed at 1024.",
+            "Report the throughput and ordering guarantees of the priority heap queue exactly as given here: throughput 40k messages per second, ordering by priority tier then arrival, capacity grows to 65536."
+          ]
+        },
+        {
+          "id": "eligible-progress-summary",
+          "kind": "routine-progress-summary",
+          "prompt": "Summarize routine progress on the migration workstream. Cover the two finished stages and the current blocker.",
+          "requiredFacts": ["stage one", "stage two", "blocker"],
+          "childTasks": [
+            "Report migration progress exactly as given: stage one schema conversion is finished, stage two dual-write verification is finished, the current blocker is the unmigrated audit consumer, and the rollback window closes Friday."
+          ]
+        },
+        {
+          "id": "eligible-completion-summary",
+          "kind": "completion-summary",
+          "prompt": "Write the completion summary for the finished rate-limiter task. Cover the token bucket change and the test results.",
+          "requiredFacts": ["token bucket", "test results"],
+          "childTasks": [
+            "Report the rate-limiter outcome exactly as given: the token bucket now refills at 100 tokens per second with burst 200, and the test results are 214 passed and 0 failed across 12 files."
+          ]
+        },
+        {
+          "id": "eligible-noncritical-troubleshooting",
+          "kind": "noncritical-troubleshooting",
+          "prompt": "Diagnose why the staging deploy prints a harmless cache warning and how to silence it. Cover the env var name and the log level exactly.",
+          "requiredFacts": ["CACHE_TTL", "warn"],
+          "childTasks": [
+            "Report the staging diagnosis exactly as given: the warning fires when CACHE_TTL is unset, the message is cached values fall back to the default, and setting log level to warn instead of debug hides it."
+          ]
+        },
+        {
+          "id": "eligible-removable-repetition",
+          "kind": "removable-repetition",
+          "prompt": "The workspace holds a status update that repeats the same environment boilerplate in every section. Produce the same update with the repetition removed and every fact kept. Cover release 2.4.1 and both fixed defects.",
+          "requiredFacts": ["2.4.1", "defect"],
+          "childTasks": [
+            "Read status-update-draft.md in the workspace and list every distinct fact it contains, ignoring repeated boilerplate."
+          ],
+          "workspaceFiles": [
+            {
+              "path": "status-update-draft.md",
+              "contents": "# Status update\n\n## Environment\n\nThe staging environment runs release 2.4.1 on three nodes. All nodes use the standard build pipeline.\n\n## Cache service\n\nThe cache service was upgraded for release 2.4.1. The environment runs on three nodes with the standard build pipeline. Defect 1188, a stale cache key after rollover, is fixed.\n\n## Queue service\n\nThe queue service received a config refresh for release 2.4.1. The environment still runs three nodes on the standard build pipeline. Defect 1201, a duplicate delivery under retry, is fixed.\n\n## Next\n\nRollout to production starts Monday. The environment remains three nodes on the standard build pipeline.\n"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "protected-content",
+      "classification": "protected",
+      "tasks": [
+        {
+          "id": "protected-warning",
+          "kind": "warning",
+          "prompt": "State the production warning for the database drop operation. Keep the exact marker PRODUCTION WARNING and state that the drop cannot be undone.",
+          "requiredFacts": ["PRODUCTION WARNING", "cannot be undone"]
+        },
+        {
+          "id": "protected-confirmation",
+          "kind": "confirmation",
+          "prompt": "Request explicit confirmation before the schema migration runs. Keep the exact phrase confirm before proceeding and mention the rollback window.",
+          "requiredFacts": ["confirm before proceeding", "rollback window"]
+        },
+        {
+          "id": "protected-command",
+          "kind": "command",
+          "prompt": "Give the exact command operators must run to rotate the gateway certificate. Keep the command verbatim including the --force flag.",
+          "requiredFacts": ["rotate-gateway-cert", "--force"]
+        },
+        {
+          "id": "protected-path",
+          "kind": "path",
+          "prompt": "Report the exact configuration file path operators must back up before the upgrade. Keep the full absolute path.",
+          "requiredFacts": ["/etc/gateway/gateway.json"]
+        },
+        {
+          "id": "protected-ordered-procedure",
+          "kind": "ordered-procedure",
+          "prompt": "Write the five-step rollback procedure as a numbered list. Keep ascending order from 1. to 5.",
+          "requiredFacts": ["1.", "5."]
+        },
+        {
+          "id": "protected-persisted-artifact",
+          "kind": "persisted-artifact",
+          "prompt": "Draft the persisted release-note paragraph for the audit log change. Keep full prose and the heading Audit Log.",
+          "requiredFacts": ["Audit Log"]
+        },
+        {
+          "id": "protected-agent-handoff",
+          "kind": "agent-handoff",
+          "prompt": "Write the agent handoff note for the next session taking over the incident. Keep the assignee line and the open action item.",
+          "requiredFacts": ["Assignee:", "Open action"]
+        }
+      ]
+    }
+  ]
+}

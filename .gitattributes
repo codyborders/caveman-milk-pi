@@ -1,0 +1,6 @@
+scripts/eval/shared-prefix-v12-fixtures.json -text
+scripts/eval/shared-prefix-v12-fixture-manifest.json -text
+evaluation/results/shared-prefix-v12-*.json -text
+evaluation/results/shared-prefix-v12-*.md -text
+evaluation/captures/shared-prefix-v12/** -text
+evaluation/shared-prefix-v12-artifacts-manifest.json -text

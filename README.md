@@ -211,6 +211,22 @@ Runtime injection uses purpose-built compact constants. `skill/SKILL.md` preserv
 
 See [CREDITS.md](./CREDITS.md) for source details and licensing.
 
+## Shared-prefix v12 holdout
+
+The `eval/shared-prefix-v12` branch adds a separate harness under `scripts/eval/`. It never touches runtime injection.
+
+The fixture `scripts/eval/shared-prefix-v12-fixtures.json` holds two groups. `eligible-prose` covers technical explanations, implementation recaps, comparisons, progress summaries, completion summaries, noncritical troubleshooting, and removable repetition. `protected-content` covers warnings, confirmations, commands, paths, ordered procedures, persisted artifacts, and agent handoffs. Every task declares required facts.
+
+A paid run captures one Caveman-off base execution per task. The base runs a parent and real children. Their canonical source bytes are locked under a sha256. Both finalizer arms then replay those bytes. Only the appended finalizer prompt differs. Protected tasks skip all finalizer work with zero prompt tokens. Gates demand complete-product token and latency upper intervals below zero. Any failure keeps mode `off`.
+
+No paid trial has run on this branch.
+
+Structural offline check:
+
+```bash
+npm run evaluate:v12:offline
+```
+
 ## License
 
 MIT.

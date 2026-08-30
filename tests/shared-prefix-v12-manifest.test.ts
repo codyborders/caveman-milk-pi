@@ -1,7 +1,6 @@
 // Hardening slice 4: a versioned fixture manifest pins the holdout bytes
 // with SHA-256. Loading the fixtures verifies the hash and fails before any
-// launch on mismatch. The freeze commit stays an explicit empty field for
-// the parent to fill after the fixture commit.
+// launch on mismatch. The manifest records the commit that froze the fixture.
 
 import * as crypto from "node:crypto";
 import * as fs from "node:fs";
@@ -27,8 +26,7 @@ describe("shared-prefix v12 fixture manifest", () => {
     const manifest = runner.loadSharedPrefixV12FixtureManifest();
     expect(manifest.schemaVersion).toBe(1);
     expect(manifest.fixtureSha256).toMatch(/^[0-9a-f]{64}$/);
-    // Freeze commit is an explicit field the parent fills after committing.
-    expect(Object.prototype.hasOwnProperty.call(manifest, "freezeCommit")).toBe(true);
+    expect(manifest.freezeCommit).toBe("58456417feb1ee2987f6ed895af5adb520be62a7");
 
     // A tampered fixture must fail validation before any launch happens.
     const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "shared-prefix-v12-manifest-"));

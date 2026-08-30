@@ -60,8 +60,8 @@ export function loadSharedPrefixV12FixtureManifest(
   if (typeof manifest.fixtureSha256 !== "string" || !/^[0-9a-f]{64}$/.test(manifest.fixtureSha256)) {
     throw new Error("Shared-prefix v12 fixture manifest must pin a sha256 hex digest.");
   }
-  if (!Object.prototype.hasOwnProperty.call(manifest, "freezeCommit")) {
-    throw new Error("Shared-prefix v12 fixture manifest must carry an explicit freezeCommit field.");
+  if (typeof manifest.freezeCommit !== "string" || !/^[0-9a-f]{40}$/.test(manifest.freezeCommit)) {
+    throw new Error("Shared-prefix v12 fixture manifest must pin a 40-character freezeCommit.");
   }
   return manifest;
 }
